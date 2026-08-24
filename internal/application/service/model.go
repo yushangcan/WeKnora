@@ -455,7 +455,7 @@ func (s *modelService) GetEmbeddingModel(ctx context.Context, modelId string) (e
 	}
 
 	logger.Info(ctx, "Embedding model initialized successfully")
-	return embedder, nil
+	return embedding.WrapEvaluationMeter(embedder), nil
 }
 
 // GetEmbeddingModelForTenant retrieves and initializes an embedding model for a specific tenant
@@ -503,7 +503,7 @@ func (s *modelService) GetEmbeddingModelForTenant(ctx context.Context, modelId s
 	}
 
 	logger.Info(ctx, "Cross-tenant embedding model initialized successfully")
-	return embedder, nil
+	return embedding.WrapEvaluationMeter(embedder), nil
 }
 
 // GetRerankModel retrieves and initializes a reranking model instance
@@ -532,7 +532,7 @@ func (s *modelService) GetRerankModel(ctx context.Context, modelId string) (rera
 	}
 
 	logger.Info(ctx, "Rerank model initialized successfully")
-	return reranker, nil
+	return rerank.WrapEvaluationMeter(reranker), nil
 }
 
 // GetChatModel retrieves and initializes a chat model instance
@@ -574,7 +574,7 @@ func (s *modelService) GetChatModel(ctx context.Context, modelId string) (chat.C
 		return nil, err
 	}
 
-	return chatModel, nil
+	return chat.WrapEvaluationMeter(chatModel), nil
 }
 
 // GetVLMModel retrieves and initializes a vision language model instance.

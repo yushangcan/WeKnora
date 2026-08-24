@@ -6,54 +6,294 @@ package client
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 )
 
-// EvaluationTask represents an evaluation task
-// Contains basic information about a model evaluation task
+// EvaluationStatus mirrors the server's legacy integer task status.
+type EvaluationStatus int
+
+const (
+	EvaluationStatusPending EvaluationStatus = iota
+	EvaluationStatusRunning
+	EvaluationStatusSuccess
+	EvaluationStatusFailed
+)
+
+// EvaluationTask represents the server's task object.
 type EvaluationTask struct {
-	ID          string `json:"id"`           // Task unique identifier
-	Status      string `json:"status"`       // Task status: pending, running, completed, failed
-	Progress    int    `json:"progress"`     // Task progress, integer value 0-100
-	DatasetID   string `json:"dataset_id"`   // Evaluation dataset ID
-	EmbeddingID string `json:"embedding_id"` // Embedding model ID
-	ChatID      string `json:"chat_id"`      // Chat model ID
-	RerankID    string `json:"rerank_id"`    // Reranking model ID
-	CreatedAt   string `json:"created_at"`   // Task creation time
-	CompleteAt  string `json:"complete_at"`  // Task completion time
-	ErrorMsg    string `json:"error_msg"`    // Error message, has value when task fails
+	ID         string           `json:"id"`
+	TenantID   uint64           `json:"tenant_id"`
+	DatasetID  string           `json:"dataset_id"`
+	StartTime  time.Time        `json:"start_time"`
+	Status     string           `json:"-"`
+	StatusCode EvaluationStatus `json:"-"`
+	ErrorMsg   string           `json:"err_msg,omitempty"`
+	Total      int              `json:"total,omitempty"`
+	Finished   int              `json:"finished,omitempty"`
+
+	// Deprecated fields are retained for source compatibility with the
+	// earlier client DTO. The current server does not populate them here.
+	Progress    int    `json:"progress,omitempty"`
+	EmbeddingID string `json:"embedding_id,omitempty"`
+	ChatID      string `json:"chat_id,omitempty"`
+	RerankID    string `json:"rerank_id,omitempty"`
+	CreatedAt   string `json:"created_at,omitempty"`
+	CompleteAt  string `json:"complete_at,omitempty"`
 }
 
-// EvaluationResult represents the evaluation results
-// Contains detailed evaluation result information
+func (task *EvaluationTask) UnmarshalJSON(data []byte) error {
+	type taskAlias EvaluationTask
+	var wire struct {
+		*taskAlias
+		Status      json.RawMessage `json:"status"`
+		LegacyError string          `json:"error_msg"`
+	}
+	wire.taskAlias = (*taskAlias)(task)
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+	if task.ErrorMsg == "" {
+		task.ErrorMsg = wire.LegacyError
+	}
+	if len(wire.Status) == 0 || string(wire.Status) == "null" {
+		return nil
+	}
+	var statusCode EvaluationStatus
+	if err := json.Unmarshal(wire.Status, &statusCode); err == nil {
+		task.StatusCode = statusCode
+		task.Status = evaluationStatusName(statusCode)
+		return nil
+	}
+	if err := json.Unmarshal(wire.Status, &task.Status); err != nil {
+		return fmt.Errorf("decode evaluation task status: %w", err)
+	}
+	task.StatusCode = evaluationStatusCode(task.Status)
+	return nil
+}
+
+func evaluationStatusName(status EvaluationStatus) string {
+	switch status {
+	case EvaluationStatusPending:
+		return "pending"
+	case EvaluationStatusRunning:
+		return "running"
+	case EvaluationStatusSuccess:
+		return "success"
+	case EvaluationStatusFailed:
+		return "failed"
+	default:
+		return "unknown"
+	}
+}
+
+func evaluationStatusCode(status string) EvaluationStatus {
+	switch status {
+	case "running":
+		return EvaluationStatusRunning
+	case "success", "completed":
+		return EvaluationStatusSuccess
+	case "failed":
+		return EvaluationStatusFailed
+	default:
+		return EvaluationStatusPending
+	}
+}
+
+// EvaluationResult represents the actual server EvaluationDetail response.
 type EvaluationResult struct {
-	TaskID       string                   `json:"task_id"`       // Associated task ID
-	Status       string                   `json:"status"`        // Task status
-	Progress     int                      `json:"progress"`      // Task progress
-	TotalQueries int                      `json:"total_queries"` // Total number of queries
-	TotalSamples int                      `json:"total_samples"` // Total number of samples
-	Metrics      map[string]float64       `json:"metrics"`       // Evaluation metrics collection
-	QueriesStat  []map[string]interface{} `json:"queries_stat"`  // Statistics for each query
-	CreatedAt    string                   `json:"created_at"`    // Creation time
-	CompleteAt   string                   `json:"complete_at"`   // Completion time
-	ErrorMsg     string                   `json:"error_msg"`     // Error message
+	Task   *EvaluationTask      `json:"task"`
+	Params json.RawMessage      `json:"params"`
+	Metric *EvaluationMetrics   `json:"metric,omitempty"`
+	Result *EvaluationRunResult `json:"result,omitempty"`
+
+	// Deprecated flat fields are retained so existing client code continues
+	// to compile while callers migrate to Task, Metric and Result.
+	TaskID       string                   `json:"task_id,omitempty"`
+	Status       string                   `json:"status,omitempty"`
+	Progress     int                      `json:"progress,omitempty"`
+	TotalQueries int                      `json:"total_queries,omitempty"`
+	TotalSamples int                      `json:"total_samples,omitempty"`
+	Metrics      map[string]float64       `json:"metrics,omitempty"`
+	QueriesStat  []map[string]interface{} `json:"queries_stat,omitempty"`
+	CreatedAt    string                   `json:"created_at,omitempty"`
+	CompleteAt   string                   `json:"complete_at,omitempty"`
+	ErrorMsg     string                   `json:"error_msg,omitempty"`
+}
+
+type EvaluationMetrics struct {
+	Retrieval  EvaluationRetrievalResult `json:"retrieval_metrics"`
+	Generation EvaluationAnswerResult    `json:"generation_metrics"`
+}
+
+type EvaluationRunResult struct {
+	SchemaVersion string                     `json:"schema_version"`
+	Run           EvaluationRunMetadata      `json:"run"`
+	Retrieval     *EvaluationRetrievalResult `json:"retrieval"`
+	Answer        *EvaluationAnswerResult    `json:"answer"`
+	Usage         EvaluationUsageResult      `json:"usage"`
+	Cost          EvaluationCostResult       `json:"cost"`
+	Timing        EvaluationTimingResult     `json:"timing"`
+	Cases         []EvaluationCaseResult     `json:"cases"`
+	Warnings      []EvaluationWarning        `json:"warnings"`
+}
+
+type EvaluationRunMetadata struct {
+	RunID          string     `json:"run_id"`
+	TenantID       uint64     `json:"tenant_id"`
+	DatasetID      string     `json:"dataset_id"`
+	StartedAt      time.Time  `json:"started_at"`
+	CompletedAt    *time.Time `json:"completed_at"`
+	Status         string     `json:"status"`
+	PricingVersion string     `json:"pricing_version,omitempty"`
+}
+
+type EvaluationRetrievalResult struct {
+	Precision float64 `json:"precision"`
+	Recall    float64 `json:"recall"`
+	NDCG3     float64 `json:"ndcg3"`
+	NDCG10    float64 `json:"ndcg10"`
+	MRR       float64 `json:"mrr"`
+	MAP       float64 `json:"map"`
+}
+
+type EvaluationAnswerResult struct {
+	BLEU1  float64 `json:"bleu1"`
+	BLEU2  float64 `json:"bleu2"`
+	BLEU4  float64 `json:"bleu4"`
+	ROUGE1 float64 `json:"rouge1"`
+	ROUGE2 float64 `json:"rouge2"`
+	ROUGEL float64 `json:"rougel"`
+}
+
+type EvaluationCallCounts struct {
+	Total     int `json:"total"`
+	Succeeded int `json:"succeeded"`
+	Failed    int `json:"failed"`
+	Items     int `json:"items"`
+}
+
+type EvaluationTokenTotals struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+	CachedTokens     int `json:"cached_tokens"`
+	CacheReadTokens  int `json:"cache_read_tokens"`
+	CacheWriteTokens int `json:"cache_write_tokens"`
+	CacheMissTokens  int `json:"cache_miss_tokens"`
+}
+
+type EvaluationUsageResult struct {
+	Status               string                 `json:"status"`
+	Calls                EvaluationCallCounts   `json:"calls"`
+	Tokens               EvaluationTokenTotals  `json:"tokens"`
+	CacheStatus          string                 `json:"cache_status"`
+	ReportedCallCount    int                    `json:"reported_call_count"`
+	UnavailableCallCount int                    `json:"unavailable_call_count"`
+	ByModel              []EvaluationModelUsage `json:"by_model"`
+	ByPhase              []EvaluationPhaseUsage `json:"by_phase"`
+}
+
+type EvaluationModelUsage struct {
+	ModelType   string                `json:"model_type"`
+	ModelID     string                `json:"model_id"`
+	ModelName   string                `json:"model_name"`
+	Operation   string                `json:"operation"`
+	UsageSource string                `json:"usage_source"`
+	Calls       EvaluationCallCounts  `json:"calls"`
+	Tokens      EvaluationTokenTotals `json:"tokens"`
+	DurationMS  int64                 `json:"duration_ms"`
+}
+
+type EvaluationPhaseUsage struct {
+	Phase       string                `json:"phase"`
+	UsageSource string                `json:"usage_source"`
+	Calls       EvaluationCallCounts  `json:"calls"`
+	Tokens      EvaluationTokenTotals `json:"tokens"`
+	DurationMS  int64                 `json:"duration_ms"`
+}
+
+type EvaluationCostResult struct {
+	Status         string              `json:"status"`
+	Source         string              `json:"source"`
+	Currency       string              `json:"currency,omitempty"`
+	Amount         *float64            `json:"amount"`
+	PricingVersion string              `json:"pricing_version,omitempty"`
+	Warnings       []EvaluationWarning `json:"warnings"`
+}
+
+type EvaluationTimingResult struct {
+	TotalWallTimeMS       int64 `json:"total_wall_time_ms"`
+	PreparationMS         int64 `json:"preparation_ms"`
+	EvaluationMS          int64 `json:"evaluation_ms"`
+	CleanupMS             int64 `json:"cleanup_ms"`
+	CaseCount             int   `json:"case_count"`
+	CaseAverageMS         int64 `json:"case_avg_ms"`
+	CaseMinimumMS         int64 `json:"case_min_ms"`
+	CaseMaximumMS         int64 `json:"case_max_ms"`
+	CaseP50MS             int64 `json:"case_p50_ms"`
+	CaseP95MS             int64 `json:"case_p95_ms"`
+	ModelCallCumulativeMS int64 `json:"model_call_cumulative_ms"`
+}
+
+type EvaluationCaseResult struct {
+	CaseID      string                `json:"case_id"`
+	Status      string                `json:"status"`
+	StartedAt   time.Time             `json:"started_at"`
+	CompletedAt *time.Time            `json:"completed_at"`
+	DurationMS  int64                 `json:"duration_ms"`
+	Usage       EvaluationUsageResult `json:"usage"`
+	Warnings    []EvaluationWarning   `json:"warnings"`
+}
+
+type EvaluationWarning struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 // EvaluationRequest represents an evaluation request
 // Parameters used to start a new evaluation task
 type EvaluationRequest struct {
-	DatasetID        string `json:"dataset_id"`   // Dataset ID to evaluate
-	EmbeddingModelID string `json:"embedding_id"` // Embedding model ID
-	ChatModelID      string `json:"chat_id"`      // Chat model ID
-	RerankModelID    string `json:"rerank_id"`    // Reranking model ID
+	DatasetID       string `json:"dataset_id"`
+	KnowledgeBaseID string `json:"knowledge_base_id,omitempty"`
+	ChatModelID     string `json:"chat_id"`
+	RerankModelID   string `json:"rerank_id,omitempty"`
+	// Deprecated: the server selects the embedding model from the knowledge
+	// base. This field is retained only for source compatibility.
+	EmbeddingModelID string `json:"embedding_id,omitempty"`
 }
 
 // EvaluationTaskResponse represents an evaluation task response
 // API response structure for evaluation tasks
 type EvaluationTaskResponse struct {
-	Success bool           `json:"success"` // Whether operation was successful
-	Data    EvaluationTask `json:"data"`    // Evaluation task data
+	Success bool           `json:"success"`
+	Data    EvaluationTask `json:"data"`
+}
+
+// UnmarshalJSON accepts both the server's current EvaluationDetail envelope
+// and the earlier flat task shape while preserving the public Data field type.
+func (response *EvaluationTaskResponse) UnmarshalJSON(data []byte) error {
+	var wire struct {
+		Success bool            `json:"success"`
+		Data    json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+	response.Success = wire.Success
+
+	var detail EvaluationResult
+	if err := json.Unmarshal(wire.Data, &detail); err != nil {
+		return err
+	}
+	if detail.Task != nil {
+		response.Data = *detail.Task
+		return nil
+	}
+	return json.Unmarshal(wire.Data, &response.Data)
 }
 
 // EvaluationResultResponse represents an evaluation result response
@@ -83,6 +323,9 @@ func (c *Client) StartEvaluation(ctx context.Context, request *EvaluationRequest
 		return nil, err
 	}
 
+	if response.Data.ID == "" {
+		return nil, fmt.Errorf("evaluation response did not contain task")
+	}
 	return &response.Data, nil
 }
 

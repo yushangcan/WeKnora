@@ -9,7 +9,7 @@
 
 > 注：服务端路由带尾斜杠（Gin 会自动从 `/evaluation` 重定向到 `/evaluation/`），下方示例为方便阅读用了 `/evaluation`。
 
-> 阶段一说明：评测结果仍保存在服务进程内存中，服务重启后会丢失。本阶段没有新增数据库、历史查询、结果对比或 Vue 页面。
+> 当前实现会把任务状态、固定配置、四维结果和 Case 观察写入项目现有数据库，服务重启后仍可按任务 ID 查询。历史分页、跨 Run 对比和 Vue 页面属于下一阶段。
 
 ## GET `/evaluation` - 获取评估任务结果
 
@@ -59,15 +59,15 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
                 "top_p": 0,
                 "frequency_penalty": 0,
                 "presence_penalty": 0,
-                "prompt": "这是用户和助手之间的对话。",
-                "context_template": "你是一个专业的智能信息检索助手",
-                "no_match_prefix": "<think>\n</think>\nNO_MATCH",
+				"prompt": "",
+				"context_template": "",
+				"no_match_prefix": "",
                 "temperature": 0.3,
                 "seed": 0,
                 "max_completion_tokens": 2048
             },
             "fallback_strategy": "",
-            "fallback_response": "抱歉，我无法回答这个问题。"
+			"fallback_response": ""
         },
         "metric": {
             "retrieval_metrics": {
@@ -391,6 +391,98 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 - `cases` 保存每个 QA Case 的归属、耗时、调用量和失败警告，不保存 Prompt、答案正文、文档正文或 API Key。
 - `metric` 旧字段继续返回，用于兼容已有调用方；`result.retrieval` 和 `result.answer` 只是对旧指标的映射。
 
+### 可重复配置与持久化
+
+- `dataset_id` 目前只接受 `default`。服务会校验五个 Parquet 文件，并按固定顺序计算 `dataset.content_fingerprint`；文件内容变化后指纹会变化。
+- `config` 记录本次运行实际使用的数据集版本、模型身份、分块、检索、生成、索引、并发数和应用版本，`config_hash` 是这些有效参数的稳定 SHA-256 摘要。
+- 模型 API Key、App Secret、自定义 Header 和扩展配置不会写入评测快照；Endpoint、Prompt 和 Context 只保存指纹。
+- 兼容字段 `params` 仍保留模型 ID 和数值参数，但 Prompt、Context、Fallback 和 Rewrite 文本在返回及持久化前会置空；运行中的模型调用继续使用原始配置。
+- `chunking.applied=true` 表示评测语料会实际使用知识库的现有分块器。每条带 PID 的数据集 passage 独立分块，不跨 passage 边界，以保持召回结果与标准 PID 的映射。
+- `task`、`config`、`metric` 和 `result` 以快照形式保存，因此源知识库或模型之后被修改、删除时，既有评测结果仍可读取。
+- 主运行更新和对应 Case 结果在同一事务中写入；所有单 Run 查询均受当前 `tenant_id` 限制。
+- 本阶段保存每个已完成 Case 的最新进度，但不做断点续跑。多实例部署无法仅凭 `running` 状态安全判断任务所属进程，因此进程异常退出后的自动终结应在后续引入 Worker 租约或心跳后启用。
+
+`config` 字段结构示例：
+
+```json
+{
+    "schema_version": "evaluation-config/v1",
+    "dataset": {
+        "id": "default",
+        "version": "1",
+        "content_fingerprint": "sha256:<dataset-content-hash>",
+        "query_count": 100,
+        "corpus_count": 1000,
+        "case_count": 100,
+        "ingestion_mode": "passage_chunking"
+    },
+    "source_knowledge_base_id": "kb-00000001",
+    "models": {
+        "embedding": {
+            "id": "embedding-model-id",
+            "name": "embedding-model-name",
+            "type": "Embedding",
+            "parameters_fingerprint": "sha256:<model-parameters-hash>"
+        },
+        "chat": {
+            "id": "chat-model-id",
+            "name": "chat-model-name",
+            "type": "KnowledgeQA",
+            "parameters_fingerprint": "sha256:<model-parameters-hash>"
+        },
+        "rerank": {
+            "id": "rerank-model-id",
+            "name": "rerank-model-name",
+            "type": "Rerank",
+            "parameters_fingerprint": "sha256:<model-parameters-hash>"
+        }
+    },
+    "chunking": {
+        "applied": true,
+        "source_unit": "dataset_passage",
+        "config": {
+            "chunk_size": 512,
+            "chunk_overlap": 80,
+            "separators": ["\n\n", "\n"]
+        }
+    },
+    "retrieval": {
+        "vector_threshold": 0.5,
+        "keyword_threshold": 0.3,
+        "embedding_top_k": 10,
+        "rerank_top_k": 5,
+        "rerank_threshold": 0.7
+    },
+    "generation": {
+        "max_tokens": 0,
+        "max_completion_tokens": 2048,
+        "temperature": 0.3,
+        "top_p": 0,
+        "top_k": 0,
+        "seed": 0,
+		"repeat_penalty": 1,
+		"frequency_penalty": 0,
+		"presence_penalty": 0,
+        "prompt_fingerprint": "sha256:<prompt-hash>",
+		"context_fingerprint": "sha256:<context-hash>",
+		"no_match_prefix_fingerprint": "sha256:<no-match-hash>",
+		"fallback_response_fingerprint": "sha256:<fallback-response-hash>",
+		"fallback_prompt_fingerprint": ""
+    },
+    "indexing": {
+        "vector_enabled": true,
+        "keyword_enabled": true
+    },
+    "runtime": {
+        "case_concurrency": 7,
+        "metric_version": "retrieval-generation/v1",
+        "result_version": "evaluation-run/v1",
+        "application_version": "0.7.2"
+    },
+    "config_hash": "sha256:<effective-config-hash>"
+}
+```
+
 ## POST `/evaluation` - 创建评估任务
 
 **参数说明（请求体）**:
@@ -446,15 +538,15 @@ curl --location 'http://localhost:8080/api/v1/evaluation' \
                 "top_p": 0,
                 "frequency_penalty": 0,
                 "presence_penalty": 0,
-                "prompt": "这是用户和助手之间的对话。",
-                "context_template": "你是一个专业的智能信息检索助手，xxx",
-                "no_match_prefix": "<think>\n</think>\nNO_MATCH",
+				"prompt": "",
+				"context_template": "",
+				"no_match_prefix": "",
                 "temperature": 0.3,
                 "seed": 0,
                 "max_completion_tokens": 2048
             },
             "fallback_strategy": "",
-            "fallback_response": "抱歉，我无法回答这个问题。"
+			"fallback_response": ""
         },
         "result": {
             "schema_version": "evaluation-run/v1",

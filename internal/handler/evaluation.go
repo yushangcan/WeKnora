@@ -30,7 +30,7 @@ type EvaluationRequest struct {
 }
 
 // EvaluationResponse is the common response envelope for creating and reading
-// an in-memory evaluation run.
+// a persisted evaluation run.
 type EvaluationResponse struct {
 	Success bool                    `json:"success"`
 	Data    *types.EvaluationDetail `json:"data"`

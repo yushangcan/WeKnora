@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	evaluationobs "github.com/Tencent/WeKnora/internal/evaluation"
 	"github.com/Tencent/WeKnora/internal/types"
 	"github.com/Tencent/WeKnora/internal/types/interfaces"
 	"gorm.io/gorm"
@@ -110,6 +111,7 @@ func (r *evaluationRepository) MarkInterruptedRunsFailed(
 	if errorMessage == "" {
 		errorMessage = "evaluation process interrupted before completion"
 	}
+	errorMessage = evaluationobs.SafeErrorText(errorMessage)
 	result := r.db.WithContext(ctx).
 		Model(&types.EvaluationRunRecord{}).
 		Where("status IN ?", []types.EvaluationRunStatus{
@@ -137,7 +139,7 @@ func newEvaluationRunRecord(
 	if err != nil {
 		return nil, fmt.Errorf("marshal evaluation config: %w", err)
 	}
-	paramsSnapshot, err := marshalEvaluationSnapshot(detail.Params)
+	paramsSnapshot, err := marshalEvaluationSnapshot(evaluationobs.SafeParamsSnapshot(detail.Params))
 	if err != nil {
 		return nil, fmt.Errorf("marshal evaluation params: %w", err)
 	}
@@ -170,7 +172,7 @@ func newEvaluationRunRecord(
 		Status:                   persistentEvaluationStatus(detail.Task.Status),
 		Total:                    detail.Task.Total,
 		Finished:                 detail.Task.Finished,
-		ErrorMessage:             detail.Task.ErrMsg,
+		ErrorMessage:             evaluationobs.SafeErrorText(detail.Task.ErrMsg),
 		ConfigSnapshot:           configSnapshot,
 		ParamsSnapshot:           paramsSnapshot,
 		MetricSnapshot:           metricSnapshot,
@@ -202,7 +204,7 @@ func updateEvaluationRun(tx *gorm.DB, detail *types.EvaluationDetail) error {
 			"status":          persistentEvaluationStatus(detail.Task.Status),
 			"total":           detail.Task.Total,
 			"finished":        detail.Task.Finished,
-			"error_message":   detail.Task.ErrMsg,
+			"error_message":   evaluationobs.SafeErrorText(detail.Task.ErrMsg),
 			"metric_snapshot": metricSnapshot,
 			"result_snapshot": resultSnapshot,
 			"completed_at":    evaluationCompletedAt(detail),

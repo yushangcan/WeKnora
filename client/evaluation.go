@@ -186,14 +186,21 @@ type EvaluationRetrievalConfig struct {
 }
 
 type EvaluationGenerationConfig struct {
-	MaxTokens           int     `json:"max_tokens"`
-	MaxCompletionTokens int     `json:"max_completion_tokens"`
-	Temperature         float64 `json:"temperature"`
-	TopP                float64 `json:"top_p"`
-	TopK                int     `json:"top_k"`
-	Seed                int     `json:"seed"`
-	PromptFingerprint   string  `json:"prompt_fingerprint"`
-	ContextFingerprint  string  `json:"context_fingerprint"`
+	MaxTokens                   int     `json:"max_tokens"`
+	MaxCompletionTokens         int     `json:"max_completion_tokens"`
+	Temperature                 float64 `json:"temperature"`
+	TopP                        float64 `json:"top_p"`
+	TopK                        int     `json:"top_k"`
+	Seed                        int     `json:"seed"`
+	RepeatPenalty               float64 `json:"repeat_penalty"`
+	FrequencyPenalty            float64 `json:"frequency_penalty"`
+	PresencePenalty             float64 `json:"presence_penalty"`
+	Thinking                    *bool   `json:"thinking,omitempty"`
+	PromptFingerprint           string  `json:"prompt_fingerprint"`
+	ContextFingerprint          string  `json:"context_fingerprint"`
+	NoMatchPrefixFingerprint    string  `json:"no_match_prefix_fingerprint"`
+	FallbackResponseFingerprint string  `json:"fallback_response_fingerprint"`
+	FallbackPromptFingerprint   string  `json:"fallback_prompt_fingerprint"`
 }
 
 type EvaluationIndexingConfig struct {

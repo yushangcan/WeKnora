@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -13,8 +14,7 @@ import (
 	"github.com/Tencent/WeKnora/internal/types/interfaces"
 )
 
-func TestEvaluationMemoryStorageReturnsDetachedSnapshot(t *testing.T) {
-	storage := newEvaluationMemoryStorage()
+func TestCloneEvaluationDetailReturnsDetachedSnapshot(t *testing.T) {
 	detail := &types.EvaluationDetail{
 		Task: &types.EvaluationTask{
 			ID:        "evaluation-1",
@@ -34,29 +34,109 @@ func TestEvaluationMemoryStorageReturnsDetachedSnapshot(t *testing.T) {
 			Cases: []types.EvaluationCaseResult{{CaseID: "case-1"}},
 		},
 	}
-	storage.register(detail)
 
-	first, err := storage.get(detail.Task.ID)
-	if err != nil {
-		t.Fatalf("get first snapshot: %v", err)
-	}
+	first := cloneEvaluationDetail(detail)
 	first.Task.Status = types.EvaluationStatueFailed
 	first.Metric.RetrievalMetrics.Precision = -1
 	first.Result.Cases[0].CaseID = "mutated"
 
-	second, err := storage.get(detail.Task.ID)
-	if err != nil {
-		t.Fatalf("get second snapshot: %v", err)
-	}
+	second := cloneEvaluationDetail(detail)
 	if second.Task.Status == types.EvaluationStatueFailed {
-		t.Fatal("task pointer leaked from in-memory storage")
+		t.Fatal("task pointer leaked from cloned detail")
 	}
 	if second.Metric.RetrievalMetrics.Precision != 0.5 {
-		t.Fatal("metric pointer leaked from in-memory storage")
+		t.Fatal("metric pointer leaked from cloned detail")
 	}
 	if second.Result.Cases[0].CaseID != "case-1" {
-		t.Fatal("nested result slice leaked from in-memory storage")
+		t.Fatal("nested result slice leaked from cloned detail")
 	}
+}
+
+type observedEvaluationRepository struct {
+	interfaces.EvaluationRepository
+	mu   sync.RWMutex
+	runs map[string]*types.EvaluationDetail
+}
+
+func newObservedEvaluationRepository() *observedEvaluationRepository {
+	return &observedEvaluationRepository{runs: make(map[string]*types.EvaluationDetail)}
+}
+
+func (r *observedEvaluationRepository) CreateRun(
+	_ context.Context,
+	detail *types.EvaluationDetail,
+	_ string,
+) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.runs[detail.Task.ID] = cloneEvaluationDetail(detail)
+	return nil
+}
+
+func (r *observedEvaluationRepository) GetRun(
+	_ context.Context,
+	tenantID uint64,
+	runID string,
+) (*types.EvaluationDetail, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	detail, ok := r.runs[runID]
+	if !ok || detail.Task.TenantID != tenantID {
+		return nil, errors.New("evaluation run not found")
+	}
+	return cloneEvaluationDetail(detail), nil
+}
+
+func (r *observedEvaluationRepository) UpdateRun(
+	_ context.Context,
+	detail *types.EvaluationDetail,
+) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, ok := r.runs[detail.Task.ID]; !ok {
+		return errors.New("evaluation run not found")
+	}
+	r.runs[detail.Task.ID] = cloneEvaluationDetail(detail)
+	return nil
+}
+
+func (r *observedEvaluationRepository) SaveCaseProgress(
+	ctx context.Context,
+	detail *types.EvaluationDetail,
+	_ *types.EvaluationCaseResult,
+) error {
+	return r.UpdateRun(ctx, detail)
+}
+
+func (r *observedEvaluationRepository) SaveTerminalRun(
+	ctx context.Context,
+	detail *types.EvaluationDetail,
+) error {
+	return r.UpdateRun(ctx, detail)
+}
+
+func (r *observedEvaluationRepository) MarkInterruptedRunsFailed(
+	_ context.Context,
+	completedAt time.Time,
+	errorMessage string,
+) (int64, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	var count int64
+	for id, detail := range r.runs {
+		if detail.Task.Status != types.EvaluationStatuePending &&
+			detail.Task.Status != types.EvaluationStatueRunning {
+			continue
+		}
+		copy := cloneEvaluationDetail(detail)
+		copy.Task.Status = types.EvaluationStatueFailed
+		copy.Task.ErrMsg = errorMessage
+		copy.Result.Run.Status = types.EvaluationRunStatusFailed
+		copy.Result.Run.CompletedAt = &completedAt
+		r.runs[id] = copy
+		count++
+	}
+	return count, nil
 }
 
 type observedDatasetStub struct {
@@ -309,8 +389,11 @@ func waitForEvaluationTerminal(
 func TestEvaluationServiceExposesFourDimensionLifecycleResult(t *testing.T) {
 	kbService := &observedKnowledgeBaseStub{}
 	knowledgeService := &observedKnowledgeStub{}
+	evaluationRepository := newObservedEvaluationRepository()
 	cfg := &config.Config{
-		Conversation: &config.ConversationConfig{Summary: &config.SummaryConfig{}},
+		Conversation: &config.ConversationConfig{
+			Summary: &config.SummaryConfig{Prompt: "private evaluation prompt"},
+		},
 	}
 	service := NewEvaluationService(
 		cfg,
@@ -319,6 +402,7 @@ func TestEvaluationServiceExposesFourDimensionLifecycleResult(t *testing.T) {
 		knowledgeService,
 		observedSessionStub{},
 		observedModelStub{},
+		evaluationRepository,
 	)
 	ctx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(7))
 
@@ -328,6 +412,9 @@ func TestEvaluationServiceExposesFourDimensionLifecycleResult(t *testing.T) {
 	}
 	if created.Result == nil || created.Result.Run.Status != types.EvaluationRunStatusPending {
 		t.Fatalf("created result does not contain pending observation: %#v", created.Result)
+	}
+	if created.Params.SummaryConfig.Prompt != "" {
+		t.Fatalf("creation response contains prompt text: %#v", created.Params.SummaryConfig)
 	}
 
 	deadline := time.Now().Add(5 * time.Second)
@@ -367,6 +454,27 @@ func TestEvaluationServiceExposesFourDimensionLifecycleResult(t *testing.T) {
 	if !knowledgeService.deleted.Load() || !kbService.deleted.Load() {
 		t.Fatal("existing cleanup lifecycle did not run")
 	}
+
+	recreatedService := NewEvaluationService(
+		cfg,
+		observedDatasetStub{},
+		&observedKnowledgeBaseStub{},
+		&observedKnowledgeStub{},
+		observedSessionStub{},
+		observedModelStub{},
+		evaluationRepository,
+	)
+	persisted, err := recreatedService.EvaluationResult(ctx, created.Task.ID)
+	if err != nil {
+		t.Fatalf("load evaluation after service recreation: %v", err)
+	}
+	if persisted.Task.Status != types.EvaluationStatueSuccess || persisted.Result == nil {
+		t.Fatalf("service recreation lost terminal result: %#v", persisted)
+	}
+	otherTenantCtx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(8))
+	if _, err := recreatedService.EvaluationResult(otherTenantCtx, created.Task.ID); err == nil {
+		t.Fatal("cross-tenant evaluation lookup unexpectedly succeeded")
+	}
 }
 
 func TestEvaluationServiceKeepsConcurrentRunsAndCasesIsolated(t *testing.T) {
@@ -380,6 +488,7 @@ func TestEvaluationServiceKeepsConcurrentRunsAndCasesIsolated(t *testing.T) {
 		&observedKnowledgeStub{},
 		observedSessionStub{},
 		observedModelStub{},
+		newObservedEvaluationRepository(),
 	)
 	ctx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(7))
 
@@ -434,6 +543,7 @@ func TestEvaluationServiceRetainsPartialResultAfterCaseFailure(t *testing.T) {
 		&observedKnowledgeStub{},
 		partiallyFailingObservedSessionStub{},
 		observedModelStub{},
+		newObservedEvaluationRepository(),
 	)
 	ctx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(7))
 

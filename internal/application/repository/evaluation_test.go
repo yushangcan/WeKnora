@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,6 +35,7 @@ func newEvaluationRepositoryTestDetail(runID string, tenantID uint64) *types.Eva
 		},
 		Params: &types.ChatManage{PipelineRequest: types.PipelineRequest{
 			EmbeddingTopK: 10, ChatModelID: "chat-1",
+			SummaryConfig: types.SummaryConfig{Prompt: "private evaluation prompt"},
 		}},
 		Config: &types.EvaluationRunConfig{
 			SchemaVersion: types.EvaluationConfigSchemaVersion,
@@ -93,6 +95,37 @@ func TestEvaluationRepositoryPersistsTenantScopedRun(t *testing.T) {
 	if record.TemporaryKnowledgeBaseID != "temporary-kb" || record.Revision != 1 {
 		t.Fatalf("run metadata was not persisted: %#v", record)
 	}
+	if string(record.ParamsSnapshot) == "" ||
+		containsEvaluationSnapshotText(record.ParamsSnapshot, "private evaluation prompt") {
+		t.Fatalf("params snapshot contains prompt text: %s", record.ParamsSnapshot)
+	}
+}
+
+func containsEvaluationSnapshotText(snapshot types.JSON, value string) bool {
+	return len(value) > 0 && strings.Contains(string(snapshot), value)
+}
+
+func TestEvaluationRunRecordRoundTripUsesOnlySnapshots(t *testing.T) {
+	detail := newEvaluationRepositoryTestDetail("evaluation-snapshot", 7)
+	record, err := newEvaluationRunRecord(detail, "temporary-kb")
+	if err != nil {
+		t.Fatalf("build run record: %v", err)
+	}
+	loaded, err := evaluationDetailFromRecord(record)
+	if err != nil {
+		t.Fatalf("decode run record: %v", err)
+	}
+	if loaded.Config.ConfigHash != detail.Config.ConfigHash ||
+		loaded.Config.Models.Chat.ID != detail.Config.Models.Chat.ID ||
+		loaded.Task.ID != detail.Task.ID {
+		t.Fatalf("snapshot round trip changed run identity: %#v", loaded)
+	}
+	if loaded.Params.EmbeddingTopK != detail.Params.EmbeddingTopK {
+		t.Fatalf("snapshot round trip changed numeric params: %#v", loaded.Params)
+	}
+	if loaded.Params.SummaryConfig.Prompt != "" {
+		t.Fatalf("snapshot round trip retained prompt text: %#v", loaded.Params.SummaryConfig)
+	}
 }
 
 func TestEvaluationRepositorySavesCaseAndRunAtomically(t *testing.T) {
@@ -122,7 +155,8 @@ func TestEvaluationRepositorySavesCaseAndRunAtomically(t *testing.T) {
 	if err != nil {
 		t.Fatalf("get progress: %v", err)
 	}
-	if loaded.Task.Finished != 1 || loaded.Metric == nil || loaded.Metric.RetrievalMetrics.Precision != 0.5 {
+	if loaded.Task.Status != types.EvaluationStatueRunning || loaded.Task.Finished != 1 ||
+		loaded.Metric == nil || loaded.Metric.RetrievalMetrics.Precision != 0.5 {
 		t.Fatalf("progress snapshot changed: %#v", loaded)
 	}
 	var caseCount int64

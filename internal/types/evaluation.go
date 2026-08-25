@@ -128,8 +128,8 @@ const (
 )
 
 // EvaluationRunResult combines the existing quality metrics with application-
-// side model usage and timing observations. It is intentionally kept in memory
-// in stage one and is not a persistence entity.
+// side model usage and timing observations. Persistence stores this response
+// contract as a versioned snapshot rather than recalculating historical runs.
 type EvaluationRunResult struct {
 	SchemaVersion string                     `json:"schema_version"`
 	Run           EvaluationRunMetadata      `json:"run"`

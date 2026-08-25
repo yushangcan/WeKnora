@@ -1,6 +1,7 @@
 package evaluation
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -22,12 +23,19 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 	}
 	chatModel := &types.Model{ID: "chat-1", Name: "chat", Type: types.ModelTypeKnowledgeQA, UpdatedAt: now}
 	kb := &types.KnowledgeBase{
-		ChunkingConfig:   types.ChunkingConfig{ChunkSize: 512, ChunkOverlap: 80},
+		ChunkingConfig: types.ChunkingConfig{
+			ChunkSize: 512, ChunkOverlap: 80, TableMetadataInstructions: "private chunk instruction",
+		},
 		IndexingStrategy: types.IndexingStrategy{VectorEnabled: true, KeywordEnabled: true},
 	}
 	params := &types.ChatManage{PipelineRequest: types.PipelineRequest{
 		VectorThreshold: 0.5, EmbeddingTopK: 10, ChatModelID: chatModel.ID,
-		SummaryConfig: types.SummaryConfig{Prompt: "private prompt", ContextTemplate: "private context", Seed: 7},
+		SummaryConfig: types.SummaryConfig{
+			Prompt: "private prompt", ContextTemplate: "private context",
+			NoMatchPrefix: "private no-match", Seed: 7,
+		},
+		FallbackResponse: "private fallback response",
+		FallbackPrompt:   "private fallback prompt",
 	}}
 	dataset := types.EvaluationDatasetDescriptor{ID: "default", Version: "1", ContentFingerprint: "sha256:data"}
 
@@ -44,7 +52,11 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 	}
 
 	encoded := first.String()
-	for _, secret := range []string{"secret-api-key", "secret-app", "secret-header", "secret-extra", "private prompt", "private context", "private.example"} {
+	for _, secret := range []string{
+		"secret-api-key", "secret-app", "secret-header", "secret-extra", "private.example",
+		"private prompt", "private context", "private no-match", "private fallback response",
+		"private fallback prompt", "private chunk instruction",
+	} {
 		if strings.Contains(encoded, secret) {
 			t.Fatalf("configuration contains secret value %q", secret)
 		}
@@ -58,5 +70,39 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 	}
 	if changedHash == first.ConfigHash {
 		t.Fatal("configuration hash did not change after an effective parameter changed")
+	}
+}
+
+func TestSafeParamsSnapshotRemovesPromptText(t *testing.T) {
+	params := &types.ChatManage{PipelineRequest: types.PipelineRequest{
+		EmbeddingTopK:       10,
+		FallbackResponse:    "private fallback",
+		FallbackPrompt:      "private fallback prompt",
+		RewritePromptSystem: "private rewrite system",
+		RewritePromptUser:   "private rewrite user",
+		SummaryConfig: types.SummaryConfig{
+			Prompt: "private prompt", ContextTemplate: "private context", NoMatchPrefix: "private prefix",
+		},
+	}}
+
+	snapshot := SafeParamsSnapshot(params)
+	data, err := json.Marshal(snapshot)
+	if err != nil {
+		t.Fatalf("marshal safe params: %v", err)
+	}
+	encoded := string(data)
+	for _, text := range []string{
+		"private fallback", "private fallback prompt", "private rewrite system",
+		"private rewrite user", "private prompt", "private context", "private prefix",
+	} {
+		if strings.Contains(encoded, text) {
+			t.Fatalf("safe params contains prompt text %q", text)
+		}
+	}
+	if snapshot.EmbeddingTopK != 10 {
+		t.Fatalf("safe params lost numeric configuration: %#v", snapshot)
+	}
+	if params.SummaryConfig.Prompt != "private prompt" {
+		t.Fatal("safe params mutated the runtime configuration")
 	}
 }

@@ -35,7 +35,17 @@ func NewRunConfig(
 		Chunking: types.EvaluationChunkingConfig{
 			Applied:    true,
 			SourceUnit: "dataset_passage",
-			Config:     kb.ChunkingConfig,
+			Config: types.EvaluationChunkingParameters{
+				ChunkSize:         kb.ChunkingConfig.ChunkSize,
+				ChunkOverlap:      kb.ChunkingConfig.ChunkOverlap,
+				Separators:        append([]string(nil), kb.ChunkingConfig.Separators...),
+				EnableParentChild: kb.ChunkingConfig.EnableParentChild,
+				ParentChunkSize:   kb.ChunkingConfig.ParentChunkSize,
+				ChildChunkSize:    kb.ChunkingConfig.ChildChunkSize,
+				Strategy:          kb.ChunkingConfig.Strategy,
+				TokenLimit:        kb.ChunkingConfig.TokenLimit,
+				Languages:         append([]string(nil), kb.ChunkingConfig.Languages...),
+			},
 		},
 		Retrieval: types.EvaluationRetrievalConfig{
 			VectorThreshold:  params.VectorThreshold,
@@ -45,14 +55,21 @@ func NewRunConfig(
 			RerankThreshold:  params.RerankThreshold,
 		},
 		Generation: types.EvaluationGenerationConfig{
-			MaxTokens:           params.SummaryConfig.MaxTokens,
-			MaxCompletionTokens: params.SummaryConfig.MaxCompletionTokens,
-			Temperature:         params.SummaryConfig.Temperature,
-			TopP:                params.SummaryConfig.TopP,
-			TopK:                params.SummaryConfig.TopK,
-			Seed:                params.SummaryConfig.Seed,
-			PromptFingerprint:   fingerprintText(params.SummaryConfig.Prompt),
-			ContextFingerprint:  fingerprintText(params.SummaryConfig.ContextTemplate),
+			MaxTokens:                   params.SummaryConfig.MaxTokens,
+			MaxCompletionTokens:         params.SummaryConfig.MaxCompletionTokens,
+			Temperature:                 params.SummaryConfig.Temperature,
+			TopP:                        params.SummaryConfig.TopP,
+			TopK:                        params.SummaryConfig.TopK,
+			Seed:                        params.SummaryConfig.Seed,
+			RepeatPenalty:               params.SummaryConfig.RepeatPenalty,
+			FrequencyPenalty:            params.SummaryConfig.FrequencyPenalty,
+			PresencePenalty:             params.SummaryConfig.PresencePenalty,
+			Thinking:                    params.SummaryConfig.Thinking,
+			PromptFingerprint:           fingerprintText(params.SummaryConfig.Prompt),
+			ContextFingerprint:          fingerprintText(params.SummaryConfig.ContextTemplate),
+			NoMatchPrefixFingerprint:    fingerprintText(params.SummaryConfig.NoMatchPrefix),
+			FallbackResponseFingerprint: fingerprintText(params.FallbackResponse),
+			FallbackPromptFingerprint:   fingerprintText(params.FallbackPrompt),
 		},
 		Indexing: types.EvaluationIndexingConfig{
 			VectorEnabled:  kb.IndexingStrategy.VectorEnabled,
@@ -93,6 +110,22 @@ func ConfigHash(config *types.EvaluationRunConfig) (string, error) {
 		return "", fmt.Errorf("marshal evaluation run configuration: %w", err)
 	}
 	return fmt.Sprintf("sha256:%x", sha256.Sum256(data)), nil
+}
+
+// SafeParamsSnapshot keeps legacy numeric and model fields without prompt text.
+func SafeParamsSnapshot(params *types.ChatManage) *types.ChatManage {
+	if params == nil {
+		return nil
+	}
+	snapshot := params.Clone()
+	snapshot.SummaryConfig.Prompt = ""
+	snapshot.SummaryConfig.ContextTemplate = ""
+	snapshot.SummaryConfig.NoMatchPrefix = ""
+	snapshot.FallbackResponse = ""
+	snapshot.FallbackPrompt = ""
+	snapshot.RewritePromptSystem = ""
+	snapshot.RewritePromptUser = ""
+	return snapshot
 }
 
 func snapshotModel(model *types.Model) types.EvaluationModelConfig {

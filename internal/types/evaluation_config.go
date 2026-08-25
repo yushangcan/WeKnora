@@ -72,9 +72,22 @@ type EvaluationModelConfig struct {
 }
 
 type EvaluationChunkingConfig struct {
-	Applied    bool           `json:"applied"`
-	SourceUnit string         `json:"source_unit"`
-	Config     ChunkingConfig `json:"config"`
+	Applied    bool                         `json:"applied"`
+	SourceUnit string                       `json:"source_unit"`
+	Config     EvaluationChunkingParameters `json:"config"`
+}
+
+// EvaluationChunkingParameters contains only settings used by passage chunking.
+type EvaluationChunkingParameters struct {
+	ChunkSize         int      `json:"chunk_size"`
+	ChunkOverlap      int      `json:"chunk_overlap"`
+	Separators        []string `json:"separators"`
+	EnableParentChild bool     `json:"enable_parent_child,omitempty"`
+	ParentChunkSize   int      `json:"parent_chunk_size,omitempty"`
+	ChildChunkSize    int      `json:"child_chunk_size,omitempty"`
+	Strategy          string   `json:"strategy,omitempty"`
+	TokenLimit        int      `json:"token_limit,omitempty"`
+	Languages         []string `json:"languages,omitempty"`
 }
 
 type EvaluationRetrievalConfig struct {
@@ -86,14 +99,21 @@ type EvaluationRetrievalConfig struct {
 }
 
 type EvaluationGenerationConfig struct {
-	MaxTokens           int     `json:"max_tokens"`
-	MaxCompletionTokens int     `json:"max_completion_tokens"`
-	Temperature         float64 `json:"temperature"`
-	TopP                float64 `json:"top_p"`
-	TopK                int     `json:"top_k"`
-	Seed                int     `json:"seed"`
-	PromptFingerprint   string  `json:"prompt_fingerprint"`
-	ContextFingerprint  string  `json:"context_fingerprint"`
+	MaxTokens                   int     `json:"max_tokens"`
+	MaxCompletionTokens         int     `json:"max_completion_tokens"`
+	Temperature                 float64 `json:"temperature"`
+	TopP                        float64 `json:"top_p"`
+	TopK                        int     `json:"top_k"`
+	Seed                        int     `json:"seed"`
+	RepeatPenalty               float64 `json:"repeat_penalty"`
+	FrequencyPenalty            float64 `json:"frequency_penalty"`
+	PresencePenalty             float64 `json:"presence_penalty"`
+	Thinking                    *bool   `json:"thinking,omitempty"`
+	PromptFingerprint           string  `json:"prompt_fingerprint"`
+	ContextFingerprint          string  `json:"context_fingerprint"`
+	NoMatchPrefixFingerprint    string  `json:"no_match_prefix_fingerprint"`
+	FallbackResponseFingerprint string  `json:"fallback_response_fingerprint"`
+	FallbackPromptFingerprint   string  `json:"fallback_prompt_fingerprint"`
 }
 
 type EvaluationIndexingConfig struct {

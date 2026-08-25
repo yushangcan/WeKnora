@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"runtime"
+	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -106,6 +109,14 @@ func cloneEvaluationDetail(source *types.EvaluationDetail) *types.EvaluationDeta
 	if source.Params != nil {
 		result.Params = source.Params.Clone()
 	}
+	if source.Config != nil {
+		if data, err := json.Marshal(source.Config); err == nil {
+			var runConfig types.EvaluationRunConfig
+			if err := json.Unmarshal(data, &runConfig); err == nil {
+				result.Config = &runConfig
+			}
+		}
+	}
 	if source.Metric != nil {
 		metric := *source.Metric
 		result.Metric = &metric
@@ -173,93 +184,30 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 	logger.Infof(ctx, "Dataset ID: %s, Knowledge Base ID: %s, Chat Model ID: %s, Rerank Model ID: %s",
 		datasetID, knowledgeBaseID, chatModelID, rerankModelID)
 
-	// Get tenant ID from context for multi-tenancy support
 	tenantID := types.MustTenantIDFromContext(ctx)
 	logger.Infof(ctx, "Tenant ID: %d", tenantID)
 
-	// Handle knowledge base creation if not provided
-	if knowledgeBaseID == "" {
-		logger.Info(ctx, "No knowledge base ID provided, creating new knowledge base")
-		// Create new knowledge base with default evaluation settings
-		// 获取默认的嵌入模型和LLM模型
-		models, err := e.modelService.ListModels(ctx)
-		if err != nil {
-			logger.Errorf(ctx, "Failed to list models: %v", err)
-			return nil, err
-		}
-
-		var embeddingModelID, llmModelID string
-		for _, model := range models {
-			if model == nil {
-				continue
-			}
-			if model.Type == types.ModelTypeEmbedding {
-				embeddingModelID = model.ID
-			}
-			if model.Type == types.ModelTypeKnowledgeQA {
-				llmModelID = model.ID
-			}
-		}
-
-		if embeddingModelID == "" || llmModelID == "" {
-			return nil, fmt.Errorf("no default models found for evaluation")
-		}
-
-		kb, err := e.knowledgeBaseService.CreateKnowledgeBase(ctx, &types.KnowledgeBase{
-			Name:             "evaluation",
-			Description:      "evaluation",
-			EmbeddingModelID: embeddingModelID,
-			SummaryModelID:   llmModelID,
-		})
-		if err != nil {
-			logger.Errorf(ctx, "Failed to create knowledge base: %v", err)
-			return nil, err
-		}
-		knowledgeBaseID = kb.ID
-		logger.Infof(ctx, "Created new knowledge base with ID: %s", knowledgeBaseID)
-	} else {
-		logger.Infof(ctx, "Using existing knowledge base ID: %s", knowledgeBaseID)
-		// Create evaluation-specific knowledge base based on existing one
-		kb, err := e.knowledgeBaseService.GetKnowledgeBaseByID(ctx, knowledgeBaseID)
-		if err != nil {
-			logger.Errorf(ctx, "Failed to get knowledge base: %v", err)
-			return nil, err
-		}
-
-		kb, err = e.knowledgeBaseService.CreateKnowledgeBase(ctx, &types.KnowledgeBase{
-			Name:             "evaluation",
-			Description:      "evaluation",
-			EmbeddingModelID: kb.EmbeddingModelID,
-			SummaryModelID:   kb.SummaryModelID,
-		})
-		if err != nil {
-			logger.Errorf(ctx, "Failed to create knowledge base: %v", err)
-			return nil, err
-		}
-		knowledgeBaseID = kb.ID
-		logger.Infof(ctx, "Created new knowledge base with ID: %s based on existing one", knowledgeBaseID)
+	if datasetID == "" {
+		datasetID = defaultDatasetID
+		logger.Info(ctx, "Using default dataset")
+	}
+	dataset, err := e.dataset.LoadDataset(ctx, datasetID)
+	if err != nil {
+		return nil, err
 	}
 
-	// Set default values for optional parameters
-	if datasetID == "" {
-		datasetID = "default"
-		logger.Info(ctx, "Using default dataset")
+	models, err := e.modelService.ListModels(ctx)
+	if err != nil {
+		return nil, err
+	}
+	sourceKnowledgeBaseID := knowledgeBaseID
+	sourceKB, err := e.resolveEvaluationSourceKnowledgeBase(ctx, knowledgeBaseID, models)
+	if err != nil {
+		return nil, err
 	}
 
 	if rerankModelID == "" {
-		// 获取默认的重排模型
-		models, err := e.modelService.ListModels(ctx)
-		if err == nil {
-			for _, model := range models {
-				if model == nil {
-					continue
-				}
-				if model.Type == types.ModelTypeRerank {
-					rerankModelID = model.ID
-					break
-				}
-			}
-		}
+		rerankModelID = selectEvaluationModelID(models, types.ModelTypeRerank)
 		if rerankModelID == "" {
 			logger.Warnf(ctx, "No rerank model found, skipping rerank")
 		} else {
@@ -268,23 +216,36 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 	}
 
 	if chatModelID == "" {
-		// 获取默认的LLM模型
-		models, err := e.modelService.ListModels(ctx)
-		if err == nil {
-			for _, model := range models {
-				if model == nil {
-					continue
-				}
-				if model.Type == types.ModelTypeKnowledgeQA {
-					chatModelID = model.ID
-					break
-				}
-			}
-		}
+		chatModelID = selectEvaluationModelID(models, types.ModelTypeKnowledgeQA)
 		if chatModelID == "" {
 			return nil, fmt.Errorf("no default chat model found")
 		}
 		logger.Infof(ctx, "Using default chat model: %s", chatModelID)
+	}
+
+	temporaryKB, err := e.createEvaluationKnowledgeBase(ctx, sourceKB, chatModelID)
+	if err != nil {
+		return nil, err
+	}
+	knowledgeBaseID = temporaryKB.ID
+
+	embeddingModel, err := e.modelService.GetModelByID(ctx, temporaryKB.EmbeddingModelID)
+	if err != nil {
+		_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+		return nil, err
+	}
+	chatModel, err := e.modelService.GetModelByID(ctx, chatModelID)
+	if err != nil {
+		_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+		return nil, err
+	}
+	var rerankModel *types.Model
+	if rerankModelID != "" {
+		rerankModel, err = e.modelService.GetModelByID(ctx, rerankModelID)
+		if err != nil {
+			_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+			return nil, err
+		}
 	}
 
 	// Create evaluation task with unique ID
@@ -292,7 +253,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 	taskID := utils.GenerateTaskID("evaluation", tenantID, datasetID)
 	logger.Infof(ctx, "Generated task ID: %s", taskID)
 
-	// Prepare evaluation detail with all parameters
+	caseConcurrency := max(runtime.GOMAXPROCS(0)-1, 1)
 	detail := &types.EvaluationDetail{
 		Task: &types.EvaluationTask{
 			ID:        taskID,
@@ -331,6 +292,22 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 			},
 		},
 	}
+	detail.Task.Total = len(dataset.Cases)
+	detail.Config, err = evaluationobs.NewRunConfig(
+		dataset.Descriptor,
+		sourceKnowledgeBaseID,
+		temporaryKB,
+		embeddingModel,
+		chatModel,
+		rerankModel,
+		detail.Params,
+		caseConcurrency,
+		evaluationApplicationVersion(),
+	)
+	if err != nil {
+		_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+		return nil, err
+	}
 	observer := evaluationobs.NewObserver(taskID, tenantID, datasetID, detail.Task.StartTime)
 	detail.Result = observer.Snapshot(types.EvaluationStatuePending, nil)
 
@@ -353,7 +330,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 		logger.Info(newCtx, "Evaluation task status set to running")
 
 		// Execute actual evaluation
-		if err := e.EvalDataset(newCtx, detail, knowledgeBaseID); err != nil {
+		if err := e.EvalDataset(newCtx, detail, knowledgeBaseID, dataset); err != nil {
 			observer.AddWarning(
 				"evaluation_failed",
 				"The evaluation stopped early; completed observations are retained.",
@@ -381,9 +358,99 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 	return detail, nil
 }
 
+func (e *EvaluationService) resolveEvaluationSourceKnowledgeBase(
+	ctx context.Context,
+	knowledgeBaseID string,
+	models []*types.Model,
+) (*types.KnowledgeBase, error) {
+	if knowledgeBaseID != "" {
+		return e.knowledgeBaseService.GetKnowledgeBaseByID(ctx, knowledgeBaseID)
+	}
+	embeddingModelID := selectEvaluationModelID(models, types.ModelTypeEmbedding)
+	chatModelID := selectEvaluationModelID(models, types.ModelTypeKnowledgeQA)
+	if embeddingModelID == "" || chatModelID == "" {
+		return nil, fmt.Errorf("no default models found for evaluation")
+	}
+	return &types.KnowledgeBase{
+		Type:             types.KnowledgeBaseTypeDocument,
+		EmbeddingModelID: embeddingModelID,
+		SummaryModelID:   chatModelID,
+		IndexingStrategy: types.DefaultIndexingStrategy(),
+	}, nil
+}
+
+func (e *EvaluationService) createEvaluationKnowledgeBase(
+	ctx context.Context,
+	source *types.KnowledgeBase,
+	chatModelID string,
+) (*types.KnowledgeBase, error) {
+	if source == nil {
+		return nil, fmt.Errorf("evaluation source knowledge base is nil")
+	}
+	indexing := types.IndexingStrategy{
+		VectorEnabled:  source.IndexingStrategy.VectorEnabled,
+		KeywordEnabled: source.IndexingStrategy.KeywordEnabled,
+	}
+	if indexing.IsZero() {
+		indexing = types.DefaultIndexingStrategy()
+	}
+	summaryModelID := source.SummaryModelID
+	if summaryModelID == "" {
+		summaryModelID = chatModelID
+	}
+	var vectorStoreID *string
+	if source.VectorStoreID != nil {
+		value := *source.VectorStoreID
+		vectorStoreID = &value
+	}
+	return e.knowledgeBaseService.CreateKnowledgeBase(ctx, &types.KnowledgeBase{
+		Name:             "evaluation",
+		Description:      "evaluation",
+		Type:             types.KnowledgeBaseTypeDocument,
+		IsTemporary:      true,
+		ChunkingConfig:   source.ChunkingConfig,
+		EmbeddingModelID: source.EmbeddingModelID,
+		SummaryModelID:   summaryModelID,
+		VectorStoreID:    vectorStoreID,
+		IndexingStrategy: indexing,
+	})
+}
+
+func selectEvaluationModelID(models []*types.Model, modelType types.ModelType) string {
+	candidates := make([]*types.Model, 0)
+	for _, model := range models {
+		if model != nil && model.Type == modelType && model.Status == types.ModelStatusActive {
+			candidates = append(candidates, model)
+		}
+	}
+	sort.Slice(candidates, func(i, j int) bool {
+		if candidates[i].IsDefault != candidates[j].IsDefault {
+			return candidates[i].IsDefault
+		}
+		return candidates[i].ID < candidates[j].ID
+	})
+	if len(candidates) == 0 {
+		return ""
+	}
+	return candidates[0].ID
+}
+
+func evaluationApplicationVersion() string {
+	data, err := os.ReadFile("VERSION")
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
+}
+
 // EvalDataset performs the actual evaluation of a dataset
 // Processes each QA pair in parallel and records metrics
-func (e *EvaluationService) EvalDataset(ctx context.Context, detail *types.EvaluationDetail, knowledgeBaseID string) error {
+func (e *EvaluationService) EvalDataset(
+	ctx context.Context,
+	detail *types.EvaluationDetail,
+	knowledgeBaseID string,
+	dataset *types.EvaluationDataset,
+) error {
 	logger.Info(ctx, "Start evaluating dataset")
 	logger.Infof(ctx, "Task ID: %s, Dataset ID: %s", detail.Task.ID, detail.Task.DatasetID)
 	observer := evaluationobs.ObserverFromContext(ctx)
@@ -393,27 +460,25 @@ func (e *EvaluationService) EvalDataset(ctx context.Context, detail *types.Evalu
 		preparationCtx, finishPreparation = observer.StartPhase(ctx, types.EvaluationPhasePreparation)
 	}
 
-	// Retrieve dataset from storage
-	dataset, err := e.dataset.GetDatasetByID(preparationCtx, detail.Task.DatasetID)
-	if err != nil {
+	if dataset == nil {
 		finishPreparation()
-		logger.Errorf(ctx, "Failed to get dataset: %v", err)
-		return err
+		return fmt.Errorf("evaluation dataset is nil")
 	}
-	logger.Infof(ctx, "Dataset retrieved successfully with %d QA pairs", len(dataset))
+	qaPairs := dataset.Cases
+	logger.Infof(ctx, "Dataset retrieved successfully with %d QA pairs", len(qaPairs))
 
 	// Update total QA pairs count in task details
 	e.evaluationMemoryStorage.update(detail.Task.ID, func(params *types.EvaluationDetail) {
-		params.Task.Total = len(dataset)
+		params.Task.Total = len(qaPairs)
 		logger.Infof(ctx, "Updated task total to %d QA pairs", params.Task.Total)
 	})
 
 	// Extract and organize passages from dataset
-	passages := getPassageList(dataset)
+	passages := getPassageList(qaPairs)
 	logger.Infof(ctx, "Creating knowledge from %d passages", len(passages))
 
 	// Create knowledge base from passages (sync: wait for indexing to complete before querying)
-	knowledge, err := e.knowledgeService.CreateKnowledgeFromPassageSync(
+	knowledge, err := e.knowledgeService.CreateKnowledgeFromPassageSyncWithChunking(
 		preparationCtx,
 		knowledgeBaseID,
 		passages,
@@ -471,14 +536,14 @@ func (e *EvaluationService) EvalDataset(ctx context.Context, detail *types.Evalu
 	var finished int
 	var mu sync.Mutex
 	var g errgroup.Group
-	metricHook := NewHookMetric(len(dataset))
+	metricHook := NewHookMetric(len(qaPairs))
 
 	// Set worker limit based on available CPUs
 	g.SetLimit(max(runtime.GOMAXPROCS(0)-1, 1))
 	logger.Infof(ctx, "Starting evaluation with %d parallel workers", max(runtime.GOMAXPROCS(0)-1, 1))
 
 	// Process each QA pair in parallel
-	for i, qaPair := range dataset {
+	for i, qaPair := range qaPairs {
 		qaPair := qaPair
 		i := i
 		g.Go(func() error {

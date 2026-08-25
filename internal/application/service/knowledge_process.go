@@ -151,6 +151,82 @@ func (s *knowledgeService) processDocumentFromPassage(ctx context.Context,
 	s.processChunks(ctx, kb, knowledge, chunks, opts)
 }
 
+// processDocumentFromPassageWithChunking keeps dataset passage boundaries while applying the configured splitter.
+func (s *knowledgeService) processDocumentFromPassageWithChunking(ctx context.Context,
+	kb *types.KnowledgeBase, knowledge *types.Knowledge, passages []string,
+) {
+	knowledge.ParseStatus = "processing"
+	knowledge.UpdatedAt = time.Now()
+	if err := s.repo.UpdateKnowledge(ctx, knowledge); err != nil {
+		return
+	}
+
+	chunks, parentChunks := splitEvaluationPassages(passages, kb.ChunkingConfig)
+	opts := ProcessChunksOptions{ParentChunks: parentChunks}
+	s.processChunks(ctx, kb, knowledge, chunks, opts)
+}
+
+// splitEvaluationPassages splits each labeled passage independently so chunks remain attributable to one passage.
+func splitEvaluationPassages(
+	passages []string,
+	chunkingConfig types.ChunkingConfig,
+) ([]types.ParsedChunk, []types.ParsedParentChunk) {
+	baseConfig := buildSplitterConfigFromChunking(chunkingConfig)
+	parsed := make([]types.ParsedChunk, 0)
+	parents := make([]types.ParsedParentChunk, 0)
+	sequence := 0
+	runeOffset := 0
+
+	for _, passage := range passages {
+		normalized := chunker.NormalizeLineEndings(passage)
+		if normalized == "" {
+			continue
+		}
+		if chunkingConfig.EnableParentChild {
+			parentConfig, childConfig := buildParentChildConfigs(chunkingConfig, baseConfig)
+			result := chunker.SplitParentChild(normalized, parentConfig, childConfig)
+			parentOffset := len(parents)
+			for _, parent := range result.Parents {
+				parents = append(parents, types.ParsedParentChunk{
+					Content: parent.Content,
+					Seq:     len(parents),
+					Start:   parent.Start + runeOffset,
+					End:     parent.End + runeOffset,
+				})
+			}
+			for _, child := range result.Children {
+				parentIndex := child.ParentIndex
+				if parentIndex >= 0 {
+					parentIndex += parentOffset
+				}
+				parsed = append(parsed, types.ParsedChunk{
+					Content:       child.Content,
+					ContextHeader: child.ContextHeader,
+					Seq:           sequence,
+					Start:         child.Start + runeOffset,
+					End:           child.End + runeOffset,
+					ParentIndex:   parentIndex,
+				})
+				sequence++
+			}
+		} else {
+			for _, chunk := range chunker.Split(normalized, baseConfig) {
+				parsed = append(parsed, types.ParsedChunk{
+					Content:       chunk.Content,
+					ContextHeader: chunk.ContextHeader,
+					Seq:           sequence,
+					Start:         chunk.Start + runeOffset,
+					End:           chunk.End + runeOffset,
+					ParentIndex:   -1,
+				})
+				sequence++
+			}
+		}
+		runeOffset += len([]rune(normalized))
+	}
+	return parsed, parents
+}
+
 // ProcessChunksOptions contains options for processing chunks
 type ProcessChunksOptions struct {
 	EnableQuestionGeneration bool

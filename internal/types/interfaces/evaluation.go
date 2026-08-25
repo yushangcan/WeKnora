@@ -30,6 +30,8 @@ type EvalHook interface {
 
 // DatasetService defines operations for dataset management
 type DatasetService interface {
+	// LoadDataset returns validated cases together with a stable content descriptor.
+	LoadDataset(ctx context.Context, datasetID string) (*types.EvaluationDataset, error)
 	// GetDatasetByID retrieves QA pairs from dataset by ID
 	GetDatasetByID(ctx context.Context, datasetID string) ([]*types.QAPair, error)
 }

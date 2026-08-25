@@ -713,14 +713,21 @@ func (s *knowledgeService) createKnowledgeFromFileURL(
 func (s *knowledgeService) CreateKnowledgeFromPassage(ctx context.Context,
 	kbID string, passage []string, channel string,
 ) (*types.Knowledge, error) {
-	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, false, channel)
+	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, false, false, channel)
 }
 
 // CreateKnowledgeFromPassageSync creates a knowledge entry from text passages and waits for indexing to complete.
 func (s *knowledgeService) CreateKnowledgeFromPassageSync(ctx context.Context,
 	kbID string, passage []string, channel string,
 ) (*types.Knowledge, error) {
-	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, true, channel)
+	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, true, false, channel)
+}
+
+// CreateKnowledgeFromPassageSyncWithChunking applies the configured splitter to each passage before indexing.
+func (s *knowledgeService) CreateKnowledgeFromPassageSyncWithChunking(ctx context.Context,
+	kbID string, passage []string, channel string,
+) (*types.Knowledge, error) {
+	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, true, true, channel)
 }
 
 // CreateKnowledgeFromManual creates or saves manual Markdown knowledge content.
@@ -850,7 +857,7 @@ func (s *knowledgeService) CreateKnowledgeFromManual(ctx context.Context,
 // createKnowledgeFromPassageInternal consolidates the common logic for creating knowledge from passages.
 // When syncMode is true, chunk processing is performed synchronously; otherwise, it's processed asynchronously.
 func (s *knowledgeService) createKnowledgeFromPassageInternal(ctx context.Context,
-	kbID string, passage []string, syncMode bool, channel string,
+	kbID string, passage []string, syncMode bool, applyChunking bool, channel string,
 ) (*types.Knowledge, error) {
 	if syncMode {
 		logger.Info(ctx, "Start creating knowledge from passage (sync)")
@@ -906,7 +913,11 @@ func (s *knowledgeService) createKnowledgeFromPassageInternal(ctx context.Contex
 	// Process passages
 	if syncMode {
 		logger.Info(ctx, "Processing passage synchronously")
-		s.processDocumentFromPassage(ctx, kb, knowledge, safePassages)
+		if applyChunking {
+			s.processDocumentFromPassageWithChunking(ctx, kb, knowledge, safePassages)
+		} else {
+			s.processDocumentFromPassage(ctx, kb, knowledge, safePassages)
+		}
 		recordKBActivity(ctx, s.audit, knowledge.TenantID, kbID, types.AuditActionKnowledgeCreated,
 			"knowledge", knowledge.ID, types.AuditOutcomeSuccess, map[string]any{
 				"title": knowledge.Title, "source_type": "passage", "processing_status": knowledge.ParseStatus,

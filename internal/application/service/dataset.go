@@ -2,8 +2,13 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"sort"
 
 	"github.com/Tencent/WeKnora/internal/logger"
 	"github.com/Tencent/WeKnora/internal/types"
@@ -13,6 +18,20 @@ import (
 
 // DatasetService provides operations for working with datasets
 type DatasetService struct{}
+
+const (
+	defaultDatasetID      = "default"
+	defaultDatasetVersion = "1"
+	defaultDatasetDir     = "./dataset/samples"
+)
+
+var defaultDatasetFiles = []string{
+	"queries.parquet",
+	"corpus.parquet",
+	"qrels.parquet",
+	"qas.parquet",
+	"answers.parquet",
+}
 
 // NewDatasetService creates a new DatasetService instance
 func NewDatasetService() interfaces.DatasetService {
@@ -39,39 +58,76 @@ type QaInfo struct {
 
 // GetDatasetByID retrieves QA pairs from dataset by ID
 func (d *DatasetService) GetDatasetByID(ctx context.Context, datasetID string) ([]*types.QAPair, error) {
+	dataset, err := d.LoadDataset(ctx, datasetID)
+	if err != nil {
+		return nil, err
+	}
+	return dataset.Cases, nil
+}
+
+// LoadDataset loads, validates and fingerprints a supported evaluation dataset.
+func (d *DatasetService) LoadDataset(ctx context.Context, datasetID string) (*types.EvaluationDataset, error) {
 	logger.Info(ctx, "Start getting dataset by ID")
 	logger.Infof(ctx, "Getting dataset with ID: %s", datasetID)
 
-	dataset := DefaultDataset()
+	if datasetID != defaultDatasetID {
+		return nil, fmt.Errorf("unsupported evaluation dataset: %s", datasetID)
+	}
+	dataset, err := loadDefaultDataset(defaultDatasetDir)
+	if err != nil {
+		return nil, err
+	}
 	dataset.PrintStats(ctx)
 	qaPairs := dataset.Iterate()
+	fingerprint, err := fingerprintDataset(defaultDatasetDir, defaultDatasetFiles)
+	if err != nil {
+		return nil, err
+	}
 
 	logger.Infof(ctx, "Retrieved %d QA pairs from dataset", len(qaPairs))
-	return qaPairs, nil
+	return &types.EvaluationDataset{
+		Descriptor: types.EvaluationDatasetDescriptor{
+			ID:                 defaultDatasetID,
+			Version:            defaultDatasetVersion,
+			ContentFingerprint: fingerprint,
+			QueryCount:         len(dataset.queries),
+			CorpusCount:        len(dataset.corpus),
+			CaseCount:          len(qaPairs),
+			IngestionMode:      types.EvaluationDatasetModePassageChunking,
+		},
+		Cases: qaPairs,
+	}, nil
 }
 
 // DefaultDataset loads and initializes the default dataset from parquet files
 func DefaultDataset() dataset {
-	datasetDir := "./dataset/samples"
-	queries, err := loadParquet[TextInfo](fmt.Sprintf("%s/queries.parquet", datasetDir))
+	result, err := loadDefaultDataset(defaultDatasetDir)
 	if err != nil {
 		panic(err)
+	}
+	return result
+}
+
+func loadDefaultDataset(datasetDir string) (dataset, error) {
+	queries, err := loadParquet[TextInfo](fmt.Sprintf("%s/queries.parquet", datasetDir))
+	if err != nil {
+		return dataset{}, err
 	}
 	corpus, err := loadParquet[TextInfo](fmt.Sprintf("%s/corpus.parquet", datasetDir))
 	if err != nil {
-		panic(err)
+		return dataset{}, err
 	}
 	answers, err := loadParquet[TextInfo](fmt.Sprintf("%s/answers.parquet", datasetDir))
 	if err != nil {
-		panic(err)
+		return dataset{}, err
 	}
 	qrels, err := loadParquet[RelsInfo](fmt.Sprintf("%s/qrels.parquet", datasetDir))
 	if err != nil {
-		panic(err)
+		return dataset{}, err
 	}
 	qas, err := loadParquet[QaInfo](fmt.Sprintf("%s/qas.parquet", datasetDir))
 	if err != nil {
-		panic(err)
+		return dataset{}, err
 	}
 
 	res := dataset{
@@ -91,12 +147,36 @@ func DefaultDataset() dataset {
 		res.answers[ai.ID] = ai.Text
 	}
 	for _, ri := range qrels {
+		if _, ok := res.queries[ri.QID]; !ok {
+			return dataset{}, fmt.Errorf("qrels references unknown query %d", ri.QID)
+		}
+		if _, ok := res.corpus[ri.PID]; !ok {
+			return dataset{}, fmt.Errorf("qrels references unknown passage %d", ri.PID)
+		}
 		res.qrels[ri.QID] = append(res.qrels[ri.QID], ri.PID)
 	}
 	for _, qi := range qas {
+		if _, ok := res.queries[qi.QID]; !ok {
+			return dataset{}, fmt.Errorf("qas references unknown query %d", qi.QID)
+		}
+		if _, ok := res.answers[qi.AID]; !ok {
+			return dataset{}, fmt.Errorf("qas references unknown answer %d", qi.AID)
+		}
 		res.qas[qi.QID] = qi.AID
 	}
-	return res
+	for qid, question := range res.queries {
+		if question == "" {
+			return dataset{}, fmt.Errorf("query %d is empty", qid)
+		}
+		if len(res.qrels[qid]) == 0 {
+			return dataset{}, fmt.Errorf("query %d has no relevant passages", qid)
+		}
+		aid, ok := res.qas[qid]
+		if !ok || res.answers[aid] == "" {
+			return dataset{}, fmt.Errorf("query %d has no reference answer", qid)
+		}
+	}
+	return res, nil
 }
 
 // dataset represents the in-memory dataset structure
@@ -110,9 +190,15 @@ type dataset struct {
 
 // Iterate generates QA pairs from the dataset
 func (d *dataset) Iterate() []*types.QAPair {
-	var pairs []*types.QAPair
+	qids := make([]int64, 0, len(d.queries))
+	for qid := range d.queries {
+		qids = append(qids, qid)
+	}
+	sort.Slice(qids, func(i, j int) bool { return qids[i] < qids[j] })
+	pairs := make([]*types.QAPair, 0, len(qids))
 
-	for qid, question := range d.queries {
+	for _, qid := range qids {
+		question := d.queries[qid]
 		// Get answer info
 		aid, hasAnswer := d.qas[qid]
 		answer := ""
@@ -142,6 +228,27 @@ func (d *dataset) Iterate() []*types.QAPair {
 	}
 
 	return pairs
+}
+
+func fingerprintDataset(datasetDir string, names []string) (string, error) {
+	hash := sha256.New()
+	for _, name := range names {
+		path := filepath.Join(datasetDir, name)
+		file, err := os.Open(path)
+		if err != nil {
+			return "", fmt.Errorf("open dataset file %s: %w", name, err)
+		}
+		_, _ = io.WriteString(hash, name)
+		_, err = io.Copy(hash, file)
+		closeErr := file.Close()
+		if err != nil {
+			return "", fmt.Errorf("fingerprint dataset file %s: %w", name, err)
+		}
+		if closeErr != nil {
+			return "", fmt.Errorf("close dataset file %s: %w", name, closeErr)
+		}
+	}
+	return fmt.Sprintf("sha256:%x", hash.Sum(nil)), nil
 }
 
 // GetContextForQID retrieves context passages for a given question ID

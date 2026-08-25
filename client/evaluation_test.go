@@ -19,6 +19,28 @@ func TestEvaluationResultResponseMatchesServerContract(t *testing.T) {
                 "finished": 1
             },
             "params": {},
+            "config": {
+                "schema_version": "evaluation-config/v1",
+                "dataset": {
+                    "id": "default",
+                    "version": "1",
+                    "content_fingerprint": "sha256:dataset",
+                    "query_count": 1,
+                    "corpus_count": 1,
+                    "case_count": 1,
+                    "ingestion_mode": "passage_chunking"
+                },
+                "models": {
+                    "embedding": {"id": "embedding-1", "parameters_fingerprint": "sha256:embedding"},
+                    "chat": {"id": "chat-1", "parameters_fingerprint": "sha256:chat"}
+                },
+                "chunking": {"applied": true, "source_unit": "dataset_passage", "config": {"chunk_size": 512}},
+                "retrieval": {"embedding_top_k": 10},
+                "generation": {"seed": 7},
+                "indexing": {"vector_enabled": true},
+                "runtime": {"case_concurrency": 2},
+                "config_hash": "sha256:config"
+            },
             "metric": {
                 "retrieval_metrics": {"precision": 0.5},
                 "generation_metrics": {"bleu1": 0.25}
@@ -68,6 +90,10 @@ func TestEvaluationResultResponseMatchesServerContract(t *testing.T) {
 	}
 	if response.Data.Metric == nil || response.Data.Metric.Retrieval.Precision != 0.5 {
 		t.Fatalf("legacy metric was not decoded: %#v", response.Data.Metric)
+	}
+	if response.Data.Config == nil || response.Data.Config.ConfigHash != "sha256:config" ||
+		response.Data.Config.Dataset.ContentFingerprint != "sha256:dataset" {
+		t.Fatalf("run configuration was not decoded: %#v", response.Data.Config)
 	}
 	if response.Data.Result == nil || response.Data.Result.Usage.Tokens.TotalTokens != 8 {
 		t.Fatalf("four-dimension result was not decoded: %#v", response.Data.Result)

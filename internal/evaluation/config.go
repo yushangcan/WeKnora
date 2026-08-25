@@ -1,0 +1,136 @@
+package evaluation
+
+import (
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"github.com/Tencent/WeKnora/internal/types"
+)
+
+// NewRunConfig builds a deterministic, non-secret snapshot of effective run inputs.
+func NewRunConfig(
+	dataset types.EvaluationDatasetDescriptor,
+	sourceKnowledgeBaseID string,
+	kb *types.KnowledgeBase,
+	embeddingModel *types.Model,
+	chatModel *types.Model,
+	rerankModel *types.Model,
+	params *types.ChatManage,
+	caseConcurrency int,
+	applicationVersion string,
+) (*types.EvaluationRunConfig, error) {
+	if kb == nil || embeddingModel == nil || chatModel == nil || params == nil {
+		return nil, fmt.Errorf("evaluation run configuration is incomplete")
+	}
+	result := &types.EvaluationRunConfig{
+		SchemaVersion:         types.EvaluationConfigSchemaVersion,
+		Dataset:               dataset,
+		SourceKnowledgeBaseID: sourceKnowledgeBaseID,
+		Models: types.EvaluationModelConfigSet{
+			Embedding: snapshotModel(embeddingModel),
+			Chat:      snapshotModel(chatModel),
+		},
+		Chunking: types.EvaluationChunkingConfig{
+			Applied:    true,
+			SourceUnit: "dataset_passage",
+			Config:     kb.ChunkingConfig,
+		},
+		Retrieval: types.EvaluationRetrievalConfig{
+			VectorThreshold:  params.VectorThreshold,
+			KeywordThreshold: params.KeywordThreshold,
+			EmbeddingTopK:    params.EmbeddingTopK,
+			RerankTopK:       params.RerankTopK,
+			RerankThreshold:  params.RerankThreshold,
+		},
+		Generation: types.EvaluationGenerationConfig{
+			MaxTokens:           params.SummaryConfig.MaxTokens,
+			MaxCompletionTokens: params.SummaryConfig.MaxCompletionTokens,
+			Temperature:         params.SummaryConfig.Temperature,
+			TopP:                params.SummaryConfig.TopP,
+			TopK:                params.SummaryConfig.TopK,
+			Seed:                params.SummaryConfig.Seed,
+			PromptFingerprint:   fingerprintText(params.SummaryConfig.Prompt),
+			ContextFingerprint:  fingerprintText(params.SummaryConfig.ContextTemplate),
+		},
+		Indexing: types.EvaluationIndexingConfig{
+			VectorEnabled:  kb.IndexingStrategy.VectorEnabled,
+			KeywordEnabled: kb.IndexingStrategy.KeywordEnabled,
+		},
+		Runtime: types.EvaluationRuntimeConfig{
+			CaseConcurrency:    caseConcurrency,
+			MetricVersion:      types.EvaluationMetricVersion,
+			ResultVersion:      types.EvaluationResultSchemaVersion,
+			ApplicationVersion: strings.TrimSpace(applicationVersion),
+		},
+	}
+	if kb.VectorStoreID != nil {
+		result.Indexing.VectorStoreID = *kb.VectorStoreID
+	}
+	if rerankModel != nil {
+		snapshot := snapshotModel(rerankModel)
+		result.Models.Rerank = &snapshot
+	}
+
+	hash, err := ConfigHash(result)
+	if err != nil {
+		return nil, err
+	}
+	result.ConfigHash = hash
+	return result, nil
+}
+
+// ConfigHash returns the SHA-256 hash of a canonical run configuration.
+func ConfigHash(config *types.EvaluationRunConfig) (string, error) {
+	if config == nil {
+		return "", fmt.Errorf("evaluation run configuration is nil")
+	}
+	copy := *config
+	copy.ConfigHash = ""
+	data, err := json.Marshal(copy)
+	if err != nil {
+		return "", fmt.Errorf("marshal evaluation run configuration: %w", err)
+	}
+	return fmt.Sprintf("sha256:%x", sha256.Sum256(data)), nil
+}
+
+func snapshotModel(model *types.Model) types.EvaluationModelConfig {
+	params := struct {
+		InterfaceType       string                    `json:"interface_type"`
+		EmbeddingParameters types.EmbeddingParameters `json:"embedding_parameters"`
+		ParameterSize       string                    `json:"parameter_size"`
+		Provider            string                    `json:"provider"`
+		SupportsVision      bool                      `json:"supports_vision"`
+		MaxConcurrency      int                       `json:"max_concurrency"`
+	}{
+		InterfaceType:       model.Parameters.InterfaceType,
+		EmbeddingParameters: model.Parameters.EmbeddingParameters,
+		ParameterSize:       model.Parameters.ParameterSize,
+		Provider:            model.Parameters.Provider,
+		SupportsVision:      model.Parameters.SupportsVision,
+		MaxConcurrency:      model.Parameters.MaxConcurrency,
+	}
+	parameterData, _ := json.Marshal(params)
+	return types.EvaluationModelConfig{
+		ID:                    model.ID,
+		Name:                  model.Name,
+		DisplayName:           model.DisplayName,
+		Type:                  model.Type,
+		Source:                model.Source,
+		Provider:              model.Parameters.Provider,
+		InterfaceType:         model.Parameters.InterfaceType,
+		EmbeddingDimension:    model.Parameters.EmbeddingParameters.Dimension,
+		MaxConcurrency:        model.Parameters.MaxConcurrency,
+		EndpointFingerprint:   fingerprintText(model.Parameters.BaseURL),
+		ParametersFingerprint: fmt.Sprintf("sha256:%x", sha256.Sum256(parameterData)),
+		UpdatedAt:             model.UpdatedAt,
+	}
+}
+
+func fingerprintText(value string) string {
+	if value == "" {
+		return ""
+	}
+	return fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(value)))
+}

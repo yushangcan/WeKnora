@@ -107,6 +107,7 @@ func evaluationStatusCode(status string) EvaluationStatus {
 type EvaluationResult struct {
 	Task   *EvaluationTask      `json:"task"`
 	Params json.RawMessage      `json:"params"`
+	Config *EvaluationRunConfig `json:"config,omitempty"`
 	Metric *EvaluationMetrics   `json:"metric,omitempty"`
 	Result *EvaluationRunResult `json:"result,omitempty"`
 
@@ -122,6 +123,90 @@ type EvaluationResult struct {
 	CreatedAt    string                   `json:"created_at,omitempty"`
 	CompleteAt   string                   `json:"complete_at,omitempty"`
 	ErrorMsg     string                   `json:"error_msg,omitempty"`
+}
+
+// EvaluationRunConfig identifies the immutable inputs used by one run.
+// Mutable or sensitive model settings are represented by fingerprints.
+type EvaluationRunConfig struct {
+	SchemaVersion         string                      `json:"schema_version"`
+	Dataset               EvaluationDatasetDescriptor `json:"dataset"`
+	SourceKnowledgeBaseID string                      `json:"source_knowledge_base_id,omitempty"`
+	Models                EvaluationModelConfigSet    `json:"models"`
+	Chunking              EvaluationChunkingConfig    `json:"chunking"`
+	Retrieval             EvaluationRetrievalConfig   `json:"retrieval"`
+	Generation            EvaluationGenerationConfig  `json:"generation"`
+	Indexing              EvaluationIndexingConfig    `json:"indexing"`
+	Runtime               EvaluationRuntimeConfig     `json:"runtime"`
+	ConfigHash            string                      `json:"config_hash"`
+}
+
+type EvaluationDatasetDescriptor struct {
+	ID                 string `json:"id"`
+	Version            string `json:"version"`
+	ContentFingerprint string `json:"content_fingerprint"`
+	QueryCount         int    `json:"query_count"`
+	CorpusCount        int    `json:"corpus_count"`
+	CaseCount          int    `json:"case_count"`
+	IngestionMode      string `json:"ingestion_mode"`
+}
+
+type EvaluationModelConfigSet struct {
+	Embedding EvaluationModelConfig  `json:"embedding"`
+	Chat      EvaluationModelConfig  `json:"chat"`
+	Rerank    *EvaluationModelConfig `json:"rerank,omitempty"`
+}
+
+type EvaluationModelConfig struct {
+	ID                    string    `json:"id"`
+	Name                  string    `json:"name"`
+	DisplayName           string    `json:"display_name,omitempty"`
+	Type                  string    `json:"type"`
+	Source                string    `json:"source"`
+	Provider              string    `json:"provider,omitempty"`
+	InterfaceType         string    `json:"interface_type,omitempty"`
+	EmbeddingDimension    int       `json:"embedding_dimension,omitempty"`
+	MaxConcurrency        int       `json:"max_concurrency,omitempty"`
+	EndpointFingerprint   string    `json:"endpoint_fingerprint,omitempty"`
+	ParametersFingerprint string    `json:"parameters_fingerprint"`
+	UpdatedAt             time.Time `json:"updated_at"`
+}
+
+type EvaluationChunkingConfig struct {
+	Applied    bool            `json:"applied"`
+	SourceUnit string          `json:"source_unit"`
+	Config     json.RawMessage `json:"config"`
+}
+
+type EvaluationRetrievalConfig struct {
+	VectorThreshold  float64 `json:"vector_threshold"`
+	KeywordThreshold float64 `json:"keyword_threshold"`
+	EmbeddingTopK    int     `json:"embedding_top_k"`
+	RerankTopK       int     `json:"rerank_top_k"`
+	RerankThreshold  float64 `json:"rerank_threshold"`
+}
+
+type EvaluationGenerationConfig struct {
+	MaxTokens           int     `json:"max_tokens"`
+	MaxCompletionTokens int     `json:"max_completion_tokens"`
+	Temperature         float64 `json:"temperature"`
+	TopP                float64 `json:"top_p"`
+	TopK                int     `json:"top_k"`
+	Seed                int     `json:"seed"`
+	PromptFingerprint   string  `json:"prompt_fingerprint"`
+	ContextFingerprint  string  `json:"context_fingerprint"`
+}
+
+type EvaluationIndexingConfig struct {
+	VectorEnabled  bool   `json:"vector_enabled"`
+	KeywordEnabled bool   `json:"keyword_enabled"`
+	VectorStoreID  string `json:"vector_store_id,omitempty"`
+}
+
+type EvaluationRuntimeConfig struct {
+	CaseConcurrency    int    `json:"case_concurrency"`
+	MetricVersion      string `json:"metric_version"`
+	ResultVersion      string `json:"result_version"`
+	ApplicationVersion string `json:"application_version,omitempty"`
 }
 
 type EvaluationMetrics struct {

@@ -64,6 +64,22 @@ type observedDatasetStub struct {
 }
 
 func (observedDatasetStub) GetDatasetByID(context.Context, string) ([]*types.QAPair, error) {
+	return observedDatasetCases(), nil
+}
+
+func (observedDatasetStub) LoadDataset(context.Context, string) (*types.EvaluationDataset, error) {
+	cases := observedDatasetCases()
+	return &types.EvaluationDataset{
+		Descriptor: types.EvaluationDatasetDescriptor{
+			ID: "default", Version: "1", ContentFingerprint: "sha256:test",
+			QueryCount: len(cases), CorpusCount: 1, CaseCount: len(cases),
+			IngestionMode: types.EvaluationDatasetModePassageChunking,
+		},
+		Cases: cases,
+	}, nil
+}
+
+func observedDatasetCases() []*types.QAPair {
 	return []*types.QAPair{{
 		QID:      1,
 		Question: "question",
@@ -71,7 +87,7 @@ func (observedDatasetStub) GetDatasetByID(context.Context, string) ([]*types.QAP
 		Passages: []string{"relevant passage"},
 		AID:      1,
 		Answer:   "answer",
-	}}, nil
+	}}
 }
 
 type observedKnowledgeBaseStub struct {
@@ -121,6 +137,15 @@ func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSync(
 		UsageSource: types.EvaluationUsageSourceUnavailable,
 	}, nil)
 	return &types.Knowledge{ID: "evaluation-knowledge"}, nil
+}
+
+func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSyncWithChunking(
+	ctx context.Context,
+	kbID string,
+	passages []string,
+	channel string,
+) (*types.Knowledge, error) {
+	return s.CreateKnowledgeFromPassageSync(ctx, kbID, passages, channel)
 }
 
 func (s *observedKnowledgeStub) DeleteKnowledge(context.Context, string) error {
@@ -173,11 +198,45 @@ type observedModelStub struct {
 	interfaces.ModelService
 }
 
+func (observedModelStub) ListModels(context.Context) ([]*types.Model, error) {
+	return []*types.Model{
+		{ID: "embedding-1", Name: "embedding", Type: types.ModelTypeEmbedding, Status: types.ModelStatusActive},
+		{ID: "chat-1", Name: "chat", Type: types.ModelTypeKnowledgeQA, Status: types.ModelStatusActive},
+		{ID: "rerank-1", Name: "rerank", Type: types.ModelTypeRerank, Status: types.ModelStatusActive},
+	}, nil
+}
+
+func (observedModelStub) GetModelByID(ctx context.Context, id string) (*types.Model, error) {
+	models, _ := observedModelStub{}.ListModels(ctx)
+	for _, model := range models {
+		if model.ID == id {
+			return model, nil
+		}
+	}
+	return nil, errors.New("model not found")
+}
+
 type twoCaseObservedDatasetStub struct {
 	interfaces.DatasetService
 }
 
 func (twoCaseObservedDatasetStub) GetDatasetByID(context.Context, string) ([]*types.QAPair, error) {
+	return twoCaseObservedDatasetCases(), nil
+}
+
+func (twoCaseObservedDatasetStub) LoadDataset(context.Context, string) (*types.EvaluationDataset, error) {
+	cases := twoCaseObservedDatasetCases()
+	return &types.EvaluationDataset{
+		Descriptor: types.EvaluationDatasetDescriptor{
+			ID: "default", Version: "1", ContentFingerprint: "sha256:two-cases",
+			QueryCount: len(cases), CorpusCount: 1, CaseCount: len(cases),
+			IngestionMode: types.EvaluationDatasetModePassageChunking,
+		},
+		Cases: cases,
+	}, nil
+}
+
+func twoCaseObservedDatasetCases() []*types.QAPair {
 	return []*types.QAPair{
 		{
 			QID:      1,
@@ -195,7 +254,7 @@ func (twoCaseObservedDatasetStub) GetDatasetByID(context.Context, string) ([]*ty
 			AID:      2,
 			Answer:   "answer",
 		},
-	}, nil
+	}
 }
 
 type partiallyFailingObservedSessionStub struct {

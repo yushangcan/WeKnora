@@ -175,19 +175,19 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 
 	embeddingModel, err := e.modelService.GetModelByID(ctx, temporaryKB.EmbeddingModelID)
 	if err != nil {
-		_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+		e.cleanupEvaluationResources(ctx, nil, "", temporaryKB.ID)
 		return nil, err
 	}
 	chatModel, err := e.modelService.GetModelByID(ctx, chatModelID)
 	if err != nil {
-		_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+		e.cleanupEvaluationResources(ctx, nil, "", temporaryKB.ID)
 		return nil, err
 	}
 	var rerankModel *types.Model
 	if rerankModelID != "" {
 		rerankModel, err = e.modelService.GetModelByID(ctx, rerankModelID)
 		if err != nil {
-			_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+			e.cleanupEvaluationResources(ctx, nil, "", temporaryKB.ID)
 			return nil, err
 		}
 	}
@@ -249,7 +249,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 		evaluationApplicationVersion(),
 	)
 	if err != nil {
-		_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+		e.cleanupEvaluationResources(ctx, nil, "", temporaryKB.ID)
 		return nil, err
 	}
 	observer := evaluationobs.NewObserver(taskID, tenantID, datasetID, detail.Task.StartTime)
@@ -257,7 +257,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 
 	logger.Info(ctx, "Persisting evaluation task")
 	if err := e.evaluationRepository.CreateRun(ctx, detail, knowledgeBaseID); err != nil {
-		_ = e.knowledgeBaseService.DeleteKnowledgeBase(ctx, temporaryKB.ID)
+		e.cleanupEvaluationResources(ctx, observer, "", temporaryKB.ID)
 		return nil, fmt.Errorf("create evaluation run: %w", err)
 	}
 	backgroundDetail := cloneEvaluationDetail(detail)
@@ -277,6 +277,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 				"persistence_failed",
 				"The evaluation could not persist its running state.",
 			)
+			e.cleanupEvaluationResources(newCtx, observer, "", knowledgeBaseID)
 			observer.Complete()
 			backgroundDetail.Task.Status = types.EvaluationStatueFailed
 			backgroundDetail.Task.ErrMsg = evaluationobs.SafeErrorText(
@@ -286,7 +287,6 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 			if saveErr := e.evaluationRepository.SaveTerminalRun(newCtx, backgroundDetail); saveErr != nil {
 				logger.Errorf(newCtx, "Failed to persist evaluation startup failure: %v", saveErr)
 			}
-			_ = e.knowledgeBaseService.DeleteKnowledgeBase(newCtx, knowledgeBaseID)
 			return
 		}
 		logger.Info(newCtx, "Evaluation task status set to running")
@@ -409,6 +409,56 @@ func evaluationApplicationVersion() string {
 	return strings.TrimSpace(string(data))
 }
 
+func (e *EvaluationService) cleanupEvaluationResources(
+	ctx context.Context,
+	observer *evaluationobs.Observer,
+	knowledgeID string,
+	knowledgeBaseID string,
+) {
+	cleanupCtx := ctx
+	finishCleanup := func() {}
+	if observer != nil {
+		cleanupCtx, finishCleanup = observer.StartPhase(ctx, types.EvaluationPhaseCleanup)
+	}
+	defer finishCleanup()
+
+	if knowledgeID != "" {
+		logger.Infof(cleanupCtx, "Cleaning up temporary evaluation knowledge: %s", knowledgeID)
+		if err := e.knowledgeService.DeleteKnowledge(cleanupCtx, knowledgeID); err != nil {
+			logger.Errorf(cleanupCtx, "Failed to delete temporary evaluation knowledge %s: %v", knowledgeID, err)
+			if observer != nil {
+				observer.AddWarning("knowledge_cleanup_failed", "Temporary evaluation knowledge could not be deleted.")
+			}
+		}
+	}
+
+	if knowledgeBaseID != "" {
+		logger.Infof(cleanupCtx, "Cleaning up temporary evaluation knowledge base: %s", knowledgeBaseID)
+		if err := e.knowledgeBaseService.DeleteKnowledgeBase(cleanupCtx, knowledgeBaseID); err != nil {
+			logger.Errorf(cleanupCtx, "Failed to delete temporary evaluation knowledge base %s: %v", knowledgeBaseID, err)
+			if observer != nil {
+				observer.AddWarning(
+					"knowledge_base_cleanup_failed",
+					"Temporary evaluation knowledge base could not be deleted.",
+				)
+			}
+		}
+	}
+}
+
+func validateEvaluationKnowledgeReadiness(knowledge *types.Knowledge) error {
+	if knowledge == nil || knowledge.ID == "" {
+		return fmt.Errorf("temporary evaluation knowledge was not created")
+	}
+	if knowledge.ParseStatus == types.ParseStatusFailed {
+		return fmt.Errorf("temporary evaluation knowledge indexing failed")
+	}
+	if knowledge.EnableStatus != "enabled" {
+		return fmt.Errorf("temporary evaluation knowledge is not ready for retrieval")
+	}
+	return nil
+}
+
 // EvalDataset performs the actual evaluation of a dataset
 // Processes each QA pair in parallel and records metrics
 func (e *EvaluationService) EvalDataset(
@@ -425,6 +475,16 @@ func (e *EvaluationService) EvalDataset(
 	if observer != nil {
 		preparationCtx, finishPreparation = observer.StartPhase(ctx, types.EvaluationPhasePreparation)
 	}
+	knowledgeID := ""
+	var cleanupOnce sync.Once
+	defer func() {
+		cleanupOnce.Do(func() {
+			e.cleanupEvaluationResources(ctx, observer, knowledgeID, knowledgeBaseID)
+		})
+		if observer != nil {
+			detail.Result = observer.Snapshot(detail.Task.Status, detail.Metric)
+		}
+	}()
 
 	if dataset == nil {
 		finishPreparation()
@@ -452,43 +512,18 @@ func (e *EvaluationService) EvalDataset(
 		"",
 	)
 	finishPreparation()
+	if knowledge != nil {
+		knowledgeID = knowledge.ID
+	}
 	if err != nil {
 		logger.Errorf(ctx, "Failed to create knowledge from passages: %v", err)
 		return err
 	}
+	if err := validateEvaluationKnowledgeReadiness(knowledge); err != nil {
+		logger.Errorf(ctx, "Temporary evaluation knowledge is not ready: %v", err)
+		return err
+	}
 	logger.Infof(ctx, "Knowledge created and indexed successfully, ID: %s", knowledge.ID)
-
-	// Setup cleanup of temporary resources
-	defer func() {
-		cleanupCtx := ctx
-		finishCleanup := func() {}
-		if observer != nil {
-			cleanupCtx, finishCleanup = observer.StartPhase(ctx, types.EvaluationPhaseCleanup)
-		}
-		logger.Infof(cleanupCtx, "Cleaning up resources - deleting knowledge: %s", knowledge.ID)
-		if err := e.knowledgeService.DeleteKnowledge(cleanupCtx, knowledge.ID); err != nil {
-			logger.Errorf(cleanupCtx, "Failed to delete knowledge: %v, knowledge ID: %s", err, knowledge.ID)
-			if observer != nil {
-				observer.AddWarning("knowledge_cleanup_failed", "Temporary evaluation knowledge could not be deleted.")
-			}
-		}
-
-		logger.Infof(cleanupCtx, "Cleaning up resources - deleting knowledge base: %s", knowledgeBaseID)
-		if err := e.knowledgeBaseService.DeleteKnowledgeBase(cleanupCtx, knowledgeBaseID); err != nil {
-			logger.Errorf(
-				cleanupCtx,
-				"Failed to delete knowledge base: %v, knowledge base ID: %s",
-				err, knowledgeBaseID,
-			)
-			if observer != nil {
-				observer.AddWarning("knowledge_base_cleanup_failed", "Temporary evaluation knowledge base could not be deleted.")
-			}
-		}
-		finishCleanup()
-		if observer != nil {
-			detail.Result = observer.Snapshot(detail.Task.Status, detail.Metric)
-		}
-	}()
 
 	evaluationCtx := ctx
 	finishEvaluation := func() {}

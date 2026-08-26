@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -176,7 +177,8 @@ func observedDatasetCases() []*types.QAPair {
 
 type observedKnowledgeBaseStub struct {
 	interfaces.KnowledgeBaseService
-	deleted atomic.Bool
+	deleted   atomic.Bool
+	deleteErr error
 }
 
 func (s *observedKnowledgeBaseStub) GetKnowledgeBaseByID(
@@ -197,13 +199,14 @@ func (s *observedKnowledgeBaseStub) CreateKnowledgeBase(
 
 func (s *observedKnowledgeBaseStub) DeleteKnowledgeBase(context.Context, string) error {
 	s.deleted.Store(true)
-	return nil
+	return s.deleteErr
 }
 
 type observedKnowledgeStub struct {
 	interfaces.KnowledgeService
 	deleted      atomic.Bool
 	passageCount atomic.Int64
+	deleteErr    error
 }
 
 func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSync(
@@ -222,7 +225,11 @@ func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSync(
 		ItemCount:   len(passages),
 		UsageSource: types.EvaluationUsageSourceUnavailable,
 	}, nil)
-	return &types.Knowledge{ID: "evaluation-knowledge"}, nil
+	return &types.Knowledge{
+		ID:           "evaluation-knowledge",
+		ParseStatus:  types.ParseStatusProcessing,
+		EnableStatus: "enabled",
+	}, nil
 }
 
 func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSyncWithChunking(
@@ -241,12 +248,30 @@ func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSyncWithChunking(
 		ItemCount:   len(passages),
 		UsageSource: types.EvaluationUsageSourceUnavailable,
 	}, nil)
-	return &types.Knowledge{ID: "evaluation-knowledge"}, nil
+	return &types.Knowledge{
+		ID:           "evaluation-knowledge",
+		ParseStatus:  types.ParseStatusProcessing,
+		EnableStatus: "enabled",
+	}, nil
 }
 
 func (s *observedKnowledgeStub) DeleteKnowledge(context.Context, string) error {
 	s.deleted.Store(true)
-	return nil
+	return s.deleteErr
+}
+
+type readinessObservedKnowledgeStub struct {
+	observedKnowledgeStub
+	result *types.Knowledge
+}
+
+func (s *readinessObservedKnowledgeStub) CreateKnowledgeFromPassageSyncWithChunking(
+	context.Context,
+	string,
+	[]types.EvaluationPassage,
+	string,
+) (*types.Knowledge, error) {
+	return s.result, nil
 }
 
 type observedSessionStub struct {
@@ -288,6 +313,20 @@ func (observedSessionStub) KnowledgeQAByEvent(
 		Usage:   types.TokenUsage{PromptTokens: 3, CompletionTokens: 2, TotalTokens: 5},
 	}
 	return nil
+}
+
+type countingObservedSessionStub struct {
+	interfaces.SessionService
+	calls atomic.Int64
+}
+
+func (s *countingObservedSessionStub) KnowledgeQAByEvent(
+	ctx context.Context,
+	chatManage *types.ChatManage,
+	events []types.EventType,
+) error {
+	s.calls.Add(1)
+	return observedSessionStub{}.KnowledgeQAByEvent(ctx, chatManage, events)
 }
 
 type observedModelStub struct {
@@ -494,6 +533,103 @@ func TestEvaluationServiceExposesFourDimensionLifecycleResult(t *testing.T) {
 	otherTenantCtx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(8))
 	if _, err := recreatedService.EvaluationResult(otherTenantCtx, created.Task.ID); err == nil {
 		t.Fatal("cross-tenant evaluation lookup unexpectedly succeeded")
+	}
+}
+
+func TestEvaluationServiceRejectsUnreadyKnowledgeAndCleansResources(t *testing.T) {
+	tests := []struct {
+		name      string
+		knowledge *types.Knowledge
+	}{
+		{name: "missing knowledge"},
+		{
+			name: "failed indexing",
+			knowledge: &types.Knowledge{
+				ID: "failed-knowledge", ParseStatus: types.ParseStatusFailed,
+				EnableStatus: "disabled", ErrorMessage: "provider-secret-detail",
+			},
+		},
+		{
+			name: "disabled index",
+			knowledge: &types.Knowledge{
+				ID: "disabled-knowledge", ParseStatus: types.ParseStatusProcessing,
+				EnableStatus: "disabled",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			kbService := &observedKnowledgeBaseStub{}
+			knowledgeService := &readinessObservedKnowledgeStub{result: test.knowledge}
+			sessionService := &countingObservedSessionStub{}
+			service := NewEvaluationService(
+				&config.Config{Conversation: &config.ConversationConfig{Summary: &config.SummaryConfig{}}},
+				observedDatasetStub{},
+				kbService,
+				knowledgeService,
+				sessionService,
+				observedModelStub{},
+				newObservedEvaluationRepository(),
+			)
+			ctx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(7))
+
+			created, err := service.Evaluation(ctx, "default", "source-kb", "chat-1", "rerank-1")
+			if err != nil {
+				t.Fatalf("create evaluation: %v", err)
+			}
+			result := waitForEvaluationTerminal(t, service, ctx, created.Task.ID)
+
+			if result.Task.Status != types.EvaluationStatueFailed {
+				t.Fatalf("task status = %v, want failed", result.Task.Status)
+			}
+			if strings.Contains(result.Task.ErrMsg, "provider-secret-detail") {
+				t.Fatalf("knowledge failure detail leaked into run error: %q", result.Task.ErrMsg)
+			}
+			if sessionService.calls.Load() != 0 {
+				t.Fatalf("RAG pipeline ran before knowledge was ready: %d calls", sessionService.calls.Load())
+			}
+			if !kbService.deleted.Load() {
+				t.Fatal("temporary knowledge base was not cleaned up")
+			}
+			if test.knowledge != nil && test.knowledge.ID != "" && !knowledgeService.deleted.Load() {
+				t.Fatal("temporary knowledge was not cleaned up")
+			}
+		})
+	}
+}
+
+func TestEvaluationServiceReportsCleanupFailuresWithoutChangingRunStatus(t *testing.T) {
+	kbService := &observedKnowledgeBaseStub{deleteErr: errors.New("simulated knowledge base cleanup failure")}
+	knowledgeService := &observedKnowledgeStub{deleteErr: errors.New("simulated knowledge cleanup failure")}
+	service := NewEvaluationService(
+		&config.Config{Conversation: &config.ConversationConfig{Summary: &config.SummaryConfig{}}},
+		observedDatasetStub{},
+		kbService,
+		knowledgeService,
+		observedSessionStub{},
+		observedModelStub{},
+		newObservedEvaluationRepository(),
+	)
+	ctx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(7))
+
+	created, err := service.Evaluation(ctx, "default", "source-kb", "chat-1", "rerank-1")
+	if err != nil {
+		t.Fatalf("create evaluation: %v", err)
+	}
+	result := waitForEvaluationTerminal(t, service, ctx, created.Task.ID)
+
+	if result.Task.Status != types.EvaluationStatueSuccess {
+		t.Fatalf("cleanup failure changed run status: %#v", result.Task)
+	}
+	warningCodes := make(map[string]struct{}, len(result.Result.Warnings))
+	for _, warning := range result.Result.Warnings {
+		warningCodes[warning.Code] = struct{}{}
+	}
+	for _, code := range []string{"knowledge_cleanup_failed", "knowledge_base_cleanup_failed"} {
+		if _, exists := warningCodes[code]; !exists {
+			t.Fatalf("cleanup warning %q is missing: %#v", code, result.Result.Warnings)
+		}
 	}
 }
 

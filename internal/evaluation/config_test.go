@@ -18,8 +18,11 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 		Parameters: types.ModelParameters{
 			BaseURL: "https://private.example/v1", APIKey: "secret-api-key", AppSecret: "secret-app",
 			CustomHeaders: map[string]string{"Authorization": "secret-header"},
-			ExtraConfig:   map[string]string{"credential": "secret-extra"},
-			Provider:      "generic", EmbeddingParameters: types.EmbeddingParameters{Dimension: 1024},
+			ExtraConfig: map[string]string{
+				"api_version": "2026-01-01",
+				"credential":  "secret-extra",
+			},
+			Provider: "generic", EmbeddingParameters: types.EmbeddingParameters{Dimension: 1024},
 		},
 	}
 	chatModel := &types.Model{ID: "chat-1", Name: "chat", Type: types.ModelTypeKnowledgeQA, UpdatedAt: now}
@@ -38,7 +41,10 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 		FallbackResponse: "private fallback response",
 		FallbackPrompt:   "private fallback prompt",
 	}}
-	dataset := types.EvaluationDatasetDescriptor{ID: "default", Version: "1", ContentFingerprint: "sha256:data"}
+	dataset := types.EvaluationDatasetDescriptor{
+		ID: "default", Version: "1", ContentFingerprint: "sha256:data",
+		Files: []types.EvaluationDatasetFile{{Name: "corpus.parquet", Fingerprint: "sha256:file", Size: 10}},
+	}
 
 	first, err := NewRunConfig(dataset, "source-kb", kb, embeddingModel, chatModel, nil, params, 4, "0.7.2")
 	if err != nil {
@@ -62,6 +68,21 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 			t.Fatalf("configuration contains secret value %q", secret)
 		}
 	}
+	if strings.Contains(encoded, "2026-01-01") {
+		t.Fatal("whitelisted model behavior was stored as raw text instead of a fingerprint")
+	}
+	if first.Reproducibility.Status != types.EvaluationReproducibilityPartial {
+		t.Fatalf("excluded provider configuration was not marked partial: %#v", first.Reproducibility)
+	}
+	warningCodes := make(map[string]struct{}, len(first.Reproducibility.Warnings))
+	for _, warning := range first.Reproducibility.Warnings {
+		warningCodes[warning.Code] = struct{}{}
+	}
+	for _, code := range []string{"provider_config_partially_snapshotted", "custom_headers_excluded"} {
+		if _, exists := warningCodes[code]; !exists {
+			t.Fatalf("reproducibility warning %q is missing: %#v", code, first.Reproducibility.Warnings)
+		}
+	}
 
 	changed := *first
 	changed.Retrieval.EmbeddingTopK++
@@ -71,6 +92,35 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 	}
 	if changedHash == first.ConfigHash {
 		t.Fatal("configuration hash did not change after an effective parameter changed")
+	}
+
+	changedModel := *embeddingModel
+	changedModel.Parameters = embeddingModel.Parameters
+	changedModel.Parameters.ExtraConfig = map[string]string{
+		"api_version": "2026-02-01",
+		"credential":  "secret-extra",
+	}
+	changedModelConfig, err := NewRunConfig(
+		dataset, "source-kb", kb, &changedModel, chatModel, nil, params, 4, "0.7.2",
+	)
+	if err != nil {
+		t.Fatalf("build changed model config: %v", err)
+	}
+	if changedModelConfig.ConfigHash == first.ConfigHash {
+		t.Fatal("configuration hash did not change after a whitelisted provider parameter changed")
+	}
+}
+
+func TestReproducibilitySnapshotCanBeComplete(t *testing.T) {
+	dataset := types.EvaluationDatasetDescriptor{
+		Files: []types.EvaluationDatasetFile{{Name: "corpus.parquet", Fingerprint: "sha256:file", Size: 10}},
+	}
+	embeddingModel := &types.Model{Type: types.ModelTypeEmbedding}
+	chatModel := &types.Model{Type: types.ModelTypeKnowledgeQA}
+
+	snapshot := reproducibilitySnapshot(dataset, true, false, embeddingModel, chatModel)
+	if snapshot.Status != types.EvaluationReproducibilityComplete || len(snapshot.Warnings) != 0 {
+		t.Fatalf("complete inputs were not marked reproducible: %#v", snapshot)
 	}
 }
 

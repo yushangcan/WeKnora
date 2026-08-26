@@ -114,6 +114,10 @@ func TestEvaluationRunConfigDecodesArtifactAndCodeIdentity(t *testing.T) {
             "commit_sha": "abc123",
             "vcs_modified": true,
             "commit_available": true
+        },
+        "reproducibility": {
+            "status": "partial",
+            "warnings": [{"code": "working_tree_modified", "message": "modified"}]
         }
     }`)
 
@@ -126,6 +130,9 @@ func TestEvaluationRunConfigDecodesArtifactAndCodeIdentity(t *testing.T) {
 	}
 	if config.Runtime.CommitSHA != "abc123" || !config.Runtime.VCSModified || !config.Runtime.CommitAvailable {
 		t.Fatalf("code identity was not decoded: %#v", config.Runtime)
+	}
+	if config.Reproducibility.Status != "partial" || len(config.Reproducibility.Warnings) != 1 {
+		t.Fatalf("reproducibility state was not decoded: %#v", config.Reproducibility)
 	}
 }
 

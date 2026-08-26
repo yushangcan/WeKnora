@@ -11,6 +11,9 @@ const (
 
 	EvaluationDatasetModePassageChunking = "passage_chunking"
 	EvaluationPassageIDMetadataKey       = "evaluation_pid"
+
+	EvaluationReproducibilityComplete = "complete"
+	EvaluationReproducibilityPartial  = "partial"
 )
 
 // EvaluationDatasetDescriptor identifies the exact dataset content used by a run.
@@ -56,6 +59,7 @@ type EvaluationRunConfig struct {
 	Generation            EvaluationGenerationConfig  `json:"generation"`
 	Indexing              EvaluationIndexingConfig    `json:"indexing"`
 	Runtime               EvaluationRuntimeConfig     `json:"runtime"`
+	Reproducibility       EvaluationReproducibility   `json:"reproducibility"`
 	ConfigHash            string                      `json:"config_hash"`
 }
 
@@ -146,4 +150,10 @@ type EvaluationRuntimeConfig struct {
 	CommitSHA          string `json:"commit_sha"`
 	VCSModified        bool   `json:"vcs_modified"`
 	CommitAvailable    bool   `json:"commit_available"`
+}
+
+// EvaluationReproducibility states whether the stored non-secret snapshot is sufficient to repeat a run.
+type EvaluationReproducibility struct {
+	Status   string              `json:"status"`
+	Warnings []EvaluationWarning `json:"warnings"`
 }

@@ -137,6 +137,7 @@ type EvaluationRunConfig struct {
 	Generation            EvaluationGenerationConfig  `json:"generation"`
 	Indexing              EvaluationIndexingConfig    `json:"indexing"`
 	Runtime               EvaluationRuntimeConfig     `json:"runtime"`
+	Reproducibility       EvaluationReproducibility   `json:"reproducibility"`
 	ConfigHash            string                      `json:"config_hash"`
 }
 
@@ -224,6 +225,11 @@ type EvaluationRuntimeConfig struct {
 	CommitSHA          string `json:"commit_sha"`
 	VCSModified        bool   `json:"vcs_modified"`
 	CommitAvailable    bool   `json:"commit_available"`
+}
+
+type EvaluationReproducibility struct {
+	Status   string              `json:"status"`
+	Warnings []EvaluationWarning `json:"warnings"`
 }
 
 type EvaluationMetrics struct {

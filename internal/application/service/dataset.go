@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/Tencent/WeKnora/internal/logger"
 	"github.com/Tencent/WeKnora/internal/types"
@@ -79,6 +80,7 @@ func (d *DatasetService) LoadDataset(ctx context.Context, datasetID string) (*ty
 	}
 	dataset.PrintStats(ctx)
 	qaPairs := dataset.Iterate()
+	corpus := dataset.EvaluationCorpus()
 	fingerprint, err := fingerprintDataset(defaultDatasetDir, defaultDatasetFiles)
 	if err != nil {
 		return nil, err
@@ -95,7 +97,8 @@ func (d *DatasetService) LoadDataset(ctx context.Context, datasetID string) (*ty
 			CaseCount:          len(qaPairs),
 			IngestionMode:      types.EvaluationDatasetModePassageChunking,
 		},
-		Cases: qaPairs,
+		Corpus: corpus,
+		Cases:  qaPairs,
 	}, nil
 }
 
@@ -130,37 +133,72 @@ func loadDefaultDataset(datasetDir string) (dataset, error) {
 		return dataset{}, err
 	}
 
+	return buildDataset(queries, corpus, answers, qrels, qas)
+}
+
+func buildDataset(
+	queries []TextInfo,
+	corpus []TextInfo,
+	answers []TextInfo,
+	qrels []RelsInfo,
+	qas []QaInfo,
+) (dataset, error) {
+	queryIndex, err := indexDatasetTexts("query", queries)
+	if err != nil {
+		return dataset{}, err
+	}
+	corpusIndex, err := indexDatasetTexts("passage", corpus)
+	if err != nil {
+		return dataset{}, err
+	}
+	answerIndex, err := indexDatasetTexts("answer", answers)
+	if err != nil {
+		return dataset{}, err
+	}
+	if len(qrels) == 0 {
+		return dataset{}, errors.New("evaluation dataset has no relevance relations")
+	}
+	if len(qas) == 0 {
+		return dataset{}, errors.New("evaluation dataset has no question-answer relations")
+	}
+
 	res := dataset{
-		queries: make(map[int64]string),  // qid -> question text
-		corpus:  make(map[int64]string),  // pid -> passage text
-		answers: make(map[int64]string),  // aid -> answer text
-		qrels:   make(map[int64][]int64), // qid -> list of pid
+		queries: queryIndex,
+		corpus:  corpusIndex,
+		answers: answerIndex,
+		qrels:   make(map[int64][]int64), // qid -> list of related pids
 		qas:     make(map[int64]int64),   // qid -> aid
 	}
-	for _, qi := range queries {
-		res.queries[qi.ID] = qi.Text
-	}
-	for _, ci := range corpus {
-		res.corpus[ci.ID] = ci.Text
-	}
-	for _, ai := range answers {
-		res.answers[ai.ID] = ai.Text
-	}
+	seenRelations := make(map[[2]int64]struct{}, len(qrels))
 	for _, ri := range qrels {
+		if ri.QID < 0 || ri.PID < 0 {
+			return dataset{}, fmt.Errorf("qrels contains negative ID: qid=%d pid=%d", ri.QID, ri.PID)
+		}
 		if _, ok := res.queries[ri.QID]; !ok {
 			return dataset{}, fmt.Errorf("qrels references unknown query %d", ri.QID)
 		}
 		if _, ok := res.corpus[ri.PID]; !ok {
 			return dataset{}, fmt.Errorf("qrels references unknown passage %d", ri.PID)
 		}
+		relation := [2]int64{ri.QID, ri.PID}
+		if _, exists := seenRelations[relation]; exists {
+			return dataset{}, fmt.Errorf("duplicate qrels relation: qid=%d pid=%d", ri.QID, ri.PID)
+		}
+		seenRelations[relation] = struct{}{}
 		res.qrels[ri.QID] = append(res.qrels[ri.QID], ri.PID)
 	}
 	for _, qi := range qas {
+		if qi.QID < 0 || qi.AID < 0 {
+			return dataset{}, fmt.Errorf("qas contains negative ID: qid=%d aid=%d", qi.QID, qi.AID)
+		}
 		if _, ok := res.queries[qi.QID]; !ok {
 			return dataset{}, fmt.Errorf("qas references unknown query %d", qi.QID)
 		}
 		if _, ok := res.answers[qi.AID]; !ok {
 			return dataset{}, fmt.Errorf("qas references unknown answer %d", qi.AID)
+		}
+		if _, exists := res.qas[qi.QID]; exists {
+			return dataset{}, fmt.Errorf("duplicate qas relation for query %d", qi.QID)
 		}
 		res.qas[qi.QID] = qi.AID
 	}
@@ -177,6 +215,26 @@ func loadDefaultDataset(datasetDir string) (dataset, error) {
 		}
 	}
 	return res, nil
+}
+
+func indexDatasetTexts(kind string, rows []TextInfo) (map[int64]string, error) {
+	if len(rows) == 0 {
+		return nil, fmt.Errorf("evaluation dataset has no %s entries", kind)
+	}
+	result := make(map[int64]string, len(rows))
+	for _, row := range rows {
+		if row.ID < 0 {
+			return nil, fmt.Errorf("%s ID must not be negative: %d", kind, row.ID)
+		}
+		if strings.TrimSpace(row.Text) == "" {
+			return nil, fmt.Errorf("%s %d is empty", kind, row.ID)
+		}
+		if _, exists := result[row.ID]; exists {
+			return nil, fmt.Errorf("duplicate %s ID: %d", kind, row.ID)
+		}
+		result[row.ID] = row.Text
+	}
+	return result, nil
 }
 
 // dataset represents the in-memory dataset structure
@@ -228,6 +286,24 @@ func (d *dataset) Iterate() []*types.QAPair {
 	}
 
 	return pairs
+}
+
+// EvaluationCorpus returns every corpus passage in stable passage ID order.
+func (d *dataset) EvaluationCorpus() []types.EvaluationPassage {
+	pids := make([]int64, 0, len(d.corpus))
+	for pid := range d.corpus {
+		pids = append(pids, pid)
+	}
+	sort.Slice(pids, func(i, j int) bool { return pids[i] < pids[j] })
+
+	passages := make([]types.EvaluationPassage, 0, len(pids))
+	for _, pid := range pids {
+		passages = append(passages, types.EvaluationPassage{
+			PID:  int(pid),
+			Text: d.corpus[pid],
+		})
+	}
+	return passages
 }
 
 func fingerprintDataset(datasetDir string, names []string) (string, error) {

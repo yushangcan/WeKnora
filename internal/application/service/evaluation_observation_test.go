@@ -152,8 +152,12 @@ func (observedDatasetStub) LoadDataset(context.Context, string) (*types.Evaluati
 	return &types.EvaluationDataset{
 		Descriptor: types.EvaluationDatasetDescriptor{
 			ID: "default", Version: "1", ContentFingerprint: "sha256:test",
-			QueryCount: len(cases), CorpusCount: 1, CaseCount: len(cases),
+			QueryCount: len(cases), CorpusCount: 2, CaseCount: len(cases),
 			IngestionMode: types.EvaluationDatasetModePassageChunking,
+		},
+		Corpus: []types.EvaluationPassage{
+			{PID: 0, Text: "relevant passage"},
+			{PID: 1, Text: "distractor passage"},
 		},
 		Cases: cases,
 	}, nil
@@ -198,7 +202,8 @@ func (s *observedKnowledgeBaseStub) DeleteKnowledgeBase(context.Context, string)
 
 type observedKnowledgeStub struct {
 	interfaces.KnowledgeService
-	deleted atomic.Bool
+	deleted      atomic.Bool
+	passageCount atomic.Int64
 }
 
 func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSync(
@@ -207,6 +212,7 @@ func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSync(
 	passages []string,
 	_ string,
 ) (*types.Knowledge, error) {
+	s.passageCount.Store(int64(len(passages)))
 	evaluationobs.RecordModelCall(ctx, evaluationobs.ModelCallRecord{
 		ModelType:   types.EvaluationModelTypeEmbedding,
 		ModelID:     "embedding-1",
@@ -312,7 +318,8 @@ func (twoCaseObservedDatasetStub) LoadDataset(context.Context, string) (*types.E
 			QueryCount: len(cases), CorpusCount: 1, CaseCount: len(cases),
 			IngestionMode: types.EvaluationDatasetModePassageChunking,
 		},
-		Cases: cases,
+		Corpus: []types.EvaluationPassage{{PID: 0, Text: "relevant passage"}},
+		Cases:  cases,
 	}, nil
 }
 
@@ -453,6 +460,9 @@ func TestEvaluationServiceExposesFourDimensionLifecycleResult(t *testing.T) {
 	}
 	if !knowledgeService.deleted.Load() || !kbService.deleted.Load() {
 		t.Fatal("existing cleanup lifecycle did not run")
+	}
+	if knowledgeService.passageCount.Load() != 2 {
+		t.Fatalf("evaluation indexed %d passages, want the complete 2-passage corpus", knowledgeService.passageCount.Load())
 	}
 
 	recreatedService := NewEvaluationService(

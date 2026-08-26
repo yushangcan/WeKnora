@@ -23,9 +23,16 @@ type EvaluationDatasetDescriptor struct {
 	IngestionMode      string `json:"ingestion_mode"`
 }
 
-// EvaluationDataset contains validated cases and their immutable descriptor.
+// EvaluationPassage is one corpus entry identified by its source passage ID.
+type EvaluationPassage struct {
+	PID  int
+	Text string
+}
+
+// EvaluationDataset contains the complete corpus, validated cases and their immutable descriptor.
 type EvaluationDataset struct {
 	Descriptor EvaluationDatasetDescriptor
+	Corpus     []EvaluationPassage
 	Cases      []*QAPair
 }
 

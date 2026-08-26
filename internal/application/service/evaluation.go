@@ -432,12 +432,16 @@ func (e *EvaluationService) EvalDataset(
 	}
 	qaPairs := dataset.Cases
 	logger.Infof(ctx, "Dataset retrieved successfully with %d QA pairs", len(qaPairs))
+	if len(dataset.Corpus) == 0 {
+		finishPreparation()
+		return fmt.Errorf("evaluation dataset corpus is empty")
+	}
 
 	detail.Task.Total = len(qaPairs)
 	logger.Infof(ctx, "Evaluation task contains %d QA pairs", detail.Task.Total)
 
-	// Extract and organize passages from dataset
-	passages := getPassageList(qaPairs)
+	// Use the complete corpus instead of limiting retrieval to relevant passages.
+	passages := getPassageList(dataset.Corpus)
 	logger.Infof(ctx, "Creating knowledge from %d passages", len(passages))
 
 	// Create knowledge base from passages (sync: wait for indexing to complete before querying)
@@ -617,22 +621,11 @@ func evaluationCaseResult(
 	return nil
 }
 
-// getPassageList extracts and organizes passages from QA pairs
-// Returns a slice of passages indexed by their passage IDs
-func getPassageList(dataset []*types.QAPair) []string {
-	pIDMap := make(map[int]string)
-	maxPID := 0
-	for _, qaPair := range dataset {
-		for i := 0; i < len(qaPair.PIDs); i++ {
-			pIDMap[qaPair.PIDs[i]] = qaPair.Passages[i]
-			maxPID = max(maxPID, qaPair.PIDs[i])
-		}
-	}
-	passages := make([]string, maxPID+1)
-	for i := 0; i <= maxPID; i++ {
-		if _, ok := pIDMap[i]; ok {
-			passages[i] = pIDMap[i]
-		}
+// getPassageList returns the complete corpus text in its validated stable order.
+func getPassageList(corpus []types.EvaluationPassage) []string {
+	passages := make([]string, 0, len(corpus))
+	for _, passage := range corpus {
+		passages = append(passages, passage.Text)
 	}
 	return passages
 }

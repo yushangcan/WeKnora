@@ -9,7 +9,7 @@
 
 > 注：服务端路由带尾斜杠（Gin 会自动从 `/evaluation` 重定向到 `/evaluation/`），下方示例为方便阅读用了 `/evaluation`。
 
-> 当前实现会把任务状态、固定配置、四维结果和 Case 观察写入项目现有数据库，服务重启后仍可按任务 ID 查询。历史分页、跨 Run 对比和 Vue 页面属于下一阶段。
+> 当前实现会把任务状态、固定配置、四维结果和 Case 审计证据写入项目现有数据库，服务重启后仍可按任务 ID 查询。当前配置契约为 `evaluation-config/v2`，检索与生成指标输入契约为 `retrieval-generation/v2`。历史分页、跨 Run 对比和 Vue 页面属于下一阶段。
 
 ## GET `/evaluation` - 获取评估任务结果
 
@@ -369,6 +369,35 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
                             }
                         ]
                     },
+                    "evidence": {
+                        "qid": 1,
+                        "question_fingerprint": "sha256:<question-hash>",
+                        "reference_answer_fingerprint": "sha256:<reference-answer-hash>",
+                        "generated_answer_fingerprint": "sha256:<generated-answer-hash>",
+                        "ground_truth_pids": [1],
+                        "search_pids": [2, 1],
+                        "rerank_pids": [2, 1],
+                        "metric_input_pids": [2, 1],
+                        "unmapped_result_count": 0,
+                        "metrics": {
+                            "retrieval_metrics": {
+                                "precision": 0.5,
+                                "recall": 1,
+                                "ndcg3": 0.6309297535714574,
+                                "ndcg10": 0.6309297535714574,
+                                "mrr": 0.5,
+                                "map": 0.5
+                            },
+                            "generation_metrics": {
+                                "bleu1": 0.037656734016532384,
+                                "bleu2": 0.04067392145167686,
+                                "bleu4": 0.048963321289052536,
+                                "rouge1": 0,
+                                "rouge2": 0,
+                                "rougel": 0
+                            }
+                        }
+                    },
                     "warnings": []
                 }
             ],
@@ -388,29 +417,62 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 - `usage` 是当前 Run 外层采集到的模型调用量。Chat Token 仅在现有 `ChatResponse.Usage` 有值时标记为 `provider_reported`；Embedding 和 Rerank 暂无统一 Token Usage 时标记为 `unavailable`。
 - `cost.amount` 未知时固定为 `null`，`status` 为 `unavailable`。本阶段不新增价格表，也不根据 Token 自行估算金额。
 - `timing.total_wall_time_ms` 是 Run 实际墙钟耗时；`model_call_cumulative_ms` 是所有模型调用耗时相加。存在并发时两者不相等是正常的。
-- `cases` 保存每个 QA Case 的归属、耗时、调用量和失败警告，不保存 Prompt、答案正文、文档正文或 API Key。
+- `cases` 保存每个 QA Case 的归属、耗时、调用量、脱敏审计证据和失败警告，不保存 Prompt、问题、答案、文档正文或 API Key。
 - `metric` 旧字段继续返回，用于兼容已有调用方；`result.retrieval` 和 `result.answer` 只是对旧指标的映射。
+- `retrieval-generation/v2` 固定使用最终检索 PID 列表作为指标输入：有 Rerank 结果时使用 Rerank 排名，否则使用 Search 排名；重复 PID 只保留第一次，无法映射的结果作为不相关结果保留在分母中。
+- `retrieval-generation/v1` 与 `retrieval-generation/v2` 的 corpus 和 PID 输入语义不同，历史结果不能直接做质量升降比较。
 
 ### 可重复配置与持久化
 
 - `dataset_id` 目前只接受 `default`。服务会校验五个 Parquet 文件，并按固定顺序计算 `dataset.content_fingerprint`；文件内容变化后指纹会变化。
+- `dataset.files` 是五个数据文件的 Manifest，保存文件名、SHA-256 指纹和字节数，不保存本机绝对路径。
 - `config` 记录本次运行实际使用的数据集版本、模型身份、分块、检索、生成、索引、并发数和应用版本，`config_hash` 是这些有效参数的稳定 SHA-256 摘要。
-- 模型 API Key、App Secret、自定义 Header 和扩展配置不会写入评测快照；Endpoint、Prompt 和 Context 只保存指纹。
+- `runtime` 保存应用版本、Commit SHA、工作树修改状态和 Commit 是否可获得。构建信息不可获得时不会虚构版本，而是把可重复性标记为 `partial`。
+- 模型 API Key、App ID、App Secret 和自定义 Header 不会写入评测快照；Endpoint、Prompt 和 Context 只保存指纹。扩展配置只允许非敏感行为参数进入模型参数指纹。
+- `reproducibility.status` 为 `complete` 或 `partial`，并通过 `warnings` 说明数据制品、代码版本或模型配置中未能安全固化的部分。
 - 兼容字段 `params` 仍保留模型 ID 和数值参数，但 Prompt、Context、Fallback 和 Rewrite 文本在返回及持久化前会置空；运行中的模型调用继续使用原始配置。
 - `chunking.applied=true` 表示评测语料会实际使用知识库的现有分块器。每条带 PID 的数据集 passage 独立分块，不跨 passage 边界，以保持召回结果与标准 PID 的映射。
 - `task`、`config`、`metric` 和 `result` 以快照形式保存，因此源知识库或模型之后被修改、删除时，既有评测结果仍可读取。
 - 主运行更新和对应 Case 结果在同一事务中写入；所有单 Run 查询均受当前 `tenant_id` 限制。
+- Run 快照只保存聚合结果，不重复保存 Case 明细。读取单个 Run 时，Repository 会从 Case 表按当前租户和 Run ID 查询，再按数值 QID 稳定排序并组装回 API 响应。
 - 本阶段保存每个已完成 Case 的最新进度，但不做断点续跑。多实例部署无法仅凭 `running` 状态安全判断任务所属进程，因此进程异常退出后的自动终结应在后续引入 Worker 租约或心跳后启用。
 
 `config` 字段结构示例：
 
 ```json
 {
-    "schema_version": "evaluation-config/v1",
+    "schema_version": "evaluation-config/v2",
     "dataset": {
         "id": "default",
         "version": "1",
         "content_fingerprint": "sha256:<dataset-content-hash>",
+        "files": [
+            {
+                "name": "queries.parquet",
+                "fingerprint": "sha256:<queries-file-hash>",
+                "size": 4096
+            },
+            {
+                "name": "corpus.parquet",
+                "fingerprint": "sha256:<corpus-file-hash>",
+                "size": 65536
+            },
+            {
+                "name": "qrels.parquet",
+                "fingerprint": "sha256:<qrels-file-hash>",
+                "size": 4096
+            },
+            {
+                "name": "qas.parquet",
+                "fingerprint": "sha256:<qas-file-hash>",
+                "size": 4096
+            },
+            {
+                "name": "answers.parquet",
+                "fingerprint": "sha256:<answers-file-hash>",
+                "size": 8192
+            }
+        ],
         "query_count": 100,
         "corpus_count": 1000,
         "case_count": 100,
@@ -422,19 +484,38 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
             "id": "embedding-model-id",
             "name": "embedding-model-name",
             "type": "Embedding",
-            "parameters_fingerprint": "sha256:<model-parameters-hash>"
+            "source": "remote",
+            "provider": "provider-name",
+            "interface_type": "openai",
+            "embedding_dimension": 1024,
+            "max_concurrency": 4,
+            "endpoint_fingerprint": "sha256:<endpoint-hash>",
+            "parameters_fingerprint": "sha256:<model-parameters-hash>",
+            "updated_at": "2026-08-26T00:00:00Z"
         },
         "chat": {
             "id": "chat-model-id",
             "name": "chat-model-name",
             "type": "KnowledgeQA",
-            "parameters_fingerprint": "sha256:<model-parameters-hash>"
+            "source": "remote",
+            "provider": "provider-name",
+            "interface_type": "openai",
+            "max_concurrency": 4,
+            "endpoint_fingerprint": "sha256:<endpoint-hash>",
+            "parameters_fingerprint": "sha256:<model-parameters-hash>",
+            "updated_at": "2026-08-26T00:00:00Z"
         },
         "rerank": {
             "id": "rerank-model-id",
             "name": "rerank-model-name",
             "type": "Rerank",
-            "parameters_fingerprint": "sha256:<model-parameters-hash>"
+            "source": "remote",
+            "provider": "provider-name",
+            "interface_type": "openai",
+            "max_concurrency": 4,
+            "endpoint_fingerprint": "sha256:<endpoint-hash>",
+            "parameters_fingerprint": "sha256:<model-parameters-hash>",
+            "updated_at": "2026-08-26T00:00:00Z"
         }
     },
     "chunking": {
@@ -475,13 +556,31 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
     },
     "runtime": {
         "case_concurrency": 7,
-        "metric_version": "retrieval-generation/v1",
+        "metric_version": "retrieval-generation/v2",
         "result_version": "evaluation-run/v1",
-        "application_version": "0.7.2"
+        "application_version": "0.7.2",
+        "commit_sha": "0123456789abcdef0123456789abcdef01234567",
+        "vcs_modified": false,
+        "commit_available": true
+    },
+    "reproducibility": {
+        "status": "complete",
+        "warnings": []
     },
     "config_hash": "sha256:<effective-config-hash>"
 }
 ```
+
+### 数据库存储职责与能力边界
+
+| 表 | 保存内容 | 不保存内容 |
+| --- | --- | --- |
+| `evaluation_runs` | Run 身份、生命周期、配置快照、兼容参数快照、聚合指标和四维结果 | Case 明细、凭据、问题或答案正文 |
+| `evaluation_run_cases` | Case 状态、耗时、Usage、Warning、PID 排名、指标和文本指纹 | 问题、参考答案、生成答案或文档正文 |
+
+两张表由项目现有 PostgreSQL/SQLite 迁移创建，Case 通过外键归属 Run，删除 Run 时级联删除 Case。当前实现支持进程重启后读取已经持久化的 Run 和 Case，但不支持从中断 Case 继续执行，也不支持多实例自动接管。
+
+SQLite 的新建库、v11 到 v12 升级、索引、外键级联和 Down Migration 已建立自动化测试。PostgreSQL migration 85 已建立 SQL 合同检查，但仍需在真实 PostgreSQL 或 Linux CI 中执行 Up/Down、JSONB 写入和外键验证；在完成该验证前不能宣称 PostgreSQL 迁移已经实跑通过。
 
 ## POST `/evaluation` - 创建评估任务
 

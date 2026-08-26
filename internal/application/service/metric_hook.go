@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"strings"
+	"encoding/json"
 	"sync"
 
 	"github.com/Tencent/WeKnora/internal/application/service/metric"
@@ -91,10 +91,12 @@ type HookMetric struct {
 
 // qaPairMetric stores metrics for a single QA pair
 type qaPairMetric struct {
-	qaPair       *types.QAPair
-	searchResult []*types.SearchResult
-	rerankResult []*types.SearchResult
-	chatResponse *types.ChatResponse
+	qaPair              *types.QAPair
+	searchResult        []*types.SearchResult
+	rerankResult        []*types.SearchResult
+	chatResponse        *types.ChatResponse
+	retrievalIDs        []int
+	unmappedResultCount int
 }
 
 // NewHookMetric creates a new HookMetric with given capacity
@@ -134,37 +136,14 @@ func (h *HookMetric) recordChatResponse(index int, chatResponse *types.ChatRespo
 // recordFinish finalizes metrics for a QA pair
 func (h *HookMetric) recordFinish(index int) {
 	// Prepare retrieval source: prefer rerank results, fall back to search results
-	retrievalSource := h.qaPairMetricList[index].rerankResult
+	caseMetric := h.qaPairMetricList[index]
+	retrievalSource := caseMetric.rerankResult
 	if len(retrievalSource) == 0 {
-		retrievalSource = h.qaPairMetricList[index].searchResult
+		retrievalSource = caseMetric.searchResult
 	}
 
-	// Map retrieved chunks back to original passage IDs via content matching.
-	// ChunkIndex is the chunk's ordinal position in the knowledge base, which
-	// does NOT correspond to the dataset's passage IDs. Instead, we match each
-	// retrieved chunk's content against the ground truth passages to determine
-	// which passage it came from.
-	qaPair := h.qaPairMetricList[index].qaPair
-	retrievalIDs := make([]int, 0, len(retrievalSource))
-	seen := make(map[int]struct{})
-	for _, r := range retrievalSource {
-		if r.Content == "" {
-			continue
-		}
-		for i, passage := range qaPair.Passages {
-			if passage == "" {
-				continue
-			}
-			if strings.Contains(passage, r.Content) || strings.Contains(r.Content, passage) {
-				pid := qaPair.PIDs[i]
-				if _, ok := seen[pid]; !ok {
-					seen[pid] = struct{}{}
-					retrievalIDs = append(retrievalIDs, pid)
-				}
-				break
-			}
-		}
-	}
+	caseMetric.retrievalIDs, caseMetric.unmappedResultCount = evaluationRetrievalIDs(retrievalSource)
+	qaPair := caseMetric.qaPair
 
 	// Get generated text if available
 	generatedTexts := ""
@@ -175,7 +154,7 @@ func (h *HookMetric) recordFinish(index int) {
 	// Prepare metric input data
 	metricInput := &types.MetricInput{
 		RetrievalGT:    [][]int{qaPair.PIDs},
-		RetrievalIDs:   retrievalIDs,
+		RetrievalIDs:   caseMetric.retrievalIDs,
 		GeneratedTexts: generatedTexts,
 		GeneratedGT:    qaPair.Answer,
 	}
@@ -184,6 +163,43 @@ func (h *HookMetric) recordFinish(index int) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.metricResults.Append(metricInput)
+}
+
+// evaluationRetrievalIDs converts ranked chunks into passage-level metric input.
+func evaluationRetrievalIDs(results []*types.SearchResult) ([]int, int) {
+	retrievalIDs := make([]int, 0, len(results))
+	seenPIDs := make(map[int]struct{}, len(results))
+	unmappedCount := 0
+
+	for _, result := range results {
+		pid, ok := evaluationPassageID(result)
+		if !ok {
+			unmappedCount++
+			// Dataset passage IDs are non-negative, so unique negative IDs remain
+			// non-relevant while preserving each unmapped result in the denominator.
+			retrievalIDs = append(retrievalIDs, -unmappedCount)
+			continue
+		}
+		if _, exists := seenPIDs[pid]; exists {
+			continue
+		}
+		seenPIDs[pid] = struct{}{}
+		retrievalIDs = append(retrievalIDs, pid)
+	}
+	return retrievalIDs, unmappedCount
+}
+
+func evaluationPassageID(result *types.SearchResult) (int, bool) {
+	if result == nil || len(result.ChunkMetadata) == 0 {
+		return 0, false
+	}
+	metadata := struct {
+		PID *int `json:"evaluation_pid"`
+	}{}
+	if err := json.Unmarshal(result.ChunkMetadata, &metadata); err != nil || metadata.PID == nil || *metadata.PID < 0 {
+		return 0, false
+	}
+	return *metadata.PID, true
 }
 
 // MetricResult returns the averaged metric results

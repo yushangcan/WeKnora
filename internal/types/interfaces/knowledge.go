@@ -45,9 +45,9 @@ type KnowledgeService interface {
 	CreateKnowledgeFromPassage(ctx context.Context, kbID string, passage []string, channel string) (*types.Knowledge, error)
 	// CreateKnowledgeFromPassageSync creates knowledge from text passages and waits until chunks are indexed.
 	CreateKnowledgeFromPassageSync(ctx context.Context, kbID string, passage []string, channel string) (*types.Knowledge, error)
-	// CreateKnowledgeFromPassageSyncWithChunking applies the knowledge base chunking configuration before indexing.
+	// CreateKnowledgeFromPassageSyncWithChunking applies chunking while preserving evaluation passage IDs.
 	CreateKnowledgeFromPassageSyncWithChunking(
-		ctx context.Context, kbID string, passage []string, channel string,
+		ctx context.Context, kbID string, passages []types.EvaluationPassage, channel string,
 	) (*types.Knowledge, error)
 	// CreateKnowledgeFromManual creates or saves manual Markdown knowledge content.
 	// channel identifies the ingestion channel; empty defaults to "web".

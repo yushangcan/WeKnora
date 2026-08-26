@@ -140,6 +140,7 @@ func (parentChildTaskEnqueuer) Enqueue(*asynq.Task, ...asynq.Option) (*asynq.Tas
 }
 
 func TestProcessChunksIndexesEveryTextChild(t *testing.T) {
+	metadata := types.JSON(`{"evaluation_pid":10}`)
 	knowledge := &types.Knowledge{
 		ID:              "knowledge-1",
 		TenantID:        1,
@@ -174,18 +175,19 @@ func TestProcessChunksIndexesEveryTextChild(t *testing.T) {
 		IndexingStrategy: types.IndexingStrategy{VectorEnabled: true},
 	}
 	chunks := []types.ParsedChunk{
-		{Content: "linked child", Seq: 0, Start: 0, End: 12, ParentIndex: 0},
-		{Content: "standalone child", Seq: 1, Start: 12, End: 28, ParentIndex: -1},
+		{Content: "linked child", Metadata: metadata, Seq: 0, Start: 0, End: 12, ParentIndex: 0},
+		{Content: "standalone child", Metadata: metadata, Seq: 1, Start: 12, End: 28, ParentIndex: -1},
 	}
 
 	svc.processChunks(ctx, kb, knowledge, chunks, ProcessChunksOptions{
 		ParentChunks: []types.ParsedParentChunk{
-			{Content: "parent context", Seq: 0, Start: 0, End: 28},
+			{Content: "parent context", Metadata: metadata, Seq: 0, Start: 0, End: 28},
 		},
 	})
 
 	var textChunkIDs []string
 	for _, chunk := range chunkService.created {
+		require.JSONEq(t, string(metadata), string(chunk.Metadata))
 		if chunk.ChunkType == types.ChunkTypeText {
 			textChunkIDs = append(textChunkIDs, chunk.ID)
 		}

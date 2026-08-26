@@ -621,11 +621,9 @@ func evaluationCaseResult(
 	return nil
 }
 
-// getPassageList returns the complete corpus text in its validated stable order.
-func getPassageList(corpus []types.EvaluationPassage) []string {
-	passages := make([]string, 0, len(corpus))
-	for _, passage := range corpus {
-		passages = append(passages, passage.Text)
-	}
+// getPassageList returns a detached copy of the complete corpus in its validated stable order.
+func getPassageList(corpus []types.EvaluationPassage) []types.EvaluationPassage {
+	passages := make([]types.EvaluationPassage, len(corpus))
+	copy(passages, corpus)
 	return passages
 }

@@ -713,21 +713,27 @@ func (s *knowledgeService) createKnowledgeFromFileURL(
 func (s *knowledgeService) CreateKnowledgeFromPassage(ctx context.Context,
 	kbID string, passage []string, channel string,
 ) (*types.Knowledge, error) {
-	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, false, false, channel)
+	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, false, false, channel, nil)
 }
 
 // CreateKnowledgeFromPassageSync creates a knowledge entry from text passages and waits for indexing to complete.
 func (s *knowledgeService) CreateKnowledgeFromPassageSync(ctx context.Context,
 	kbID string, passage []string, channel string,
 ) (*types.Knowledge, error) {
-	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, true, false, channel)
+	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, true, false, channel, nil)
 }
 
-// CreateKnowledgeFromPassageSyncWithChunking applies the configured splitter to each passage before indexing.
+// CreateKnowledgeFromPassageSyncWithChunking applies chunking while preserving evaluation passage IDs.
 func (s *knowledgeService) CreateKnowledgeFromPassageSyncWithChunking(ctx context.Context,
-	kbID string, passage []string, channel string,
+	kbID string, passages []types.EvaluationPassage, channel string,
 ) (*types.Knowledge, error) {
-	return s.createKnowledgeFromPassageInternal(ctx, kbID, passage, true, true, channel)
+	texts := make([]string, len(passages))
+	pids := make([]int, len(passages))
+	for i, passage := range passages {
+		texts[i] = passage.Text
+		pids[i] = passage.PID
+	}
+	return s.createKnowledgeFromPassageInternal(ctx, kbID, texts, true, true, channel, pids)
 }
 
 // CreateKnowledgeFromManual creates or saves manual Markdown knowledge content.
@@ -857,8 +863,11 @@ func (s *knowledgeService) CreateKnowledgeFromManual(ctx context.Context,
 // createKnowledgeFromPassageInternal consolidates the common logic for creating knowledge from passages.
 // When syncMode is true, chunk processing is performed synchronously; otherwise, it's processed asynchronously.
 func (s *knowledgeService) createKnowledgeFromPassageInternal(ctx context.Context,
-	kbID string, passage []string, syncMode bool, applyChunking bool, channel string,
+	kbID string, passage []string, syncMode bool, applyChunking bool, channel string, evaluationPIDs []int,
 ) (*types.Knowledge, error) {
+	if applyChunking && len(evaluationPIDs) != len(passage) {
+		return nil, werrors.NewValidationError("评测段落标识与段落数量不一致")
+	}
 	if syncMode {
 		logger.Info(ctx, "Start creating knowledge from passage (sync)")
 	} else {
@@ -914,7 +923,11 @@ func (s *knowledgeService) createKnowledgeFromPassageInternal(ctx context.Contex
 	if syncMode {
 		logger.Info(ctx, "Processing passage synchronously")
 		if applyChunking {
-			s.processDocumentFromPassageWithChunking(ctx, kb, knowledge, safePassages)
+			evaluationPassages := make([]types.EvaluationPassage, len(safePassages))
+			for i, text := range safePassages {
+				evaluationPassages[i] = types.EvaluationPassage{PID: evaluationPIDs[i], Text: text}
+			}
+			s.processDocumentFromPassageWithChunking(ctx, kb, knowledge, evaluationPassages)
 		} else {
 			s.processDocumentFromPassage(ctx, kb, knowledge, safePassages)
 		}

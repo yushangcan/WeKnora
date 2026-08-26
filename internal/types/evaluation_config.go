@@ -10,6 +10,7 @@ const (
 	EvaluationMetricVersion       = "retrieval-generation/v1"
 
 	EvaluationDatasetModePassageChunking = "passage_chunking"
+	EvaluationPassageIDMetadataKey       = "evaluation_pid"
 )
 
 // EvaluationDatasetDescriptor identifies the exact dataset content used by a run.

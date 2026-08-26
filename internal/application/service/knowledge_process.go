@@ -153,7 +153,7 @@ func (s *knowledgeService) processDocumentFromPassage(ctx context.Context,
 
 // processDocumentFromPassageWithChunking keeps dataset passage boundaries while applying the configured splitter.
 func (s *knowledgeService) processDocumentFromPassageWithChunking(ctx context.Context,
-	kb *types.KnowledgeBase, knowledge *types.Knowledge, passages []string,
+	kb *types.KnowledgeBase, knowledge *types.Knowledge, passages []types.EvaluationPassage,
 ) {
 	knowledge.ParseStatus = "processing"
 	knowledge.UpdatedAt = time.Now()
@@ -168,7 +168,7 @@ func (s *knowledgeService) processDocumentFromPassageWithChunking(ctx context.Co
 
 // splitEvaluationPassages splits each labeled passage independently so chunks remain attributable to one passage.
 func splitEvaluationPassages(
-	passages []string,
+	passages []types.EvaluationPassage,
 	chunkingConfig types.ChunkingConfig,
 ) ([]types.ParsedChunk, []types.ParsedParentChunk) {
 	baseConfig := buildSplitterConfigFromChunking(chunkingConfig)
@@ -178,20 +178,25 @@ func splitEvaluationPassages(
 	runeOffset := 0
 
 	for _, passage := range passages {
-		normalized := chunker.NormalizeLineEndings(passage)
+		normalized := chunker.NormalizeLineEndings(passage.Text)
 		if normalized == "" {
 			continue
 		}
+		metadataBytes, _ := json.Marshal(map[string]int{
+			types.EvaluationPassageIDMetadataKey: passage.PID,
+		})
+		metadata := types.JSON(metadataBytes)
 		if chunkingConfig.EnableParentChild {
 			parentConfig, childConfig := buildParentChildConfigs(chunkingConfig, baseConfig)
 			result := chunker.SplitParentChild(normalized, parentConfig, childConfig)
 			parentOffset := len(parents)
 			for _, parent := range result.Parents {
 				parents = append(parents, types.ParsedParentChunk{
-					Content: parent.Content,
-					Seq:     len(parents),
-					Start:   parent.Start + runeOffset,
-					End:     parent.End + runeOffset,
+					Content:  parent.Content,
+					Metadata: metadata,
+					Seq:      len(parents),
+					Start:    parent.Start + runeOffset,
+					End:      parent.End + runeOffset,
 				})
 			}
 			for _, child := range result.Children {
@@ -201,6 +206,7 @@ func splitEvaluationPassages(
 				}
 				parsed = append(parsed, types.ParsedChunk{
 					Content:       child.Content,
+					Metadata:      metadata,
 					ContextHeader: child.ContextHeader,
 					Seq:           sequence,
 					Start:         child.Start + runeOffset,
@@ -213,6 +219,7 @@ func splitEvaluationPassages(
 			for _, chunk := range chunker.Split(normalized, baseConfig) {
 				parsed = append(parsed, types.ParsedChunk{
 					Content:       chunk.Content,
+					Metadata:      metadata,
 					ContextHeader: chunk.ContextHeader,
 					Seq:           sequence,
 					Start:         chunk.Start + runeOffset,
@@ -462,6 +469,7 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 				StartAt:         pc.Start,
 				EndAt:           pc.End,
 				ChunkType:       types.ChunkTypeParentText,
+				Metadata:        pc.Metadata,
 			}
 		}
 		// Set prev/next links for parent chunks
@@ -502,6 +510,7 @@ func (s *knowledgeService) processChunks(ctx context.Context,
 			StartAt:         int(chunkData.Start),
 			EndAt:           int(chunkData.End),
 			ChunkType:       types.ChunkTypeText,
+			Metadata:        chunkData.Metadata,
 		}
 
 		// Wire up ParentChunkID for child chunks

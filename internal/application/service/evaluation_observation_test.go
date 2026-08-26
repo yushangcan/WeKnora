@@ -227,11 +227,21 @@ func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSync(
 
 func (s *observedKnowledgeStub) CreateKnowledgeFromPassageSyncWithChunking(
 	ctx context.Context,
-	kbID string,
-	passages []string,
-	channel string,
+	_ string,
+	passages []types.EvaluationPassage,
+	_ string,
 ) (*types.Knowledge, error) {
-	return s.CreateKnowledgeFromPassageSync(ctx, kbID, passages, channel)
+	s.passageCount.Store(int64(len(passages)))
+	evaluationobs.RecordModelCall(ctx, evaluationobs.ModelCallRecord{
+		ModelType:   types.EvaluationModelTypeEmbedding,
+		ModelID:     "embedding-1",
+		ModelName:   "fake-embedding",
+		Operation:   types.EvaluationOperationBatchEmbed,
+		CallCount:   1,
+		ItemCount:   len(passages),
+		UsageSource: types.EvaluationUsageSourceUnavailable,
+	}, nil)
+	return &types.Knowledge{ID: "evaluation-knowledge"}, nil
 }
 
 func (s *observedKnowledgeStub) DeleteKnowledge(context.Context, string) error {

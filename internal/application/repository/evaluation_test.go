@@ -106,6 +106,25 @@ func containsEvaluationSnapshotText(snapshot types.JSON, value string) bool {
 	return len(value) > 0 && strings.Contains(string(snapshot), value)
 }
 
+func TestMarshalEvaluationRunResultSnapshotExcludesCases(t *testing.T) {
+	snapshot, err := marshalEvaluationRunResultSnapshot(&types.EvaluationRunResult{
+		SchemaVersion: types.EvaluationResultSchemaVersion,
+		Cases: []types.EvaluationCaseResult{
+			{CaseID: "10", Evidence: types.EvaluationCaseEvidence{QuestionFingerprint: "sha256:question"}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("marshal aggregate result: %v", err)
+	}
+	var result types.EvaluationRunResult
+	if err := json.Unmarshal(snapshot, &result); err != nil {
+		t.Fatalf("decode aggregate result: %v", err)
+	}
+	if len(result.Cases) != 0 || strings.Contains(string(snapshot), "sha256:question") {
+		t.Fatalf("aggregate result contains case evidence: %s", snapshot)
+	}
+}
+
 func TestEvaluationRunRecordRoundTripUsesOnlySnapshots(t *testing.T) {
 	detail := newEvaluationRepositoryTestDetail("evaluation-snapshot", 7)
 	record, err := newEvaluationRunRecord(detail, "temporary-kb")
@@ -175,6 +194,21 @@ func TestEvaluationRepositorySavesCaseAndRunAtomically(t *testing.T) {
 	if caseCount != 1 {
 		t.Fatalf("case count = %d, want 1", caseCount)
 	}
+	if len(loaded.Result.Cases) != 1 || loaded.Result.Cases[0].CaseID != "10" ||
+		loaded.Result.Cases[0].Evidence.QID != 10 {
+		t.Fatalf("case table was not assembled into the run response: %#v", loaded.Result.Cases)
+	}
+	var runRecord types.EvaluationRunRecord
+	if err := db.Where("tenant_id = ? AND run_id = ?", 7, detail.Task.ID).Take(&runRecord).Error; err != nil {
+		t.Fatalf("load run record: %v", err)
+	}
+	var aggregateResult types.EvaluationRunResult
+	if err := json.Unmarshal(runRecord.ResultSnapshot, &aggregateResult); err != nil {
+		t.Fatalf("decode aggregate result snapshot: %v", err)
+	}
+	if len(aggregateResult.Cases) != 0 || strings.Contains(string(runRecord.ResultSnapshot), "sha256:question") {
+		t.Fatalf("run snapshot duplicated case evidence: %s", runRecord.ResultSnapshot)
+	}
 	var caseRecord types.EvaluationRunCaseRecord
 	if err := db.Where("tenant_id = ? AND run_id = ? AND case_id = ?", 7, detail.Task.ID, "10").
 		Take(&caseRecord).Error; err != nil {
@@ -216,6 +250,10 @@ func TestEvaluationRepositoryKeepsTerminalSnapshotAfterRecreation(t *testing.T) 
 	detail.Result.Run.Status = types.EvaluationRunStatusSuccess
 	detail.Result.Run.CompletedAt = &completedAt
 	detail.Result.Retrieval = &types.EvaluationRetrievalResult{Precision: 0.75}
+	detail.Result.Cases = []types.EvaluationCaseResult{
+		{CaseID: "10", Status: types.EvaluationRunStatusSuccess, StartedAt: detail.Task.StartTime},
+		{CaseID: "2", Status: types.EvaluationRunStatusSuccess, StartedAt: detail.Task.StartTime},
+	}
 	if err := repo.SaveTerminalRun(context.Background(), detail); err != nil {
 		t.Fatalf("save terminal run: %v", err)
 	}
@@ -228,6 +266,10 @@ func TestEvaluationRepositoryKeepsTerminalSnapshotAfterRecreation(t *testing.T) 
 	if loaded.Task.Status != types.EvaluationStatueSuccess || loaded.Result.Run.CompletedAt == nil ||
 		loaded.Result.Retrieval == nil || loaded.Result.Retrieval.Precision != 0.75 {
 		t.Fatalf("terminal snapshot changed: %#v", loaded)
+	}
+	if len(loaded.Result.Cases) != 2 || loaded.Result.Cases[0].CaseID != "2" ||
+		loaded.Result.Cases[1].CaseID != "10" {
+		t.Fatalf("persisted cases were not assembled in numeric order: %#v", loaded.Result.Cases)
 	}
 }
 

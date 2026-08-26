@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
+	"strconv"
 	"time"
 
 	evaluationobs "github.com/Tencent/WeKnora/internal/evaluation"
@@ -49,7 +51,19 @@ func (r *evaluationRepository) GetRun(
 	if err != nil {
 		return nil, err
 	}
-	return evaluationDetailFromRecord(&record)
+	detail, err := evaluationDetailFromRecord(&record)
+	if err != nil {
+		return nil, err
+	}
+	cases, err := r.listEvaluationCases(ctx, tenantID, runID)
+	if err != nil {
+		return nil, err
+	}
+	detail.Result.Cases = cases
+	if record.Status == types.EvaluationRunStatusFailed && len(cases) > 0 {
+		detail.Result.Run.Status = types.EvaluationRunStatusPartial
+	}
+	return detail, nil
 }
 
 // UpdateRun persists a lifecycle transition or a run-level observation snapshot.
@@ -147,7 +161,7 @@ func newEvaluationRunRecord(
 	if err != nil {
 		return nil, fmt.Errorf("marshal evaluation metric: %w", err)
 	}
-	resultSnapshot, err := marshalEvaluationSnapshot(detail.Result)
+	resultSnapshot, err := marshalEvaluationRunResultSnapshot(detail.Result)
 	if err != nil {
 		return nil, fmt.Errorf("marshal evaluation result: %w", err)
 	}
@@ -193,7 +207,7 @@ func updateEvaluationRun(tx *gorm.DB, detail *types.EvaluationDetail) error {
 	if err != nil {
 		return fmt.Errorf("marshal evaluation metric: %w", err)
 	}
-	resultSnapshot, err := marshalEvaluationSnapshot(detail.Result)
+	resultSnapshot, err := marshalEvaluationRunResultSnapshot(detail.Result)
 	if err != nil {
 		return fmt.Errorf("marshal evaluation result: %w", err)
 	}
@@ -331,6 +345,36 @@ func evaluationDetailFromRecord(record *types.EvaluationRunRecord) (*types.Evalu
 	}, nil
 }
 
+func (r *evaluationRepository) listEvaluationCases(
+	ctx context.Context,
+	tenantID uint64,
+	runID string,
+) ([]types.EvaluationCaseResult, error) {
+	var records []types.EvaluationRunCaseRecord
+	if err := r.db.WithContext(ctx).
+		Where("tenant_id = ? AND run_id = ?", tenantID, runID).
+		Find(&records).Error; err != nil {
+		return nil, err
+	}
+	cases := make([]types.EvaluationCaseResult, 0, len(records))
+	for i := range records {
+		var result types.EvaluationCaseResult
+		if err := unmarshalEvaluationSnapshot(records[i].ResultSnapshot, &result); err != nil {
+			return nil, fmt.Errorf("decode evaluation case %s: %w", records[i].CaseID, err)
+		}
+		cases = append(cases, result)
+	}
+	sort.Slice(cases, func(i, j int) bool {
+		left, leftErr := strconv.Atoi(cases[i].CaseID)
+		right, rightErr := strconv.Atoi(cases[j].CaseID)
+		if leftErr == nil && rightErr == nil && left != right {
+			return left < right
+		}
+		return cases[i].CaseID < cases[j].CaseID
+	})
+	return cases, nil
+}
+
 func validateEvaluationDetail(detail *types.EvaluationDetail) error {
 	if detail == nil || detail.Task == nil {
 		return errors.New("evaluation detail task is required")
@@ -353,6 +397,15 @@ func marshalEvaluationSnapshot(value interface{}) (types.JSON, error) {
 		return nil, err
 	}
 	return types.JSON(data), nil
+}
+
+func marshalEvaluationRunResultSnapshot(result *types.EvaluationRunResult) (types.JSON, error) {
+	if result == nil {
+		return nil, nil
+	}
+	copy := *result
+	copy.Cases = []types.EvaluationCaseResult{}
+	return marshalEvaluationSnapshot(&copy)
 }
 
 func unmarshalEvaluationSnapshot(snapshot types.JSON, target interface{}) error {

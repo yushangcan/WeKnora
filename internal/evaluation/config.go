@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 	"strings"
 
 	"github.com/Tencent/WeKnora/internal/types"
@@ -24,6 +25,7 @@ func NewRunConfig(
 	if kb == nil || embeddingModel == nil || chatModel == nil || params == nil {
 		return nil, fmt.Errorf("evaluation run configuration is incomplete")
 	}
+	commitSHA, vcsModified, commitAvailable := currentVCSIdentity()
 	result := &types.EvaluationRunConfig{
 		SchemaVersion:         types.EvaluationConfigSchemaVersion,
 		Dataset:               dataset,
@@ -80,6 +82,9 @@ func NewRunConfig(
 			MetricVersion:      types.EvaluationMetricVersion,
 			ResultVersion:      types.EvaluationResultSchemaVersion,
 			ApplicationVersion: strings.TrimSpace(applicationVersion),
+			CommitSHA:          commitSHA,
+			VCSModified:        vcsModified,
+			CommitAvailable:    commitAvailable,
 		},
 	}
 	if kb.VectorStoreID != nil {
@@ -96,6 +101,30 @@ func NewRunConfig(
 	}
 	result.ConfigHash = hash
 	return result, nil
+}
+
+func currentVCSIdentity() (string, bool, bool) {
+	return vcsIdentityFromBuildInfo(debug.ReadBuildInfo())
+}
+
+func vcsIdentityFromBuildInfo(info *debug.BuildInfo, ok bool) (string, bool, bool) {
+	if !ok || info == nil {
+		return "unknown", false, false
+	}
+	commitSHA := ""
+	vcsModified := false
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			commitSHA = strings.TrimSpace(setting.Value)
+		case "vcs.modified":
+			vcsModified = setting.Value == "true"
+		}
+	}
+	if commitSHA == "" {
+		return "unknown", vcsModified, false
+	}
+	return commitSHA, vcsModified, true
 }
 
 // ConfigHash returns the SHA-256 hash of a canonical run configuration.

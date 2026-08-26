@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	"encoding/json"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
@@ -70,6 +71,22 @@ func TestNewRunConfigIsStableAndExcludesSecrets(t *testing.T) {
 	}
 	if changedHash == first.ConfigHash {
 		t.Fatal("configuration hash did not change after an effective parameter changed")
+	}
+}
+
+func TestVCSIdentityFromBuildInfo(t *testing.T) {
+	info := &debug.BuildInfo{Settings: []debug.BuildSetting{
+		{Key: "vcs.revision", Value: "abc123"},
+		{Key: "vcs.modified", Value: "true"},
+	}}
+	commitSHA, modified, available := vcsIdentityFromBuildInfo(info, true)
+	if commitSHA != "abc123" || !modified || !available {
+		t.Fatalf("unexpected VCS identity: sha=%q modified=%v available=%v", commitSHA, modified, available)
+	}
+
+	commitSHA, modified, available = vcsIdentityFromBuildInfo(nil, false)
+	if commitSHA != "unknown" || modified || available {
+		t.Fatalf("unavailable VCS identity was not explicit: sha=%q modified=%v available=%v", commitSHA, modified, available)
 	}
 }
 

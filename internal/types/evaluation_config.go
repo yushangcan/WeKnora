@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	EvaluationConfigSchemaVersion = "evaluation-config/v1"
+	EvaluationConfigSchemaVersion = "evaluation-config/v2"
 	EvaluationMetricVersion       = "retrieval-generation/v2"
 
 	EvaluationDatasetModePassageChunking = "passage_chunking"
@@ -15,13 +15,21 @@ const (
 
 // EvaluationDatasetDescriptor identifies the exact dataset content used by a run.
 type EvaluationDatasetDescriptor struct {
-	ID                 string `json:"id"`
-	Version            string `json:"version"`
-	ContentFingerprint string `json:"content_fingerprint"`
-	QueryCount         int    `json:"query_count"`
-	CorpusCount        int    `json:"corpus_count"`
-	CaseCount          int    `json:"case_count"`
-	IngestionMode      string `json:"ingestion_mode"`
+	ID                 string                  `json:"id"`
+	Version            string                  `json:"version"`
+	ContentFingerprint string                  `json:"content_fingerprint"`
+	Files              []EvaluationDatasetFile `json:"files,omitempty"`
+	QueryCount         int                     `json:"query_count"`
+	CorpusCount        int                     `json:"corpus_count"`
+	CaseCount          int                     `json:"case_count"`
+	IngestionMode      string                  `json:"ingestion_mode"`
+}
+
+// EvaluationDatasetFile identifies one immutable dataset artifact without exposing its local path.
+type EvaluationDatasetFile struct {
+	Name        string `json:"name"`
+	Fingerprint string `json:"fingerprint"`
+	Size        int64  `json:"size"`
 }
 
 // EvaluationPassage is one corpus entry identified by its source passage ID.
@@ -135,4 +143,7 @@ type EvaluationRuntimeConfig struct {
 	MetricVersion      string `json:"metric_version"`
 	ResultVersion      string `json:"result_version"`
 	ApplicationVersion string `json:"application_version,omitempty"`
+	CommitSHA          string `json:"commit_sha"`
+	VCSModified        bool   `json:"vcs_modified"`
+	CommitAvailable    bool   `json:"commit_available"`
 }

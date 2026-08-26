@@ -41,19 +41,28 @@ func TestFingerprintDatasetChangesWithContent(t *testing.T) {
 		}
 	}
 
-	first, err := fingerprintDataset(dir, names)
+	first, firstManifest, err := fingerprintDataset(dir, names)
 	if err != nil {
 		t.Fatalf("fingerprint first dataset: %v", err)
+	}
+	if len(firstManifest) != 2 || firstManifest[0].Name != "a" || firstManifest[0].Size != 1 {
+		t.Fatalf("unexpected first manifest: %#v", firstManifest)
 	}
 	if err := os.WriteFile(filepath.Join(dir, "b"), []byte("changed"), 0o600); err != nil {
 		t.Fatalf("change fixture: %v", err)
 	}
-	second, err := fingerprintDataset(dir, names)
+	second, secondManifest, err := fingerprintDataset(dir, names)
 	if err != nil {
 		t.Fatalf("fingerprint second dataset: %v", err)
 	}
 	if first == second {
 		t.Fatal("dataset fingerprint did not change after file content changed")
+	}
+	if firstManifest[0] != secondManifest[0] {
+		t.Fatalf("unchanged file identity changed: before=%#v after=%#v", firstManifest[0], secondManifest[0])
+	}
+	if firstManifest[1].Fingerprint == secondManifest[1].Fingerprint || secondManifest[1].Size != 7 {
+		t.Fatalf("changed file identity was not updated: before=%#v after=%#v", firstManifest[1], secondManifest[1])
 	}
 }
 
@@ -72,6 +81,18 @@ func TestDefaultDatasetFilesPassValidation(t *testing.T) {
 	}
 	if len(dataset.EvaluationCorpus()) == 0 || len(dataset.Iterate()) == 0 {
 		t.Fatal("default dataset must contain corpus passages and evaluation cases")
+	}
+	_, manifest, err := fingerprintDataset(datasetDir, defaultDatasetFiles)
+	if err != nil {
+		t.Fatalf("fingerprint default dataset: %v", err)
+	}
+	if len(manifest) != len(defaultDatasetFiles) {
+		t.Fatalf("manifest file count = %d, want %d", len(manifest), len(defaultDatasetFiles))
+	}
+	for i, file := range manifest {
+		if file.Name != defaultDatasetFiles[i] || filepath.IsAbs(file.Name) || file.Fingerprint == "" || file.Size <= 0 {
+			t.Fatalf("invalid manifest entry at %d: %#v", i, file)
+		}
 	}
 }
 

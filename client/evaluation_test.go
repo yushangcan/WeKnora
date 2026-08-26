@@ -103,6 +103,32 @@ func TestEvaluationResultResponseMatchesServerContract(t *testing.T) {
 	}
 }
 
+func TestEvaluationRunConfigDecodesArtifactAndCodeIdentity(t *testing.T) {
+	payload := []byte(`{
+        "schema_version": "evaluation-config/v2",
+        "dataset": {
+            "id": "default",
+            "files": [{"name": "corpus.parquet", "fingerprint": "sha256:file", "size": 128}]
+        },
+        "runtime": {
+            "commit_sha": "abc123",
+            "vcs_modified": true,
+            "commit_available": true
+        }
+    }`)
+
+	var config EvaluationRunConfig
+	if err := json.Unmarshal(payload, &config); err != nil {
+		t.Fatalf("unmarshal v2 evaluation config: %v", err)
+	}
+	if len(config.Dataset.Files) != 1 || config.Dataset.Files[0].Name != "corpus.parquet" {
+		t.Fatalf("dataset manifest was not decoded: %#v", config.Dataset.Files)
+	}
+	if config.Runtime.CommitSHA != "abc123" || !config.Runtime.VCSModified || !config.Runtime.CommitAvailable {
+		t.Fatalf("code identity was not decoded: %#v", config.Runtime)
+	}
+}
+
 func TestEvaluationTaskResponseAcceptsNestedServerTask(t *testing.T) {
 	payload := []byte(`{
 		"success": true,

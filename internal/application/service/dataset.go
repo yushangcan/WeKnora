@@ -81,7 +81,7 @@ func (d *DatasetService) LoadDataset(ctx context.Context, datasetID string) (*ty
 	dataset.PrintStats(ctx)
 	qaPairs := dataset.Iterate()
 	corpus := dataset.EvaluationCorpus()
-	fingerprint, err := fingerprintDataset(defaultDatasetDir, defaultDatasetFiles)
+	fingerprint, manifest, err := fingerprintDataset(defaultDatasetDir, defaultDatasetFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -92,6 +92,7 @@ func (d *DatasetService) LoadDataset(ctx context.Context, datasetID string) (*ty
 			ID:                 defaultDatasetID,
 			Version:            defaultDatasetVersion,
 			ContentFingerprint: fingerprint,
+			Files:              manifest,
 			QueryCount:         len(dataset.queries),
 			CorpusCount:        len(dataset.corpus),
 			CaseCount:          len(qaPairs),
@@ -306,25 +307,35 @@ func (d *dataset) EvaluationCorpus() []types.EvaluationPassage {
 	return passages
 }
 
-func fingerprintDataset(datasetDir string, names []string) (string, error) {
+func fingerprintDataset(
+	datasetDir string,
+	names []string,
+) (string, []types.EvaluationDatasetFile, error) {
 	hash := sha256.New()
+	manifest := make([]types.EvaluationDatasetFile, 0, len(names))
 	for _, name := range names {
 		path := filepath.Join(datasetDir, name)
 		file, err := os.Open(path)
 		if err != nil {
-			return "", fmt.Errorf("open dataset file %s: %w", name, err)
+			return "", nil, fmt.Errorf("open dataset file %s: %w", name, err)
 		}
+		fileHash := sha256.New()
 		_, _ = io.WriteString(hash, name)
-		_, err = io.Copy(hash, file)
+		size, err := io.Copy(io.MultiWriter(hash, fileHash), file)
 		closeErr := file.Close()
 		if err != nil {
-			return "", fmt.Errorf("fingerprint dataset file %s: %w", name, err)
+			return "", nil, fmt.Errorf("fingerprint dataset file %s: %w", name, err)
 		}
 		if closeErr != nil {
-			return "", fmt.Errorf("close dataset file %s: %w", name, closeErr)
+			return "", nil, fmt.Errorf("close dataset file %s: %w", name, closeErr)
 		}
+		manifest = append(manifest, types.EvaluationDatasetFile{
+			Name:        name,
+			Fingerprint: fmt.Sprintf("sha256:%x", fileHash.Sum(nil)),
+			Size:        size,
+		})
 	}
-	return fmt.Sprintf("sha256:%x", hash.Sum(nil)), nil
+	return fmt.Sprintf("sha256:%x", hash.Sum(nil)), manifest, nil
 }
 
 // GetContextForQID retrieves context passages for a given question ID

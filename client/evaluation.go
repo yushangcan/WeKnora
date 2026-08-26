@@ -141,13 +141,20 @@ type EvaluationRunConfig struct {
 }
 
 type EvaluationDatasetDescriptor struct {
-	ID                 string `json:"id"`
-	Version            string `json:"version"`
-	ContentFingerprint string `json:"content_fingerprint"`
-	QueryCount         int    `json:"query_count"`
-	CorpusCount        int    `json:"corpus_count"`
-	CaseCount          int    `json:"case_count"`
-	IngestionMode      string `json:"ingestion_mode"`
+	ID                 string                  `json:"id"`
+	Version            string                  `json:"version"`
+	ContentFingerprint string                  `json:"content_fingerprint"`
+	Files              []EvaluationDatasetFile `json:"files,omitempty"`
+	QueryCount         int                     `json:"query_count"`
+	CorpusCount        int                     `json:"corpus_count"`
+	CaseCount          int                     `json:"case_count"`
+	IngestionMode      string                  `json:"ingestion_mode"`
+}
+
+type EvaluationDatasetFile struct {
+	Name        string `json:"name"`
+	Fingerprint string `json:"fingerprint"`
+	Size        int64  `json:"size"`
 }
 
 type EvaluationModelConfigSet struct {
@@ -214,6 +221,9 @@ type EvaluationRuntimeConfig struct {
 	MetricVersion      string `json:"metric_version"`
 	ResultVersion      string `json:"result_version"`
 	ApplicationVersion string `json:"application_version,omitempty"`
+	CommitSHA          string `json:"commit_sha"`
+	VCSModified        bool   `json:"vcs_modified"`
+	CommitAvailable    bool   `json:"commit_available"`
 }
 
 type EvaluationMetrics struct {

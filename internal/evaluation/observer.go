@@ -15,6 +15,7 @@ type caseObservation struct {
 	startedAt   time.Time
 	completedAt *time.Time
 	duration    time.Duration
+	evidence    types.EvaluationCaseEvidence
 	warnings    []types.EvaluationWarning
 }
 
@@ -111,12 +112,14 @@ func (o *Observer) StartCase(ctx context.Context, caseID string) (context.Contex
 				})
 			}
 			o.mu.Lock()
+			existing := o.cases[caseID]
 			o.cases[caseID] = caseObservation{
 				caseID:      caseID,
 				status:      status,
 				startedAt:   startedAt,
 				completedAt: &completedAt,
 				duration:    completedAt.Sub(startedAt),
+				evidence:    existing.evidence,
 				warnings:    warnings,
 			}
 			o.mu.Unlock()
@@ -131,6 +134,51 @@ func (o *Observer) AddWarning(code, message string) {
 	o.mu.Lock()
 	o.warnings = append(o.warnings, types.EvaluationWarning{Code: code, Message: message})
 	o.mu.Unlock()
+}
+
+// RecordCaseEvidence attaches non-text audit evidence to an observed case.
+func (o *Observer) RecordCaseEvidence(caseID string, evidence types.EvaluationCaseEvidence) {
+	if o == nil {
+		return
+	}
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	observedCase, ok := o.cases[caseID]
+	if !ok {
+		return
+	}
+	observedCase.evidence = cloneCaseEvidence(evidence)
+	if evidence.UnmappedResultCount > 0 {
+		observedCase.warnings = appendWarningOnce(observedCase.warnings, types.EvaluationWarning{
+			Code:    "unmapped_retrieval_result",
+			Message: "One or more ranked retrieval results lacked a valid evaluation passage ID and were retained as non-relevant placeholders.",
+		})
+		o.warnings = appendWarningOnce(o.warnings, types.EvaluationWarning{
+			Code:    "unmapped_retrieval_results",
+			Message: "One or more evaluation cases contained ranked retrieval results without valid passage IDs.",
+		})
+	}
+	o.cases[caseID] = observedCase
+}
+
+// MarkCaseFailure records a post-pipeline failure stage for terminal persistence.
+func (o *Observer) MarkCaseFailure(caseID, stage string) {
+	if o == nil {
+		return
+	}
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	observedCase, ok := o.cases[caseID]
+	if !ok {
+		return
+	}
+	observedCase.status = types.EvaluationRunStatusFailed
+	observedCase.evidence.FailureStage = stage
+	observedCase.warnings = appendWarningOnce(observedCase.warnings, types.EvaluationWarning{
+		Code:    "case_persistence_failed",
+		Message: "The case completed but its progress snapshot could not be persisted.",
+	})
+	o.cases[caseID] = observedCase
 }
 
 func (o *Observer) Complete() {
@@ -161,6 +209,7 @@ func (o *Observer) Snapshot(taskStatus types.EvaluationStatue, metric *types.Met
 	cases := make([]caseObservation, 0, len(o.cases))
 	for _, observedCase := range o.cases {
 		observedCase.completedAt = cloneTime(observedCase.completedAt)
+		observedCase.evidence = cloneCaseEvidence(observedCase.evidence)
 		observedCase.warnings = append([]types.EvaluationWarning{}, observedCase.warnings...)
 		cases = append(cases, observedCase)
 	}
@@ -184,6 +233,7 @@ func (o *Observer) Snapshot(taskStatus types.EvaluationStatue, metric *types.Met
 			CompletedAt: cloneTime(observedCase.completedAt),
 			DurationMS:  durationMS,
 			Usage:       aggregateUsage(filterRecordsByCase(records, observedCase.caseID)),
+			Evidence:    cloneCaseEvidence(observedCase.evidence),
 			Warnings:    append([]types.EvaluationWarning{}, observedCase.warnings...),
 		})
 	}
@@ -227,6 +277,31 @@ func (o *Observer) Snapshot(taskStatus types.EvaluationStatue, metric *types.Met
 		Warnings:  warnings,
 	}
 	return result
+}
+
+func cloneCaseEvidence(source types.EvaluationCaseEvidence) types.EvaluationCaseEvidence {
+	result := source
+	result.GroundTruthPIDs = append([]int(nil), source.GroundTruthPIDs...)
+	result.SearchPIDs = append([]int(nil), source.SearchPIDs...)
+	result.RerankPIDs = append([]int(nil), source.RerankPIDs...)
+	result.MetricInputPIDs = append([]int(nil), source.MetricInputPIDs...)
+	if source.Metrics != nil {
+		metrics := *source.Metrics
+		result.Metrics = &metrics
+	}
+	return result
+}
+
+func appendWarningOnce(
+	warnings []types.EvaluationWarning,
+	warning types.EvaluationWarning,
+) []types.EvaluationWarning {
+	for _, existing := range warnings {
+		if existing.Code == warning.Code {
+			return warnings
+		}
+	}
+	return append(warnings, warning)
 }
 
 func qualityRetrieval(metric *types.MetricResult) *types.EvaluationRetrievalResult {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -573,6 +574,12 @@ func (e *EvaluationService) EvalDataset(
 			caseErr := e.sessionService.KnowledgeQAByEvent(caseCtx, chatManage, types.Pipline["rag"])
 			finishCase(caseErr)
 			if caseErr != nil {
+				if observer != nil {
+					observer.RecordCaseEvidence(
+						caseID,
+						evaluationCaseEvidence(qaPair, chatManage, nil, "rag_pipeline"),
+					)
+				}
 				logger.Errorf(caseCtx, "Failed to process question %d: %v", i, caseErr)
 				return caseErr
 			}
@@ -588,6 +595,13 @@ func (e *EvaluationService) EvalDataset(
 			metricHook.recordRerankResult(i, chatManage.RerankResult)
 			metricHook.recordChatResponse(i, chatManage.ChatResponse)
 			metricHook.recordFinish(i)
+			caseMetricResult := metricHook.CaseMetricResult(i)
+			if observer != nil {
+				observer.RecordCaseEvidence(
+					caseID,
+					evaluationCaseEvidence(qaPair, chatManage, caseMetricResult, ""),
+				)
+			}
 
 			// Update progress metrics
 			finished += 1
@@ -609,6 +623,9 @@ func (e *EvaluationService) EvalDataset(
 			}
 			mu.Unlock()
 			if persistErr != nil {
+				if observer != nil {
+					observer.MarkCaseFailure(caseID, "persistence")
+				}
 				return fmt.Errorf("persist evaluation case %s: %w", caseID, persistErr)
 			}
 			logger.Infof(caseCtx, "Updated task progress: %d/%d completed", finishedSnapshot, totalSnapshot)
@@ -639,6 +656,54 @@ func (e *EvaluationService) EvalDataset(
 
 	logger.Infof(ctx, "Dataset evaluation completed successfully, task ID: %s", detail.Task.ID)
 	return nil
+}
+
+func evaluationCaseEvidence(
+	qaPair *types.QAPair,
+	chatManage *types.ChatManage,
+	metricResult *types.MetricResult,
+	failureStage string,
+) types.EvaluationCaseEvidence {
+	evidence := types.EvaluationCaseEvidence{FailureStage: failureStage}
+	if qaPair != nil {
+		evidence.QID = qaPair.QID
+		evidence.QuestionFingerprint = evaluationTextFingerprint(qaPair.Question)
+		evidence.ReferenceAnswerFingerprint = evaluationTextFingerprint(qaPair.Answer)
+		evidence.GroundTruthPIDs = append([]int(nil), qaPair.PIDs...)
+	}
+	if chatManage == nil {
+		if metricResult != nil {
+			metrics := *metricResult
+			evidence.Metrics = &metrics
+		}
+		return evidence
+	}
+
+	searchPIDs, searchUnmappedCount := evaluationRetrievalIDs(chatManage.SearchResult)
+	rerankPIDs, rerankUnmappedCount := evaluationRetrievalIDs(chatManage.RerankResult)
+	evidence.SearchPIDs = searchPIDs
+	evidence.RerankPIDs = rerankPIDs
+	evidence.MetricInputPIDs = append([]int(nil), evidence.SearchPIDs...)
+	evidence.UnmappedResultCount = searchUnmappedCount
+	if len(chatManage.RerankResult) > 0 {
+		evidence.MetricInputPIDs = append([]int(nil), evidence.RerankPIDs...)
+		evidence.UnmappedResultCount = rerankUnmappedCount
+	}
+	if chatManage.ChatResponse != nil {
+		evidence.GeneratedAnswerFingerprint = evaluationTextFingerprint(chatManage.ChatResponse.Content)
+	}
+	if metricResult != nil {
+		metrics := *metricResult
+		evidence.Metrics = &metrics
+	}
+	return evidence
+}
+
+func evaluationTextFingerprint(value string) string {
+	if value == "" {
+		return ""
+	}
+	return fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(value)))
 }
 
 func evaluationCaseResult(

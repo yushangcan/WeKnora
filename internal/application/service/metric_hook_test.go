@@ -33,6 +33,9 @@ func TestHookMetricUsesRankedPassageIDs(t *testing.T) {
 	require.InDelta(t, 0.5, result.MRR, 1e-9)
 	require.InDelta(t, 1/math.Log2(3), result.NDCG3, 1e-9)
 	require.InDelta(t, 1/math.Log2(3), result.NDCG10, 1e-9)
+	caseResult := hook.CaseMetricResult(0)
+	require.NotNil(t, caseResult)
+	require.InDelta(t, result.Precision, caseResult.RetrievalMetrics.Precision, 1e-9)
 }
 
 func TestEvaluationRetrievalIDsDeduplicateAndRetainUnmappedResults(t *testing.T) {

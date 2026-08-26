@@ -306,8 +306,9 @@ func (observedSessionStub) KnowledgeQAByEvent(
 			TotalTokens:      5,
 		},
 	}, nil)
-	chatManage.SearchResult = []*types.SearchResult{{Content: "relevant passage"}}
-	chatManage.RerankResult = []*types.SearchResult{{Content: "relevant passage"}}
+	metadata := types.JSON(`{"evaluation_pid":0}`)
+	chatManage.SearchResult = []*types.SearchResult{{Content: "relevant passage", ChunkMetadata: metadata}}
+	chatManage.RerankResult = []*types.SearchResult{{Content: "relevant passage", ChunkMetadata: metadata}}
 	chatManage.ChatResponse = &types.ChatResponse{
 		Content: "answer",
 		Usage:   types.TokenUsage{PromptTokens: 3, CompletionTokens: 2, TotalTokens: 5},
@@ -506,6 +507,21 @@ func TestEvaluationServiceExposesFourDimensionLifecycleResult(t *testing.T) {
 	}
 	if len(result.Result.Cases) != 1 || result.Result.Cases[0].CaseID != "1" {
 		t.Fatalf("case observation was not connected: %#v", result.Result.Cases)
+	}
+	evidence := result.Result.Cases[0].Evidence
+	if evidence.QID != 1 || len(evidence.GroundTruthPIDs) != 1 || evidence.GroundTruthPIDs[0] != 0 ||
+		len(evidence.MetricInputPIDs) != 1 || evidence.MetricInputPIDs[0] != 0 || evidence.Metrics == nil {
+		t.Fatalf("case audit evidence was not connected: %#v", evidence)
+	}
+	for _, fingerprint := range []string{
+		evidence.QuestionFingerprint,
+		evidence.ReferenceAnswerFingerprint,
+		evidence.GeneratedAnswerFingerprint,
+	} {
+		if !strings.HasPrefix(fingerprint, "sha256:") || strings.Contains(fingerprint, "question") ||
+			strings.Contains(fingerprint, "answer") {
+			t.Fatalf("case text was not safely fingerprinted: %q", fingerprint)
+		}
 	}
 	if !knowledgeService.deleted.Load() || !kbService.deleted.Load() {
 		t.Fatal("existing cleanup lifecycle did not run")
@@ -728,5 +744,9 @@ func TestEvaluationServiceRetainsPartialResultAfterCaseFailure(t *testing.T) {
 	}
 	if result.Result.Retrieval == nil || result.Result.Answer == nil {
 		t.Fatalf("completed quality dimensions were not mapped: %#v", result.Result)
+	}
+	if result.Result.Cases[1].Evidence.QID != 2 ||
+		result.Result.Cases[1].Evidence.FailureStage != "rag_pipeline" {
+		t.Fatalf("failed case audit stage was not retained: %#v", result.Result.Cases[1].Evidence)
 	}
 }

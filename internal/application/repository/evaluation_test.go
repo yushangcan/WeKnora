@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -143,6 +144,12 @@ func TestEvaluationRepositorySavesCaseAndRunAtomically(t *testing.T) {
 	caseResult := types.EvaluationCaseResult{
 		CaseID: "10", Status: types.EvaluationRunStatusSuccess,
 		StartedAt: detail.Task.StartTime, CompletedAt: &completedAt, DurationMS: 1000,
+		Evidence: types.EvaluationCaseEvidence{
+			QID: 10, QuestionFingerprint: "sha256:question", GroundTruthPIDs: []int{1},
+			MetricInputPIDs: []int{2, 1}, Metrics: &types.MetricResult{
+				RetrievalMetrics: types.RetrievalMetrics{Precision: 0.5},
+			},
+		},
 		Warnings: []types.EvaluationWarning{},
 	}
 	detail.Result.Run.Status = types.EvaluationRunStatusRunning
@@ -167,6 +174,19 @@ func TestEvaluationRepositorySavesCaseAndRunAtomically(t *testing.T) {
 	}
 	if caseCount != 1 {
 		t.Fatalf("case count = %d, want 1", caseCount)
+	}
+	var caseRecord types.EvaluationRunCaseRecord
+	if err := db.Where("tenant_id = ? AND run_id = ? AND case_id = ?", 7, detail.Task.ID, "10").
+		Take(&caseRecord).Error; err != nil {
+		t.Fatalf("load case record: %v", err)
+	}
+	var persistedCase types.EvaluationCaseResult
+	if err := json.Unmarshal(caseRecord.ResultSnapshot, &persistedCase); err != nil {
+		t.Fatalf("decode case result snapshot: %v", err)
+	}
+	if persistedCase.Evidence.QID != 10 || persistedCase.Evidence.Metrics == nil ||
+		persistedCase.Evidence.Metrics.RetrievalMetrics.Precision != 0.5 {
+		t.Fatalf("case audit evidence changed after persistence: %#v", persistedCase.Evidence)
 	}
 
 	detail.Task.Finished = 2

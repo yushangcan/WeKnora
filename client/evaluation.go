@@ -348,13 +348,28 @@ type EvaluationTimingResult struct {
 }
 
 type EvaluationCaseResult struct {
-	CaseID      string                `json:"case_id"`
-	Status      string                `json:"status"`
-	StartedAt   time.Time             `json:"started_at"`
-	CompletedAt *time.Time            `json:"completed_at"`
-	DurationMS  int64                 `json:"duration_ms"`
-	Usage       EvaluationUsageResult `json:"usage"`
-	Warnings    []EvaluationWarning   `json:"warnings"`
+	CaseID      string                 `json:"case_id"`
+	Status      string                 `json:"status"`
+	StartedAt   time.Time              `json:"started_at"`
+	CompletedAt *time.Time             `json:"completed_at"`
+	DurationMS  int64                  `json:"duration_ms"`
+	Usage       EvaluationUsageResult  `json:"usage"`
+	Evidence    EvaluationCaseEvidence `json:"evidence"`
+	Warnings    []EvaluationWarning    `json:"warnings"`
+}
+
+type EvaluationCaseEvidence struct {
+	QID                        int                `json:"qid"`
+	QuestionFingerprint        string             `json:"question_fingerprint"`
+	ReferenceAnswerFingerprint string             `json:"reference_answer_fingerprint"`
+	GeneratedAnswerFingerprint string             `json:"generated_answer_fingerprint"`
+	GroundTruthPIDs            []int              `json:"ground_truth_pids"`
+	SearchPIDs                 []int              `json:"search_pids"`
+	RerankPIDs                 []int              `json:"rerank_pids"`
+	MetricInputPIDs            []int              `json:"metric_input_pids"`
+	UnmappedResultCount        int                `json:"unmapped_result_count"`
+	Metrics                    *EvaluationMetrics `json:"metrics,omitempty"`
+	FailureStage               string             `json:"failure_stage,omitempty"`
 }
 
 type EvaluationWarning struct {

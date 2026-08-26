@@ -50,8 +50,8 @@ var metricCalculators = []struct {
 	}},
 }
 
-// Append calculates and stores metrics for given input
-func (m *MetricList) Append(metricInput *types.MetricInput) {
+// Append calculates and stores metrics for given input.
+func (m *MetricList) Append(metricInput *types.MetricInput) *types.MetricResult {
 	result := &types.MetricResult{}
 	// Calculate all configured metrics
 	for _, c := range metricCalculators {
@@ -60,6 +60,7 @@ func (m *MetricList) Append(metricInput *types.MetricInput) {
 	}
 	logger.Infof(context.Background(), "metric: %v", result)
 	m.results = append(m.results, result)
+	return result
 }
 
 // Avg calculates average of all stored metric results
@@ -97,6 +98,7 @@ type qaPairMetric struct {
 	chatResponse        *types.ChatResponse
 	retrievalIDs        []int
 	unmappedResultCount int
+	metricResult        *types.MetricResult
 }
 
 // NewHookMetric creates a new HookMetric with given capacity
@@ -162,7 +164,7 @@ func (h *HookMetric) recordFinish(index int) {
 	// Thread-safe append of metrics
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.metricResults.Append(metricInput)
+	caseMetric.metricResult = h.metricResults.Append(metricInput)
 }
 
 // evaluationRetrievalIDs converts ranked chunks into passage-level metric input.
@@ -207,4 +209,16 @@ func (h *HookMetric) MetricResult() *types.MetricResult {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	return h.metricResults.Avg()
+}
+
+// CaseMetricResult returns the exact metric result calculated for one case.
+func (h *HookMetric) CaseMetricResult(index int) *types.MetricResult {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	if index < 0 || index >= len(h.qaPairMetricList) || h.qaPairMetricList[index] == nil ||
+		h.qaPairMetricList[index].metricResult == nil {
+		return nil
+	}
+	result := *h.qaPairMetricList[index].metricResult
+	return &result
 }

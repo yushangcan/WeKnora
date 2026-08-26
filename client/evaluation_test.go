@@ -136,6 +136,34 @@ func TestEvaluationRunConfigDecodesArtifactAndCodeIdentity(t *testing.T) {
 	}
 }
 
+func TestEvaluationCaseResultDecodesAuditEvidence(t *testing.T) {
+	payload := []byte(`{
+        "case_id": "10",
+        "status": "success",
+        "evidence": {
+            "qid": 10,
+            "question_fingerprint": "sha256:question",
+            "reference_answer_fingerprint": "sha256:reference",
+            "generated_answer_fingerprint": "sha256:generated",
+            "ground_truth_pids": [1],
+            "search_pids": [2, 1],
+            "rerank_pids": [1, 2],
+            "metric_input_pids": [1, 2],
+            "unmapped_result_count": 0,
+            "metrics": {"retrieval_metrics": {"precision": 0.5}}
+        }
+    }`)
+
+	var result EvaluationCaseResult
+	if err := json.Unmarshal(payload, &result); err != nil {
+		t.Fatalf("unmarshal case audit evidence: %v", err)
+	}
+	if result.Evidence.QID != 10 || len(result.Evidence.MetricInputPIDs) != 2 ||
+		result.Evidence.Metrics == nil || result.Evidence.Metrics.Retrieval.Precision != 0.5 {
+		t.Fatalf("case audit evidence was not decoded: %#v", result.Evidence)
+	}
+}
+
 func TestEvaluationTaskResponseAcceptsNestedServerTask(t *testing.T) {
 	payload := []byte(`{
 		"success": true,

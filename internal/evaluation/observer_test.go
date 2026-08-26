@@ -41,6 +41,10 @@ func TestObserverSnapshotAggregatesExistingMetricsUsageAndTiming(t *testing.T) {
 		UsageSource: types.EvaluationUsageSourceUnavailable,
 	}, nil)
 	finishCase(nil)
+	observer.RecordCaseEvidence("42", types.EvaluationCaseEvidence{
+		QID: 42, GroundTruthPIDs: []int{1}, MetricInputPIDs: []int{-1, 1},
+		UnmappedResultCount: 1, Metrics: &types.MetricResult{RetrievalMetrics: types.RetrievalMetrics{Precision: 0.5}},
+	})
 	observer.Complete()
 
 	metric := &types.MetricResult{
@@ -71,6 +75,13 @@ func TestObserverSnapshotAggregatesExistingMetricsUsageAndTiming(t *testing.T) {
 	}
 	if result.Cases[0].Warnings == nil {
 		t.Fatal("case warnings must serialize as an empty array, not null")
+	}
+	if result.Cases[0].Evidence.QID != 42 || result.Cases[0].Evidence.Metrics == nil ||
+		len(result.Cases[0].Evidence.MetricInputPIDs) != 2 {
+		t.Fatalf("case evidence was not retained: %#v", result.Cases[0].Evidence)
+	}
+	if len(result.Cases[0].Warnings) != 1 || result.Cases[0].Warnings[0].Code != "unmapped_retrieval_result" {
+		t.Fatalf("case mapping warning was not retained: %#v", result.Cases[0].Warnings)
 	}
 }
 

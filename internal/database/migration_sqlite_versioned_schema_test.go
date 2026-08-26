@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,13 +14,15 @@ import (
 // versionedSQLiteTables is the set of tables that SQLite migrations must
 // create to stay in sync with the versioned (PostgreSQL) migrations:
 // 000041 task queue, 000053 system settings, 000055 processing spans,
-// 000063 knowledge multi-tags.
+// 000063 knowledge multi-tags, 000085 evaluation persistence.
 var versionedSQLiteTables = []string{
 	"task_pending_ops",
 	"task_dead_letters",
 	"system_settings",
 	"knowledge_processing_spans",
 	"knowledge_tag_relations",
+	"evaluation_runs",
+	"evaluation_run_cases",
 }
 
 // versionedSQLiteColumns maps each existing table to the columns that the
@@ -33,7 +37,7 @@ var versionedSQLiteColumns = map[string][]string{
 	"mcp_oauth_tokens":   {"principal_type", "principal_id"}, // 000064
 }
 
-const expectedSQLiteMigrationVersion = 11
+const expectedSQLiteMigrationVersion = 12
 
 func TestSQLiteMigrationsCreateVersionedSchema(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
@@ -64,8 +68,76 @@ func TestSQLiteMigrationsCreateVersionedSchema(t *testing.T) {
 
 	assertSQLiteShareLinkInvitationsWork(t, db)
 	assertSQLiteMCPOAuthPrincipalUpsertWorks(t, db)
+	assertSQLiteEvaluationSchemaWorks(t, db)
 	require.False(t, sqliteColumnExists(t, db, "knowledges", "tag_id"),
 		"SQLite migrations must drop legacy knowledges.tag_id after multi-tag migration")
+}
+
+func TestSQLiteMigrationsUpgradeV11PreservesData(t *testing.T) {
+	repoRoot := sqliteRepoRoot(t)
+	legacyRoot := copySQLiteMigrationsThrough(t, repoRoot, 11)
+	chdirAndRestore(t, legacyRoot)
+
+	dbPath := filepath.Join(t.TempDir(), "upgrade-v11.db")
+	require.NoError(t, RunMigrationsWithOptions("sqlite3://unused", MigrationOptions{SQLiteDBPath: dbPath}))
+	db := openSQLiteDB(t, dbPath)
+	versionBefore, dirtyBefore := sqliteMigrationState(t, db)
+	require.Equal(t, 11, versionBefore)
+	require.False(t, dirtyBefore)
+	_, err := db.Exec("INSERT INTO tenants (name, business) VALUES (?, ?)", "v11-sentinel", "evaluation-upgrade-test")
+	require.NoError(t, err)
+	require.NoError(t, db.Close())
+
+	chdirAndRestore(t, repoRoot)
+	require.NoError(t, RunMigrationsWithOptions("sqlite3://unused", MigrationOptions{SQLiteDBPath: dbPath}))
+	db = openSQLiteDB(t, dbPath)
+	versionAfter, dirtyAfter := sqliteMigrationState(t, db)
+	require.Equal(t, expectedSQLiteMigrationVersion, versionAfter)
+	require.False(t, dirtyAfter)
+
+	var sentinelName string
+	require.NoError(t, db.QueryRow(
+		"SELECT name FROM tenants WHERE business = ?", "evaluation-upgrade-test",
+	).Scan(&sentinelName))
+	require.Equal(t, "v11-sentinel", sentinelName)
+	assertSQLiteEvaluationSchemaWorks(t, db)
+}
+
+func TestSQLiteEvaluationMigrationDownRemovesTables(t *testing.T) {
+	repoRoot := sqliteRepoRoot(t)
+	chdirAndRestore(t, repoRoot)
+	dbPath := filepath.Join(t.TempDir(), "evaluation-down.db")
+	require.NoError(t, RunMigrationsWithOptions("sqlite3://unused", MigrationOptions{SQLiteDBPath: dbPath}))
+	db := openSQLiteDB(t, dbPath)
+
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "sqlite", "000012_evaluation_runs.down.sql"))
+	require.NoError(t, err)
+	_, err = db.Exec(string(downSQL))
+	require.NoError(t, err)
+	require.False(t, sqliteTableExists(t, db, "evaluation_run_cases"))
+	require.False(t, sqliteTableExists(t, db, "evaluation_runs"))
+}
+
+func TestPostgresEvaluationMigrationContract(t *testing.T) {
+	repoRoot := sqliteRepoRoot(t)
+	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000085_evaluation_runs.up.sql"))
+	require.NoError(t, err)
+	up := string(upSQL)
+	for _, fragment := range []string{
+		"CREATE TABLE IF NOT EXISTS evaluation_runs",
+		"CREATE TABLE IF NOT EXISTS evaluation_run_cases",
+		"config_snapshot JSONB NOT NULL",
+		"result_snapshot JSONB NOT NULL",
+		"FOREIGN KEY (run_id) REFERENCES evaluation_runs(run_id) ON DELETE CASCADE",
+		"idx_evaluation_runs_tenant_config_created",
+		"idx_evaluation_run_cases_tenant_run",
+	} {
+		require.Contains(t, up, fragment)
+	}
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000085_evaluation_runs.down.sql"))
+	require.NoError(t, err)
+	require.Contains(t, string(downSQL), "DROP TABLE IF EXISTS evaluation_run_cases")
+	require.Contains(t, string(downSQL), "DROP TABLE IF EXISTS evaluation_runs")
 }
 
 func TestSQLiteMigrationsUpgradeV4PreservesData(t *testing.T) {
@@ -149,6 +221,7 @@ func openSQLiteDB(t *testing.T, dbPath string) *sql.DB {
 	t.Helper()
 	db, err := sql.Open("sqlite3", dbPath)
 	require.NoError(t, err)
+	db.SetMaxOpenConns(1)
 	t.Cleanup(func() { _ = db.Close() })
 	return db
 }
@@ -178,6 +251,74 @@ func sqliteColumnExists(t *testing.T, db *sql.DB, table, column string) bool {
 		column,
 	).Scan(&n))
 	return n == 1
+}
+
+func sqliteIndexExists(t *testing.T, db *sql.DB, index string) bool {
+	t.Helper()
+	var n int
+	require.NoError(t, db.QueryRow(
+		"SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = ?",
+		index,
+	).Scan(&n))
+	return n == 1
+}
+
+func assertSQLiteEvaluationSchemaWorks(t *testing.T, db *sql.DB) {
+	t.Helper()
+	for _, table := range []string{"evaluation_runs", "evaluation_run_cases"} {
+		require.Truef(t, sqliteTableExists(t, db, table), "SQLite migrations must create table %s", table)
+	}
+	for _, index := range []string{
+		"idx_evaluation_runs_tenant_created",
+		"idx_evaluation_runs_tenant_status_updated",
+		"idx_evaluation_runs_tenant_config_created",
+		"idx_evaluation_run_cases_tenant_run",
+	} {
+		require.Truef(t, sqliteIndexExists(t, db, index), "SQLite migrations must create index %s", index)
+	}
+
+	var referencedTable, onDelete string
+	rows, err := db.Query("PRAGMA foreign_key_list(evaluation_run_cases)")
+	require.NoError(t, err)
+	for rows.Next() {
+		var id, seq int
+		var from, to, onUpdate, match string
+		require.NoError(t, rows.Scan(&id, &seq, &referencedTable, &from, &to, &onUpdate, &onDelete, &match))
+		if referencedTable == "evaluation_runs" && from == "run_id" && to == "run_id" {
+			break
+		}
+	}
+	require.NoError(t, rows.Err())
+	require.NoError(t, rows.Close())
+	require.Equal(t, "evaluation_runs", referencedTable)
+	require.Equal(t, "CASCADE", onDelete)
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON")
+	require.NoError(t, err)
+	runInsert := `INSERT INTO evaluation_runs (
+        run_id, tenant_id, dataset_id, dataset_version, dataset_fingerprint, config_hash,
+        embedding_model_id, chat_model_id, status, config_snapshot, params_snapshot,
+        result_snapshot, started_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	_, err = db.Exec(
+		runInsert,
+		"migration-run", 7, "default", "1", "sha256:dataset", "sha256:config",
+		"embedding-1", "chat-1", "running", `{}`, `{}`, `{}`, "2026-08-26T00:00:00Z",
+	)
+	require.NoError(t, err)
+	_, err = db.Exec(`INSERT INTO evaluation_run_cases (
+        run_id, case_id, tenant_id, status, started_at, usage_snapshot, warnings_snapshot, result_snapshot
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		"migration-run", "1", 7, "success", "2026-08-26T00:00:00Z", `{}`, `[]`, `{}`,
+	)
+	require.NoError(t, err)
+	_, err = db.Exec("DELETE FROM evaluation_runs WHERE run_id = ?", "migration-run")
+	require.NoError(t, err)
+	var caseCount int
+	require.NoError(t, db.QueryRow(
+		"SELECT COUNT(*) FROM evaluation_run_cases WHERE run_id = ?", "migration-run",
+	).Scan(&caseCount))
+	require.Equal(t, 0, caseCount)
 }
 
 func assertSQLiteShareLinkInvitationsWork(t *testing.T, db *sql.DB) {
@@ -258,6 +399,31 @@ func copySQLiteMigrationsV4(t *testing.T, repoRoot string) string {
 		data, err := os.ReadFile(filepath.Join(srcDir, name))
 		require.NoError(t, err)
 		require.NoError(t, os.WriteFile(filepath.Join(destDir, name), data, 0o600))
+	}
+	return dest
+}
+
+func copySQLiteMigrationsThrough(t *testing.T, repoRoot string, maxVersion int) string {
+	t.Helper()
+	dest := t.TempDir()
+	srcDir := filepath.Join(repoRoot, "migrations", "sqlite")
+	destDir := filepath.Join(dest, "migrations", "sqlite")
+	require.NoError(t, os.MkdirAll(destDir, 0o755))
+
+	entries, err := os.ReadDir(srcDir)
+	require.NoError(t, err)
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".up.sql") {
+			continue
+		}
+		version, err := strconv.Atoi(entry.Name()[:6])
+		require.NoError(t, err)
+		if version > maxVersion {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(srcDir, entry.Name()))
+		require.NoError(t, err)
+		require.NoError(t, os.WriteFile(filepath.Join(destDir, entry.Name()), data, 0o600))
 	}
 	return dest
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -377,6 +378,156 @@ type EvaluationWarning struct {
 	Message string `json:"message"`
 }
 
+// EvaluationRunStatus is the persisted lifecycle state of an evaluation run.
+type EvaluationRunStatus string
+
+const (
+	EvaluationRunStatusPending EvaluationRunStatus = "pending"
+	EvaluationRunStatusRunning EvaluationRunStatus = "running"
+	EvaluationRunStatusSuccess EvaluationRunStatus = "success"
+	EvaluationRunStatusPartial EvaluationRunStatus = "partial"
+	EvaluationRunStatusFailed  EvaluationRunStatus = "failed"
+)
+
+// EvaluationRunListFilter selects one page of persisted evaluation runs.
+type EvaluationRunListFilter struct {
+	Status           EvaluationRunStatus
+	DatasetID        string
+	ConfigHash       string
+	EmbeddingModelID string
+	ChatModelID      string
+	RerankModelID    string
+	StartedFrom      *time.Time
+	StartedTo        *time.Time
+	Page             int
+	PageSize         int
+}
+
+type EvaluationCaseStatusCounts struct {
+	Total   int64 `json:"total"`
+	Pending int64 `json:"pending"`
+	Running int64 `json:"running"`
+	Success int64 `json:"success"`
+	Partial int64 `json:"partial"`
+	Failed  int64 `json:"failed"`
+}
+
+type EvaluationRunProgress struct {
+	Total    int                        `json:"total"`
+	Finished int                        `json:"finished"`
+	Cases    EvaluationCaseStatusCounts `json:"cases"`
+}
+
+// EvaluationRunSummary contains the persisted list projection of one run.
+type EvaluationRunSummary struct {
+	RunID                 string                      `json:"run_id"`
+	Status                EvaluationRunStatus         `json:"status"`
+	Dataset               EvaluationDatasetDescriptor `json:"dataset"`
+	SourceKnowledgeBaseID string                      `json:"source_knowledge_base_id,omitempty"`
+	ConfigHash            string                      `json:"config_hash"`
+	ConfigSchemaVersion   string                      `json:"config_schema_version"`
+	MetricVersion         string                      `json:"metric_version"`
+	ResultVersion         string                      `json:"result_version"`
+	Models                EvaluationModelConfigSet    `json:"models"`
+	Reproducibility       EvaluationReproducibility   `json:"reproducibility"`
+	Progress              EvaluationRunProgress       `json:"progress"`
+	Retrieval             *EvaluationRetrievalResult  `json:"retrieval"`
+	Answer                *EvaluationAnswerResult     `json:"answer"`
+	Usage                 EvaluationUsageResult       `json:"usage"`
+	Cost                  EvaluationCostResult        `json:"cost"`
+	Timing                EvaluationTimingResult      `json:"timing"`
+	Warnings              []EvaluationWarning         `json:"warnings"`
+	ErrorMessage          string                      `json:"error_message,omitempty"`
+	StartedAt             time.Time                   `json:"started_at"`
+	CompletedAt           *time.Time                  `json:"completed_at"`
+	CreatedAt             time.Time                   `json:"created_at"`
+	UpdatedAt             time.Time                   `json:"updated_at"`
+}
+
+type EvaluationRunPage struct {
+	Items    []EvaluationRunSummary `json:"items"`
+	Total    int64                  `json:"total"`
+	Page     int                    `json:"page"`
+	PageSize int                    `json:"page_size"`
+}
+
+type EvaluationRunOverview struct {
+	Summary EvaluationRunSummary `json:"summary"`
+	Config  *EvaluationRunConfig `json:"config"`
+	Metric  *EvaluationMetrics   `json:"metric,omitempty"`
+}
+
+type EvaluationCasePage struct {
+	Items    []EvaluationCaseResult `json:"items"`
+	Total    int64                  `json:"total"`
+	Page     int                    `json:"page"`
+	PageSize int                    `json:"page_size"`
+}
+
+type EvaluationComparisonCompatibility struct {
+	Comparable bool     `json:"comparable"`
+	Reasons    []string `json:"reasons"`
+	Warnings   []string `json:"warnings"`
+}
+
+type EvaluationValueDelta struct {
+	Baseline *float64 `json:"baseline"`
+	Value    *float64 `json:"value"`
+	Absolute *float64 `json:"absolute"`
+	Percent  *float64 `json:"percent"`
+}
+
+type EvaluationQualityDeltas struct {
+	Precision EvaluationValueDelta `json:"precision"`
+	Recall    EvaluationValueDelta `json:"recall"`
+	NDCG3     EvaluationValueDelta `json:"ndcg3"`
+	NDCG10    EvaluationValueDelta `json:"ndcg10"`
+	MRR       EvaluationValueDelta `json:"mrr"`
+	MAP       EvaluationValueDelta `json:"map"`
+	BLEU1     EvaluationValueDelta `json:"bleu1"`
+	BLEU2     EvaluationValueDelta `json:"bleu2"`
+	BLEU4     EvaluationValueDelta `json:"bleu4"`
+	ROUGE1    EvaluationValueDelta `json:"rouge1"`
+	ROUGE2    EvaluationValueDelta `json:"rouge2"`
+	ROUGEL    EvaluationValueDelta `json:"rougel"`
+}
+
+type EvaluationCostDeltas struct {
+	Amount           EvaluationValueDelta `json:"amount"`
+	Calls            EvaluationValueDelta `json:"calls"`
+	PromptTokens     EvaluationValueDelta `json:"prompt_tokens"`
+	CompletionTokens EvaluationValueDelta `json:"completion_tokens"`
+	TotalTokens      EvaluationValueDelta `json:"total_tokens"`
+	CachedTokens     EvaluationValueDelta `json:"cached_tokens"`
+}
+
+type EvaluationTimingDeltas struct {
+	TotalWallTimeMS       EvaluationValueDelta `json:"total_wall_time_ms"`
+	PreparationMS         EvaluationValueDelta `json:"preparation_ms"`
+	EvaluationMS          EvaluationValueDelta `json:"evaluation_ms"`
+	CleanupMS             EvaluationValueDelta `json:"cleanup_ms"`
+	CaseAverageMS         EvaluationValueDelta `json:"case_avg_ms"`
+	CaseP50MS             EvaluationValueDelta `json:"case_p50_ms"`
+	CaseP95MS             EvaluationValueDelta `json:"case_p95_ms"`
+	ModelCallCumulativeMS EvaluationValueDelta `json:"model_call_cumulative_ms"`
+}
+
+type EvaluationRunComparison struct {
+	Run                  EvaluationRunSummary              `json:"run"`
+	Config               *EvaluationRunConfig              `json:"config"`
+	QualityCompatibility EvaluationComparisonCompatibility `json:"quality_compatibility"`
+	CostCompatibility    EvaluationComparisonCompatibility `json:"cost_compatibility"`
+	TimingCompatibility  EvaluationComparisonCompatibility `json:"timing_compatibility"`
+	Quality              EvaluationQualityDeltas           `json:"quality"`
+	Cost                 EvaluationCostDeltas              `json:"cost"`
+	Timing               EvaluationTimingDeltas            `json:"timing"`
+}
+
+type EvaluationComparison struct {
+	BaselineID string                    `json:"baseline_id"`
+	Runs       []EvaluationRunComparison `json:"runs"`
+}
+
 // EvaluationRequest represents an evaluation request
 // Parameters used to start a new evaluation task
 type EvaluationRequest struct {
@@ -475,5 +626,131 @@ func (c *Client) GetEvaluationResult(ctx context.Context, taskID string) (*Evalu
 		return nil, err
 	}
 
+	return &response.Data, nil
+}
+
+// ListEvaluationRuns returns one filtered page of persisted evaluation runs.
+func (c *Client) ListEvaluationRuns(
+	ctx context.Context,
+	filter EvaluationRunListFilter,
+) (*EvaluationRunPage, error) {
+	query := url.Values{}
+	if filter.Status != "" {
+		query.Set("status", string(filter.Status))
+	}
+	if filter.DatasetID != "" {
+		query.Set("dataset_id", filter.DatasetID)
+	}
+	if filter.ConfigHash != "" {
+		query.Set("config_hash", filter.ConfigHash)
+	}
+	if filter.EmbeddingModelID != "" {
+		query.Set("embedding_model_id", filter.EmbeddingModelID)
+	}
+	if filter.ChatModelID != "" {
+		query.Set("chat_model_id", filter.ChatModelID)
+	}
+	if filter.RerankModelID != "" {
+		query.Set("rerank_model_id", filter.RerankModelID)
+	}
+	if filter.StartedFrom != nil {
+		query.Set("started_from", filter.StartedFrom.Format(time.RFC3339))
+	}
+	if filter.StartedTo != nil {
+		query.Set("started_to", filter.StartedTo.Format(time.RFC3339))
+	}
+	if filter.Page > 0 {
+		query.Set("page", strconv.Itoa(filter.Page))
+	}
+	if filter.PageSize > 0 {
+		query.Set("page_size", strconv.Itoa(filter.PageSize))
+	}
+
+	resp, err := c.doRequest(ctx, http.MethodGet, "/api/v1/evaluation/runs", nil, query)
+	if err != nil {
+		return nil, err
+	}
+	var response struct {
+		Success bool              `json:"success"`
+		Data    EvaluationRunPage `json:"data"`
+	}
+	if err := parseResponse(resp, &response); err != nil {
+		return nil, err
+	}
+	return &response.Data, nil
+}
+
+// GetEvaluationRun returns one persisted run without loading its case rows.
+func (c *Client) GetEvaluationRun(ctx context.Context, runID string) (*EvaluationRunOverview, error) {
+	path := fmt.Sprintf("/api/v1/evaluation/runs/%s", url.PathEscape(runID))
+	resp, err := c.doRequest(ctx, http.MethodGet, path, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	var response struct {
+		Success bool                  `json:"success"`
+		Data    EvaluationRunOverview `json:"data"`
+	}
+	if err := parseResponse(resp, &response); err != nil {
+		return nil, err
+	}
+	return &response.Data, nil
+}
+
+// ListEvaluationRunCases returns an independently paged case evidence list.
+func (c *Client) ListEvaluationRunCases(
+	ctx context.Context,
+	runID string,
+	status EvaluationRunStatus,
+	page int,
+	pageSize int,
+) (*EvaluationCasePage, error) {
+	query := url.Values{}
+	if status != "" {
+		query.Set("status", string(status))
+	}
+	if page > 0 {
+		query.Set("page", strconv.Itoa(page))
+	}
+	if pageSize > 0 {
+		query.Set("page_size", strconv.Itoa(pageSize))
+	}
+	path := fmt.Sprintf("/api/v1/evaluation/runs/%s/cases", url.PathEscape(runID))
+	resp, err := c.doRequest(ctx, http.MethodGet, path, nil, query)
+	if err != nil {
+		return nil, err
+	}
+	var response struct {
+		Success bool               `json:"success"`
+		Data    EvaluationCasePage `json:"data"`
+	}
+	if err := parseResponse(resp, &response); err != nil {
+		return nil, err
+	}
+	return &response.Data, nil
+}
+
+// CompareEvaluationRuns returns persisted baseline-relative differences.
+func (c *Client) CompareEvaluationRuns(
+	ctx context.Context,
+	baselineID string,
+	runIDs []string,
+) (*EvaluationComparison, error) {
+	query := url.Values{}
+	query.Set("baseline_id", baselineID)
+	for _, runID := range runIDs {
+		query.Add("run_ids", runID)
+	}
+	resp, err := c.doRequest(ctx, http.MethodGet, "/api/v1/evaluation/comparison", nil, query)
+	if err != nil {
+		return nil, err
+	}
+	var response struct {
+		Success bool                 `json:"success"`
+		Data    EvaluationComparison `json:"data"`
+	}
+	if err := parseResponse(resp, &response); err != nil {
+		return nil, err
+	}
 	return &response.Data, nil
 }

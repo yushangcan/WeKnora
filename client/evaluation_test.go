@@ -1,8 +1,12 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func TestEvaluationResultResponseMatchesServerContract(t *testing.T) {
@@ -203,5 +207,107 @@ func TestEvaluationTaskResponseAcceptsNestedServerTask(t *testing.T) {
 	}
 	if response.Data.ID != "evaluation-1" || response.Data.Status != "running" {
 		t.Fatalf("nested task was not decoded: %#v", response.Data)
+	}
+}
+
+func TestListEvaluationRunsSendsFiltersAndPreservesUnavailableCost(t *testing.T) {
+	startedFrom := time.Date(2026, time.August, 27, 1, 2, 3, 0, time.UTC)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/api/v1/evaluation/runs" {
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		query := r.URL.Query()
+		if query.Get("status") != "success" || query.Get("dataset_id") != "dataset-1" ||
+			query.Get("chat_model_id") != "chat-1" || query.Get("page") != "2" ||
+			query.Get("page_size") != "25" || query.Get("started_from") != startedFrom.Format(time.RFC3339) {
+			t.Fatalf("unexpected query: %s", r.URL.RawQuery)
+		}
+		_, _ = w.Write([]byte(`{"success":true,"data":{"items":[{"run_id":"run-1","cost":{"status":"unavailable","amount":null}}],"total":1,"page":2,"page_size":25}}`))
+	}))
+	defer server.Close()
+
+	page, err := NewClient(server.URL).ListEvaluationRuns(context.Background(), EvaluationRunListFilter{
+		Status:      EvaluationRunStatusSuccess,
+		DatasetID:   "dataset-1",
+		ChatModelID: "chat-1",
+		StartedFrom: &startedFrom,
+		Page:        2,
+		PageSize:    25,
+	})
+	if err != nil {
+		t.Fatalf("list evaluation runs: %v", err)
+	}
+	if page.Total != 1 || len(page.Items) != 1 || page.Items[0].RunID != "run-1" {
+		t.Fatalf("unexpected page: %#v", page)
+	}
+	if page.Items[0].Cost.Amount != nil {
+		t.Fatalf("unavailable cost became a value: %#v", page.Items[0].Cost)
+	}
+}
+
+func TestGetEvaluationRunUsesHistoryEndpoint(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/api/v1/evaluation/runs/run-1" {
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		_, _ = w.Write([]byte(`{"success":true,"data":{"summary":{"run_id":"run-1"},"config":{"config_hash":"sha256:config"}}}`))
+	}))
+	defer server.Close()
+
+	overview, err := NewClient(server.URL).GetEvaluationRun(context.Background(), "run-1")
+	if err != nil {
+		t.Fatalf("get evaluation run: %v", err)
+	}
+	if overview.Summary.RunID != "run-1" || overview.Config == nil || overview.Config.ConfigHash != "sha256:config" {
+		t.Fatalf("unexpected overview: %#v", overview)
+	}
+}
+
+func TestListEvaluationRunCasesUsesIndependentPagination(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/api/v1/evaluation/runs/run-1/cases" {
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		query := r.URL.Query()
+		if query.Get("status") != "failed" || query.Get("page") != "3" || query.Get("page_size") != "10" {
+			t.Fatalf("unexpected query: %s", r.URL.RawQuery)
+		}
+		_, _ = w.Write([]byte(`{"success":true,"data":{"items":[{"case_id":"case-1","status":"failed"}],"total":1,"page":3,"page_size":10}}`))
+	}))
+	defer server.Close()
+
+	page, err := NewClient(server.URL).ListEvaluationRunCases(
+		context.Background(), "run-1", EvaluationRunStatusFailed, 3, 10,
+	)
+	if err != nil {
+		t.Fatalf("list evaluation cases: %v", err)
+	}
+	if page.Page != 3 || len(page.Items) != 1 || page.Items[0].CaseID != "case-1" {
+		t.Fatalf("unexpected case page: %#v", page)
+	}
+}
+
+func TestCompareEvaluationRunsSendsOrderedIDs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/api/v1/evaluation/comparison" {
+			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
+		}
+		query := r.URL.Query()
+		if query.Get("baseline_id") != "run-a" || len(query["run_ids"]) != 2 ||
+			query["run_ids"][0] != "run-a" || query["run_ids"][1] != "run-b" {
+			t.Fatalf("unexpected comparison query: %s", r.URL.RawQuery)
+		}
+		_, _ = w.Write([]byte(`{"success":true,"data":{"baseline_id":"run-a","runs":[{"run":{"run_id":"run-a"}},{"run":{"run_id":"run-b"}}]}}`))
+	}))
+	defer server.Close()
+
+	comparison, err := NewClient(server.URL).CompareEvaluationRuns(
+		context.Background(), "run-a", []string{"run-a", "run-b"},
+	)
+	if err != nil {
+		t.Fatalf("compare evaluation runs: %v", err)
+	}
+	if comparison.BaselineID != "run-a" || len(comparison.Runs) != 2 || comparison.Runs[1].Run.RunID != "run-b" {
+		t.Fatalf("unexpected comparison: %#v", comparison)
 	}
 }

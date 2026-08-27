@@ -1,4 +1,4 @@
-.PHONY: help build run test clean docker-build-app docker-build-docreader docker-build-frontend docker-build-all docker-run migrate-up migrate-down docker-restart docker-stop start-all stop-all start-ollama stop-ollama build-images build-images-app build-images-docreader build-images-frontend clean-images check-env list-containers pull-images show-platform dev-start dev-stop dev-restart dev-logs dev-status dev-app dev-frontend docs install-swagger build-lite run-lite package-lite anydoc-lib build-anydoc
+.PHONY: help build run test eval clean docker-build-app docker-build-docreader docker-build-frontend docker-build-all docker-run migrate-up migrate-down docker-restart docker-stop start-all stop-all start-ollama stop-ollama build-images build-images-app build-images-docreader build-images-frontend clean-images check-env list-containers pull-images show-platform dev-start dev-stop dev-restart dev-logs dev-status dev-app dev-frontend docs install-swagger build-lite run-lite package-lite anydoc-lib build-anydoc
 
 # Show help
 help:
@@ -8,6 +8,7 @@ help:
 	@echo "  build             构建应用"
 	@echo "  run               运行应用"
 	@echo "  test              运行测试"
+	@echo "  eval              执行评测并轮询结果（需要 WEKNORA_API_KEY）"
 	@echo "  anydoc-lib        构建 anydoc 静态库（需要 Rust 工具链）"
 	@echo "  build-anydoc      构建带 anydoc 解析引擎的应用"
 	@echo "  clean             清理构建文件"
@@ -106,6 +107,10 @@ run: build
 # Run tests
 test:
 	go test -v ./...
+
+# Run one persisted evaluation and write the terminal API response to a report.
+eval:
+	go run ./cmd/evaluation
 
 # Clean build artifacts
 clean:

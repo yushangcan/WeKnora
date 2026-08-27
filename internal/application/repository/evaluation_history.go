@@ -240,7 +240,8 @@ func evaluationOverviewFromRecord(
 	}
 	result := detail.Result
 	status := record.Status
-	if result != nil && result.Run.Status != "" && record.Status != types.EvaluationRunStatusFailed {
+	if result != nil && result.Run.Status != "" &&
+		(record.Status != types.EvaluationRunStatusFailed || result.Run.Status == types.EvaluationRunStatusPartial) {
 		status = result.Run.Status
 	}
 	return &types.EvaluationRunOverview{

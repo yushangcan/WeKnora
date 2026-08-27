@@ -632,10 +632,10 @@ Repository 保留了显式的 `MarkInterruptedRunsFailed` 恢复操作，但启�
 
 | 字段              | 类型   | 必填 | 说明                                            |
 | ----------------- | ------ | ---- | ----------------------------------------------- |
-| dataset_id        | string | 是   | 评估数据集，目前仅支持 `default`（官方测试集）   |
-| knowledge_base_id | string | 是   | 评估使用的知识库 ID                              |
-| chat_id           | string | 是   | 评估使用的对话模型 ID                            |
-| rerank_id         | string | 是   | 评估使用的重排序模型 ID                          |
+| dataset_id        | string | 否   | 评估数据集，留空时使用 `default`（官方测试集）   |
+| knowledge_base_id | string | 否   | 源知识库 ID，留空时按活动模型使用默认配置        |
+| chat_id           | string | 否   | 对话模型 ID，留空时选择活动的 KnowledgeQA 模型   |
+| rerank_id         | string | 否   | 重排序模型 ID，留空时选择活动模型；不存在则跳过  |
 
 **请求**:
 

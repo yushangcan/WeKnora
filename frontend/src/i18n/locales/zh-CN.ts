@@ -6334,8 +6334,174 @@ export default {
       references: '引用'
     }
   },
+  evaluation: {
+    title: '质量评测',
+    description: '以持久化快照查看、追溯并比较 RAG 评测结果。',
+    common: {
+      unavailable: '不可用',
+      notConfigured: '未配置'
+    },
+    actions: {
+      refresh: '刷新',
+      compare: '对比所选 Run',
+      start: '发起评测',
+      reset: '重置',
+      search: '查询',
+      clear: '清空',
+      details: '详情'
+    },
+    running: {
+      title: '评测正在运行'
+    },
+    status: {
+      pending: '等待中',
+      running: '运行中',
+      success: '成功',
+      partial: '部分完成',
+      failed: '失败'
+    },
+    fields: {
+      status: '状态',
+      dataset: '数据集',
+      configHash: '配置哈希',
+      startedAt: '开始时间',
+      completedAt: '完成时间',
+      reproducibility: '可复现性',
+      runId: 'Run ID',
+      calls: '调用',
+      caseId: 'Case ID',
+      duration: '耗时',
+      run: '评测 Run',
+      configuration: '固定配置',
+      models: '模型快照',
+      progress: '进度',
+      actions: '操作'
+    },
+    filters: {
+      allStatuses: '全部状态',
+      datasetPlaceholder: '输入数据集 ID',
+      configPlaceholder: '输入完整配置哈希',
+      modelPlaceholder: '选择模型',
+      startedFrom: '开始时间从',
+      startedTo: '开始时间至'
+    },
+    models: {
+      embedding: 'Embedding 模型',
+      chat: '回答模型',
+      rerank: 'Rerank 模型',
+      embeddingShort: 'E:',
+      chatShort: 'C:',
+      rerankShort: 'R:'
+    },
+    dimensions: {
+      retrieval: '检索准确性',
+      answer: '答案质量',
+      retrievalAnswer: '检索与答案质量',
+      cost: '成本',
+      timing: '耗时'
+    },
+    metrics: {
+      precision: 'Precision',
+      recall: 'Recall',
+      ndcg3: "NDCG{'@'}3",
+      ndcg10: "NDCG{'@'}10",
+      mrr: 'MRR',
+      map: 'MAP',
+      bleu1: 'BLEU-1',
+      bleu2: 'BLEU-2',
+      bleu4: 'BLEU-4',
+      rouge1: 'ROUGE-1',
+      rouge2: 'ROUGE-2',
+      rougel: 'ROUGE-L',
+      amount: '费用金额',
+      calls: '模型调用次数',
+      prompt_tokens: 'Prompt Tokens',
+      completion_tokens: 'Completion Tokens',
+      total_tokens: '总 Tokens',
+      cached_tokens: '缓存 Tokens',
+      total_wall_time_ms: '总墙钟时间',
+      preparation_ms: '准备耗时',
+      evaluation_ms: '评测耗时',
+      cleanup_ms: '清理耗时',
+      case_avg_ms: 'Case 平均耗时',
+      case_p50_ms: 'Case P50',
+      case_p95_ms: 'Case P95',
+      model_call_cumulative_ms: '模型调用累计耗时'
+    },
+    history: {
+      title: '历史评测',
+      total: '共 {count} 条'
+    },
+    start: {
+      title: '发起质量评测',
+      dataset: '数据集 ID',
+      datasetPlaceholder: '例如 default',
+      datasetHint: '数据集内容和问答对由后端按该 ID 加载并固化指纹。',
+      knowledgeBase: '知识库',
+      knowledgeBasePlaceholder: '选择待评测知识库',
+      embeddingHint: 'Embedding 模型和分块参数取自该知识库的当前配置，并在 Run 中保存快照。',
+      chatPlaceholder: '选择回答模型',
+      rerankPlaceholder: '可选：选择 Rerank 模型'
+    },
+    detail: {
+      title: '评测详情',
+      summary: 'Run 概览',
+      dimensions: '四维结果',
+      configuration: '配置快照',
+      rawConfiguration: '查看完整配置 JSON',
+      cases: 'Case 审计证据',
+      casesHint: 'Case 独立分页，不与 Run 列表直接联表。',
+      questionEvidence: '问题证据',
+      evidence: '召回证据',
+      retrieved: '召回',
+      unavailable: '无法读取该 Run 的持久化详情。'
+    },
+    comparison: {
+      title: '多 Run 对比',
+      baseline: '基线 Run',
+      baselineTag: '基线',
+      hint: '所有差值均为候选值减基线值；不可比较的维度不会生成差值。',
+      configurations: '配置与数据快照',
+      selected: '已选择 {count}/5',
+      comparable: '可比较',
+      notComparable: '不可比较',
+      metric: '指标',
+      empty: '请选择 2 至 5 个 Run 后再进行对比。'
+    },
+    compatibility: {
+      dataset_fingerprint_unavailable: '数据集指纹不可用',
+      dataset_fingerprint_mismatch: '数据集指纹不一致',
+      metric_version_unavailable: '指标版本不可用',
+      metric_version_mismatch: '指标版本不一致',
+      result_version_unavailable: '结果版本不可用',
+      result_version_mismatch: '结果版本不一致',
+      run_not_terminal: 'Run 尚未结束',
+      quality_metrics_unavailable: '质量指标不可用',
+      cost_unavailable: '费用金额不可用',
+      cost_currency_unavailable: '费用币种不可用',
+      cost_currency_mismatch: '费用币种不一致',
+      pricing_version_unavailable: '计价版本不可用',
+      pricing_version_mismatch: '计价版本不一致',
+      timing_is_environment_dependent: '耗时受运行环境影响',
+      partial_run: '包含部分完成的 Run'
+    },
+    messages: {
+      loadFailed: '加载评测历史失败',
+      loadDetailFailed: '加载评测详情失败',
+      loadCasesFailed: '加载 Case 证据失败',
+      compareFailed: '对比评测 Run 失败',
+      requiredFields: '请填写数据集并选择知识库和回答模型',
+      started: '评测已发起',
+      startFailed: '发起评测失败',
+      completed: '评测已完成',
+      runFailed: '评测运行失败',
+      pollFailed: '获取评测进度失败',
+      compareLimit: '最多只能选择 5 个 Run'
+    }
+  },
   menu: {
     knowledgeBase: '知识库',
+    evaluations: '质量评测',
     agents: '智能体',
     organizations: '共享空间',
     newChat: '新对话',

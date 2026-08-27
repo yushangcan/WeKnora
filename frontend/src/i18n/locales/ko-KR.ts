@@ -6332,8 +6332,174 @@ export default {
       references: '참조'
     }
   },
+  evaluation: {
+    title: '품질 평가',
+    description: '저장된 RAG 평가 스냅샷을 조회하고 추적하며 비교합니다.',
+    common: {
+      unavailable: '사용할 수 없음',
+      notConfigured: '설정되지 않음'
+    },
+    actions: {
+      refresh: '새로 고침',
+      compare: '실행 비교',
+      start: '평가 시작',
+      reset: '초기화',
+      search: '조회',
+      clear: '지우기',
+      details: '상세'
+    },
+    running: {
+      title: '평가가 실행 중입니다'
+    },
+    status: {
+      pending: '대기 중',
+      running: '실행 중',
+      success: '성공',
+      partial: '일부 완료',
+      failed: '실패'
+    },
+    fields: {
+      status: '상태',
+      dataset: '데이터셋',
+      configHash: '설정 해시',
+      startedAt: '시작 시간',
+      completedAt: '완료 시간',
+      reproducibility: '재현 가능성',
+      runId: '실행 ID',
+      calls: '호출',
+      caseId: '케이스 ID',
+      duration: '소요 시간',
+      run: '평가 실행',
+      configuration: '고정 설정',
+      models: '모델 스냅샷',
+      progress: '진행률',
+      actions: '작업'
+    },
+    filters: {
+      allStatuses: '모든 상태',
+      datasetPlaceholder: '데이터셋 ID 입력',
+      configPlaceholder: '전체 설정 해시 입력',
+      modelPlaceholder: '모델 선택',
+      startedFrom: '시작 시간부터',
+      startedTo: '시작 시간까지'
+    },
+    models: {
+      embedding: '임베딩 모델',
+      chat: '답변 모델',
+      rerank: '리랭크 모델',
+      embeddingShort: 'E:',
+      chatShort: 'C:',
+      rerankShort: 'R:'
+    },
+    dimensions: {
+      retrieval: '검색 정확도',
+      answer: '답변 품질',
+      retrievalAnswer: '검색 및 답변 품질',
+      cost: '비용',
+      timing: '소요 시간'
+    },
+    metrics: {
+      precision: 'Precision',
+      recall: 'Recall',
+      ndcg3: "NDCG{'@'}3",
+      ndcg10: "NDCG{'@'}10",
+      mrr: 'MRR',
+      map: 'MAP',
+      bleu1: 'BLEU-1',
+      bleu2: 'BLEU-2',
+      bleu4: 'BLEU-4',
+      rouge1: 'ROUGE-1',
+      rouge2: 'ROUGE-2',
+      rougel: 'ROUGE-L',
+      amount: '비용 금액',
+      calls: '모델 호출 수',
+      prompt_tokens: '프롬프트 토큰',
+      completion_tokens: '완료 토큰',
+      total_tokens: '전체 토큰',
+      cached_tokens: '캐시 토큰',
+      total_wall_time_ms: '전체 경과 시간',
+      preparation_ms: '준비 시간',
+      evaluation_ms: '평가 시간',
+      cleanup_ms: '정리 시간',
+      case_avg_ms: '케이스 평균 시간',
+      case_p50_ms: '케이스 P50',
+      case_p95_ms: '케이스 P95',
+      model_call_cumulative_ms: '모델 호출 누적 시간'
+    },
+    history: {
+      title: '평가 기록',
+      total: '총 {count}개'
+    },
+    start: {
+      title: '품질 평가 시작',
+      dataset: '데이터셋 ID',
+      datasetPlaceholder: '예: default',
+      datasetHint: '백엔드가 이 ID로 데이터셋과 Q&A를 불러와 지문을 저장합니다.',
+      knowledgeBase: '지식 베이스',
+      knowledgeBasePlaceholder: '평가할 지식 베이스 선택',
+      embeddingHint: '임베딩 모델과 청킹 설정은 지식 베이스에서 가져와 실행 스냅샷에 저장됩니다.',
+      chatPlaceholder: '답변 모델 선택',
+      rerankPlaceholder: '선택 사항: 리랭크 모델 선택'
+    },
+    detail: {
+      title: '평가 상세',
+      summary: '실행 개요',
+      dimensions: '4차원 결과',
+      configuration: '설정 스냅샷',
+      rawConfiguration: '전체 설정 JSON 보기',
+      cases: '케이스 감사 근거',
+      casesHint: '케이스는 실행 목록과 직접 조인하지 않고 별도로 페이지 처리됩니다.',
+      questionEvidence: '질문 근거',
+      evidence: '검색 근거',
+      retrieved: '검색됨',
+      unavailable: '이 실행의 저장된 상세 정보를 불러올 수 없습니다.'
+    },
+    comparison: {
+      title: '여러 실행 비교',
+      baseline: '기준 실행',
+      baselineTag: '기준',
+      hint: '모든 차이는 후보 값에서 기준 값을 뺀 값입니다. 호환되지 않는 차원은 계산하지 않습니다.',
+      configurations: '설정 및 데이터 스냅샷',
+      selected: '{count}/5 선택됨',
+      comparable: '비교 가능',
+      notComparable: '비교 불가',
+      metric: '지표',
+      empty: '비교할 실행을 2개에서 5개까지 선택하세요.'
+    },
+    compatibility: {
+      dataset_fingerprint_unavailable: '데이터셋 지문을 사용할 수 없음',
+      dataset_fingerprint_mismatch: '데이터셋 지문이 다름',
+      metric_version_unavailable: '지표 버전을 사용할 수 없음',
+      metric_version_mismatch: '지표 버전이 다름',
+      result_version_unavailable: '결과 버전을 사용할 수 없음',
+      result_version_mismatch: '결과 버전이 다름',
+      run_not_terminal: '실행이 아직 종료되지 않음',
+      quality_metrics_unavailable: '품질 지표를 사용할 수 없음',
+      cost_unavailable: '비용 금액을 사용할 수 없음',
+      cost_currency_unavailable: '비용 통화를 사용할 수 없음',
+      cost_currency_mismatch: '비용 통화가 다름',
+      pricing_version_unavailable: '가격 버전을 사용할 수 없음',
+      pricing_version_mismatch: '가격 버전이 다름',
+      timing_is_environment_dependent: '시간은 실행 환경의 영향을 받음',
+      partial_run: '일부 완료 실행이 포함됨'
+    },
+    messages: {
+      loadFailed: '평가 기록을 불러오지 못했습니다',
+      loadDetailFailed: '평가 상세를 불러오지 못했습니다',
+      loadCasesFailed: '케이스 근거를 불러오지 못했습니다',
+      compareFailed: '평가 실행을 비교하지 못했습니다',
+      requiredFields: '데이터셋을 입력하고 지식 베이스와 답변 모델을 선택하세요',
+      started: '평가를 시작했습니다',
+      startFailed: '평가를 시작하지 못했습니다',
+      completed: '평가가 완료되었습니다',
+      runFailed: '평가 실행이 실패했습니다',
+      pollFailed: '평가 진행률을 가져오지 못했습니다',
+      compareLimit: '최대 5개의 실행만 선택할 수 있습니다'
+    }
+  },
   menu: {
     knowledgeBase: '지식베이스',
+    evaluations: '품질 평가',
     agents: '에이전트',
     organizations: '공유 공간',
     newChat: '새 대화',

@@ -1,6 +1,172 @@
 export default {
+  evaluation: {
+    title: 'Quality Evaluation',
+    description: 'Inspect, trace, and compare persisted RAG evaluation snapshots.',
+    common: {
+      unavailable: 'Unavailable',
+      notConfigured: 'Not configured'
+    },
+    actions: {
+      refresh: 'Refresh',
+      compare: 'Compare runs',
+      start: 'Start evaluation',
+      reset: 'Reset',
+      search: 'Search',
+      clear: 'Clear',
+      details: 'Details'
+    },
+    running: {
+      title: 'Evaluation is running'
+    },
+    status: {
+      pending: 'Pending',
+      running: 'Running',
+      success: 'Success',
+      partial: 'Partial',
+      failed: 'Failed'
+    },
+    fields: {
+      status: 'Status',
+      dataset: 'Dataset',
+      configHash: 'Config hash',
+      startedAt: 'Started at',
+      completedAt: 'Completed at',
+      reproducibility: 'Reproducibility',
+      runId: 'Run ID',
+      calls: 'Calls',
+      caseId: 'Case ID',
+      duration: 'Duration',
+      run: 'Evaluation run',
+      configuration: 'Fixed configuration',
+      models: 'Model snapshot',
+      progress: 'Progress',
+      actions: 'Actions'
+    },
+    filters: {
+      allStatuses: 'All statuses',
+      datasetPlaceholder: 'Enter dataset ID',
+      configPlaceholder: 'Enter the full config hash',
+      modelPlaceholder: 'Select a model',
+      startedFrom: 'Started from',
+      startedTo: 'Started to'
+    },
+    models: {
+      embedding: 'Embedding model',
+      chat: 'Answer model',
+      rerank: 'Rerank model',
+      embeddingShort: 'E:',
+      chatShort: 'C:',
+      rerankShort: 'R:'
+    },
+    dimensions: {
+      retrieval: 'Retrieval accuracy',
+      answer: 'Answer quality',
+      retrievalAnswer: 'Retrieval and answer quality',
+      cost: 'Cost',
+      timing: 'Timing'
+    },
+    metrics: {
+      precision: 'Precision',
+      recall: 'Recall',
+      ndcg3: "NDCG{'@'}3",
+      ndcg10: "NDCG{'@'}10",
+      mrr: 'MRR',
+      map: 'MAP',
+      bleu1: 'BLEU-1',
+      bleu2: 'BLEU-2',
+      bleu4: 'BLEU-4',
+      rouge1: 'ROUGE-1',
+      rouge2: 'ROUGE-2',
+      rougel: 'ROUGE-L',
+      amount: 'Cost amount',
+      calls: 'Model calls',
+      prompt_tokens: 'Prompt tokens',
+      completion_tokens: 'Completion tokens',
+      total_tokens: 'Total tokens',
+      cached_tokens: 'Cached tokens',
+      total_wall_time_ms: 'Total wall time',
+      preparation_ms: 'Preparation',
+      evaluation_ms: 'Evaluation',
+      cleanup_ms: 'Cleanup',
+      case_avg_ms: 'Average case time',
+      case_p50_ms: 'Case P50',
+      case_p95_ms: 'Case P95',
+      model_call_cumulative_ms: 'Cumulative model-call time'
+    },
+    history: {
+      title: 'Evaluation history',
+      total: '{count} runs'
+    },
+    start: {
+      title: 'Start quality evaluation',
+      dataset: 'Dataset ID',
+      datasetPlaceholder: 'For example, default',
+      datasetHint: 'The backend loads the dataset and Q&A pairs by this ID and records their fingerprint.',
+      knowledgeBase: 'Knowledge base',
+      knowledgeBasePlaceholder: 'Select a knowledge base',
+      embeddingHint: 'The embedding model and chunking settings come from the knowledge base and are snapshotted in the run.',
+      chatPlaceholder: 'Select an answer model',
+      rerankPlaceholder: 'Optional: select a rerank model'
+    },
+    detail: {
+      title: 'Evaluation details',
+      summary: 'Run overview',
+      dimensions: 'Four-dimension result',
+      configuration: 'Configuration snapshot',
+      rawConfiguration: 'View full configuration JSON',
+      cases: 'Case audit evidence',
+      casesHint: 'Cases are paged separately and are not joined directly to the run list.',
+      questionEvidence: 'Question evidence',
+      evidence: 'Retrieval evidence',
+      retrieved: 'Retrieved',
+      unavailable: 'The persisted details for this run could not be loaded.'
+    },
+    comparison: {
+      title: 'Compare runs',
+      baseline: 'Baseline run',
+      baselineTag: 'Baseline',
+      hint: 'Every delta is candidate minus baseline. Incompatible dimensions do not produce deltas.',
+      configurations: 'Configuration and dataset snapshots',
+      selected: '{count}/5 selected',
+      comparable: 'Comparable',
+      notComparable: 'Not comparable',
+      metric: 'Metric',
+      empty: 'Select between 2 and 5 runs to compare.'
+    },
+    compatibility: {
+      dataset_fingerprint_unavailable: 'Dataset fingerprint is unavailable',
+      dataset_fingerprint_mismatch: 'Dataset fingerprints differ',
+      metric_version_unavailable: 'Metric version is unavailable',
+      metric_version_mismatch: 'Metric versions differ',
+      result_version_unavailable: 'Result version is unavailable',
+      result_version_mismatch: 'Result versions differ',
+      run_not_terminal: 'The run is not terminal',
+      quality_metrics_unavailable: 'Quality metrics are unavailable',
+      cost_unavailable: 'Cost amount is unavailable',
+      cost_currency_unavailable: 'Cost currency is unavailable',
+      cost_currency_mismatch: 'Cost currencies differ',
+      pricing_version_unavailable: 'Pricing version is unavailable',
+      pricing_version_mismatch: 'Pricing versions differ',
+      timing_is_environment_dependent: 'Timing depends on the runtime environment',
+      partial_run: 'A partial run is included'
+    },
+    messages: {
+      loadFailed: 'Failed to load evaluation history',
+      loadDetailFailed: 'Failed to load evaluation details',
+      loadCasesFailed: 'Failed to load case evidence',
+      compareFailed: 'Failed to compare evaluation runs',
+      requiredFields: 'Enter a dataset and select a knowledge base and answer model',
+      started: 'Evaluation started',
+      startFailed: 'Failed to start evaluation',
+      completed: 'Evaluation completed',
+      runFailed: 'Evaluation failed',
+      pollFailed: 'Failed to retrieve evaluation progress',
+      compareLimit: 'You can select at most 5 runs'
+    }
+  },
   menu: {
     knowledgeBase: 'Knowledge Base',
+    evaluations: 'Quality Evaluation',
     agents: 'Agents',
     organizations: 'Shared Spaces',
     newChat: 'New Chat',

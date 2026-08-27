@@ -6332,8 +6332,174 @@ export default {
       references: 'Источники'
     }
   },
+  evaluation: {
+    title: 'Оценка качества',
+    description: 'Просмотр, аудит и сравнение сохранённых снимков оценки RAG.',
+    common: {
+      unavailable: 'Недоступно',
+      notConfigured: 'Не настроено'
+    },
+    actions: {
+      refresh: 'Обновить',
+      compare: 'Сравнить запуски',
+      start: 'Запустить оценку',
+      reset: 'Сбросить',
+      search: 'Поиск',
+      clear: 'Очистить',
+      details: 'Подробнее'
+    },
+    running: {
+      title: 'Оценка выполняется'
+    },
+    status: {
+      pending: 'Ожидание',
+      running: 'Выполняется',
+      success: 'Успешно',
+      partial: 'Частично',
+      failed: 'Ошибка'
+    },
+    fields: {
+      status: 'Статус',
+      dataset: 'Набор данных',
+      configHash: 'Хеш конфигурации',
+      startedAt: 'Начало',
+      completedAt: 'Завершение',
+      reproducibility: 'Воспроизводимость',
+      runId: 'ID запуска',
+      calls: 'Вызовы',
+      caseId: 'ID примера',
+      duration: 'Длительность',
+      run: 'Запуск оценки',
+      configuration: 'Фиксированная конфигурация',
+      models: 'Снимок моделей',
+      progress: 'Прогресс',
+      actions: 'Действия'
+    },
+    filters: {
+      allStatuses: 'Все статусы',
+      datasetPlaceholder: 'Введите ID набора',
+      configPlaceholder: 'Введите полный хеш конфигурации',
+      modelPlaceholder: 'Выберите модель',
+      startedFrom: 'Начало с',
+      startedTo: 'Начало до'
+    },
+    models: {
+      embedding: 'Модель эмбеддингов',
+      chat: 'Модель ответа',
+      rerank: 'Модель реранжирования',
+      embeddingShort: 'E:',
+      chatShort: 'C:',
+      rerankShort: 'R:'
+    },
+    dimensions: {
+      retrieval: 'Точность поиска',
+      answer: 'Качество ответа',
+      retrievalAnswer: 'Поиск и качество ответа',
+      cost: 'Стоимость',
+      timing: 'Время'
+    },
+    metrics: {
+      precision: 'Precision',
+      recall: 'Recall',
+      ndcg3: "NDCG{'@'}3",
+      ndcg10: "NDCG{'@'}10",
+      mrr: 'MRR',
+      map: 'MAP',
+      bleu1: 'BLEU-1',
+      bleu2: 'BLEU-2',
+      bleu4: 'BLEU-4',
+      rouge1: 'ROUGE-1',
+      rouge2: 'ROUGE-2',
+      rougel: 'ROUGE-L',
+      amount: 'Сумма',
+      calls: 'Вызовы модели',
+      prompt_tokens: 'Токены запроса',
+      completion_tokens: 'Токены ответа',
+      total_tokens: 'Всего токенов',
+      cached_tokens: 'Токены из кеша',
+      total_wall_time_ms: 'Общее время',
+      preparation_ms: 'Подготовка',
+      evaluation_ms: 'Оценка',
+      cleanup_ms: 'Очистка',
+      case_avg_ms: 'Среднее по примеру',
+      case_p50_ms: 'Пример P50',
+      case_p95_ms: 'Пример P95',
+      model_call_cumulative_ms: 'Суммарное время вызовов модели'
+    },
+    history: {
+      title: 'История оценок',
+      total: 'Запусков: {count}'
+    },
+    start: {
+      title: 'Запуск оценки качества',
+      dataset: 'ID набора данных',
+      datasetPlaceholder: 'Например, default',
+      datasetHint: 'Сервер загружает набор и пары вопрос-ответ по этому ID и сохраняет их отпечаток.',
+      knowledgeBase: 'База знаний',
+      knowledgeBasePlaceholder: 'Выберите базу знаний',
+      embeddingHint: 'Модель эмбеддингов и параметры разбиения берутся из базы знаний и сохраняются в запуске.',
+      chatPlaceholder: 'Выберите модель ответа',
+      rerankPlaceholder: 'Необязательно: выберите модель реранжирования'
+    },
+    detail: {
+      title: 'Детали оценки',
+      summary: 'Обзор запуска',
+      dimensions: 'Результат по четырём измерениям',
+      configuration: 'Снимок конфигурации',
+      rawConfiguration: 'Показать полный JSON конфигурации',
+      cases: 'Аудит примеров',
+      casesHint: 'Примеры загружаются отдельно и не соединяются напрямую со списком запусков.',
+      questionEvidence: 'Отпечаток вопроса',
+      evidence: 'Данные поиска',
+      retrieved: 'Найдено',
+      unavailable: 'Не удалось загрузить сохранённые детали запуска.'
+    },
+    comparison: {
+      title: 'Сравнение запусков',
+      baseline: 'Базовый запуск',
+      baselineTag: 'База',
+      hint: 'Разница равна значению кандидата минус базовое. Несовместимые измерения не сравниваются.',
+      configurations: 'Снимки конфигурации и данных',
+      selected: 'Выбрано {count}/5',
+      comparable: 'Сравнимо',
+      notComparable: 'Несравнимо',
+      metric: 'Метрика',
+      empty: 'Выберите от 2 до 5 запусков для сравнения.'
+    },
+    compatibility: {
+      dataset_fingerprint_unavailable: 'Отпечаток набора недоступен',
+      dataset_fingerprint_mismatch: 'Отпечатки наборов различаются',
+      metric_version_unavailable: 'Версия метрик недоступна',
+      metric_version_mismatch: 'Версии метрик различаются',
+      result_version_unavailable: 'Версия результата недоступна',
+      result_version_mismatch: 'Версии результата различаются',
+      run_not_terminal: 'Запуск ещё не завершён',
+      quality_metrics_unavailable: 'Метрики качества недоступны',
+      cost_unavailable: 'Стоимость недоступна',
+      cost_currency_unavailable: 'Валюта недоступна',
+      cost_currency_mismatch: 'Валюты различаются',
+      pricing_version_unavailable: 'Версия цен недоступна',
+      pricing_version_mismatch: 'Версии цен различаются',
+      timing_is_environment_dependent: 'Время зависит от среды выполнения',
+      partial_run: 'Включён частично завершённый запуск'
+    },
+    messages: {
+      loadFailed: 'Не удалось загрузить историю оценок',
+      loadDetailFailed: 'Не удалось загрузить детали оценки',
+      loadCasesFailed: 'Не удалось загрузить примеры',
+      compareFailed: 'Не удалось сравнить запуски',
+      requiredFields: 'Укажите набор данных, базу знаний и модель ответа',
+      started: 'Оценка запущена',
+      startFailed: 'Не удалось запустить оценку',
+      completed: 'Оценка завершена',
+      runFailed: 'Оценка завершилась ошибкой',
+      pollFailed: 'Не удалось получить прогресс оценки',
+      compareLimit: 'Можно выбрать не более 5 запусков'
+    }
+  },
   menu: {
     knowledgeBase: 'База знаний',
+    evaluations: 'Оценка качества',
     agents: 'Агенты',
     organizations: 'Общие пространства',
     newChat: 'Новый диалог',

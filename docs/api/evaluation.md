@@ -481,7 +481,7 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 - `task`、`config`、`metric` 和 `result` 以快照形式保存，因此源知识库或模型之后被修改、删除时，既有评测结果仍可读取。
 - 主运行更新和对应 Case 结果在同一事务中写入；所有单 Run 查询均受当前 `tenant_id` 限制。
 - Run 快照只保存聚合结果，不重复保存 Case 明细。读取单个 Run 时，Repository 会从 Case 表按当前租户和 Run ID 查询，再按数值 QID 稳定排序并组装回 API 响应。
-- 本阶段保存每个已完成 Case 的最新进度，但不做断点续跑。多实例部署无法仅凭 `running` 状态安全判断任务所属进程，因此进程异常退出后的自动终结应在后续引入 Worker 租约或心跳后启用。
+- 本阶段保存每个已完成 Case 的最新进度，终态快照写入遇到短暂错误时会进行有限重试，但不做断点续跑。多实例部署无法仅凭 `running` 状态安全判断任务所属进程，因此进程异常退出后的自动终结应在后续引入 Worker 租约或心跳后启用。
 
 `config` 字段结构示例：
 

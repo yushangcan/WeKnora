@@ -30,6 +30,11 @@ qrels: qid -> pid
 arels: qid -> aid
 */
 
+const (
+	terminalEvaluationSaveAttempts = 3
+	terminalEvaluationRetryDelay   = 100 * time.Millisecond
+)
+
 // EvaluationService handles evaluation tasks for knowledge base and chat models
 type EvaluationService struct {
 	config               *config.Config                  // Application configuration
@@ -59,6 +64,31 @@ func NewEvaluationService(
 		modelService:         modelService,
 		evaluationRepository: evaluationRepository,
 	}
+}
+
+func (e *EvaluationService) saveTerminalEvaluationRun(
+	ctx context.Context,
+	detail *types.EvaluationDetail,
+) error {
+	var saveErr error
+	for attempt := 1; attempt <= terminalEvaluationSaveAttempts; attempt++ {
+		saveErr = e.evaluationRepository.SaveTerminalRun(ctx, detail)
+		if saveErr == nil {
+			return nil
+		}
+		if attempt == terminalEvaluationSaveAttempts || ctx.Err() != nil {
+			break
+		}
+		logger.Warnf(ctx, "Failed to persist terminal evaluation state, retrying: attempt=%d err=%v", attempt, saveErr)
+		timer := time.NewTimer(time.Duration(attempt) * terminalEvaluationRetryDelay)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return saveErr
+		case <-timer.C:
+		}
+	}
+	return saveErr
 }
 
 // cloneEvaluationDetail prevents the API layer and background workers from
@@ -285,7 +315,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 				fmt.Sprintf("persist running evaluation state: %v", err),
 			)
 			backgroundDetail.Result = observer.Snapshot(types.EvaluationStatueFailed, backgroundDetail.Metric)
-			if saveErr := e.evaluationRepository.SaveTerminalRun(newCtx, backgroundDetail); saveErr != nil {
+			if saveErr := e.saveTerminalEvaluationRun(newCtx, backgroundDetail); saveErr != nil {
 				logger.Errorf(newCtx, "Failed to persist evaluation startup failure: %v", saveErr)
 			}
 			return
@@ -302,7 +332,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 			backgroundDetail.Task.Status = types.EvaluationStatueFailed
 			backgroundDetail.Task.ErrMsg = evaluationobs.SafeErrorMessage(err)
 			backgroundDetail.Result = observer.Snapshot(types.EvaluationStatueFailed, backgroundDetail.Metric)
-			if saveErr := e.evaluationRepository.SaveTerminalRun(newCtx, backgroundDetail); saveErr != nil {
+			if saveErr := e.saveTerminalEvaluationRun(newCtx, backgroundDetail); saveErr != nil {
 				logger.Errorf(newCtx, "Failed to persist terminal evaluation failure: %v", saveErr)
 			}
 			logger.Errorf(newCtx, "Evaluation task failed: %v, task ID: %s", err, taskID)
@@ -314,7 +344,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 		observer.Complete()
 		backgroundDetail.Task.Status = types.EvaluationStatueSuccess
 		backgroundDetail.Result = observer.Snapshot(types.EvaluationStatueSuccess, backgroundDetail.Metric)
-		if err := e.evaluationRepository.SaveTerminalRun(newCtx, backgroundDetail); err != nil {
+		if err := e.saveTerminalEvaluationRun(newCtx, backgroundDetail); err != nil {
 			logger.Errorf(newCtx, "Failed to persist successful evaluation result: %v", err)
 		}
 	}()

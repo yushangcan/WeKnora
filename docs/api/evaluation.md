@@ -11,6 +11,48 @@
 
 > 当前实现会把任务状态、固定配置、四维结果和 Case 审计证据写入项目现有数据库，服务重启后仍可按任务 ID 查询。当前配置契约为 `evaluation-config/v2`，检索与生成指标输入契约为 `retrieval-generation/v2`。历史分页、跨 Run 对比和 Vue 页面属于下一阶段。
 
+## 一条命令执行评测
+
+仓库提供 `make eval` 入口，负责创建评测、轮询任务状态并把最后一次完整 API 响应写入 JSON 报告。命令只从环境变量读取认证信息，API Key 不会写入报告或控制台输出。
+
+PowerShell：
+
+```powershell
+$env:WEKNORA_API_KEY = '<your-api-key>'
+$env:WEKNORA_BASE_URL = 'http://localhost:18080'
+make eval
+```
+
+Bash：
+
+```bash
+export WEKNORA_API_KEY='<your-api-key>'
+export WEKNORA_BASE_URL='http://localhost:8080'
+make eval
+```
+
+如果本机没有 `make`，可直接执行相同入口：
+
+```bash
+go run ./cmd/evaluation
+```
+
+默认使用 `default` 数据集，报告写入 `tmp/evaluation-report.json`。服务可以在模型列表中选择活动模型并创建临时评测知识库，因此模型 ID 和知识库 ID 均可为空。需要固定它们时使用以下可选变量：
+
+| 环境变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `WEKNORA_BASE_URL` | `http://localhost:8080` | WeKnora 后端地址，不包含 `/api/v1` |
+| `WEKNORA_TENANT_ID` | 空 | 平台级 API Key 调用指定租户时使用 |
+| `EVALUATION_DATASET_ID` | `default` | 固定评测数据集 |
+| `EVALUATION_KNOWLEDGE_BASE_ID` | 空 | 复用其分块、Embedding 和索引配置 |
+| `EVALUATION_CHAT_MODEL_ID` | 空 | 指定回答模型 |
+| `EVALUATION_RERANK_MODEL_ID` | 空 | 指定 Rerank 模型 |
+| `EVALUATION_POLL_INTERVAL` | `2s` | 查询任务状态的间隔 |
+| `EVALUATION_TIMEOUT` | `30m` | 单次命令的最长等待时间 |
+| `EVALUATION_REPORT_PATH` | `tmp/evaluation-report.json` | 成功、失败或超时时保存的最后响应 |
+
+`make eval` 输出 task ID、进度、Config Hash、Metric Version 和检索、答案、成本、耗时摘要。业务失败和超时会以非零状态退出，同时尽可能保留最后一次响应，便于本地验收或后续 CI 使用。
+
 ## GET `/evaluation` - 获取评估任务结果
 
 **参数说明（查询参数）**:
@@ -580,7 +622,9 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 
 两张表由项目现有 PostgreSQL/SQLite 迁移创建，Case 通过外键归属 Run，删除 Run 时级联删除 Case。当前实现支持进程重启后读取已经持久化的 Run 和 Case，但不支持从中断 Case 继续执行，也不支持多实例自动接管。
 
-SQLite 的新建库、v11 到 v12 升级、索引、外键级联和 Down Migration 已建立自动化测试。PostgreSQL migration 85 已建立 SQL 合同检查，但仍需在真实 PostgreSQL 或 Linux CI 中执行 Up/Down、JSONB 写入和外键验证；在完成该验证前不能宣称 PostgreSQL 迁移已经实跑通过。
+SQLite 的新建库、v11 到 v12 升级、索引、外键级联和 Down Migration 已建立自动化测试。2026-08-27 已在本地 ParadeDB/PostgreSQL 17 容器中完成 migration 79 到 85 的真实升级，并验证两张表、索引、JSONB 写入、Run/Case 外键和级联删除。Down Migration 仍应在可丢弃的数据库或 CI 中验证，不能为验证回滚而破坏现有开发数据。
+
+Repository 保留了显式的 `MarkInterruptedRunsFailed` 恢复操作，但启动流程不会自动调用。该操作目前没有 Worker 归属、租约或心跳条件，若在多实例启动时直接全局执行，可能把其他实例仍在运行的任务错误关闭。安全的异常恢复需要先增加 Worker Owner 和租约过期判断，只处理确认失去所有权的 Run；在此之前，文档和 API 不宣称支持断点续跑或多实例自动接管。
 
 ## POST `/evaluation` - 创建评估任务
 

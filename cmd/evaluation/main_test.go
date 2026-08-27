@@ -159,6 +159,57 @@ func TestRunEvaluationTimeoutWritesLastResponse(t *testing.T) {
 	}
 }
 
+func TestRunEvaluationRequestTimeoutWritesPreviousResponse(t *testing.T) {
+	pollStarted := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"success":true,"data":{"task":{"id":"run-request-timeout","status":1,"total":2,"finished":1}}}`))
+			return
+		}
+		close(pollStarted)
+		<-r.Context().Done()
+	}))
+	defer server.Close()
+
+	reportPath := filepath.Join(t.TempDir(), "request-timeout.json")
+	config := commandConfig{
+		BaseURL:      server.URL,
+		APIKey:       "secret",
+		DatasetID:    "default",
+		PollInterval: time.Millisecond,
+		ReportPath:   reportPath,
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- runEvaluation(ctx, server.Client(), config, &bytes.Buffer{})
+	}()
+	select {
+	case <-pollStarted:
+		cancel()
+	case <-time.After(time.Second):
+		t.Fatal("poll request did not start")
+	}
+	var err error
+	select {
+	case err = <-errCh:
+	case <-time.After(time.Second):
+		t.Fatal("evaluation did not stop after cancellation")
+	}
+	if err == nil || !strings.Contains(err.Error(), "timed out") {
+		t.Fatalf("timeout error = %v", err)
+	}
+	report, readErr := os.ReadFile(reportPath)
+	if readErr != nil {
+		t.Fatalf("last response report was not written: %v", readErr)
+	}
+	if !strings.Contains(string(report), `"id": "run-request-timeout"`) {
+		t.Fatalf("previous response was not retained: %s", report)
+	}
+}
+
 func TestLoadCommandConfigRequiresKeyAndValidDurations(t *testing.T) {
 	values := map[string]string{
 		"WEKNORA_API_KEY":          "secret",

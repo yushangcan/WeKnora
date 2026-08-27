@@ -201,14 +201,11 @@ func runEvaluation(
 
 		select {
 		case <-ctx.Done():
-			if reportErr := writeEvaluationReport(config.ReportPath, rawResponse); reportErr != nil {
-				return fmt.Errorf("evaluation task %s timed out; save last response: %w", taskID, reportErr)
-			}
-			return fmt.Errorf("evaluation task %s timed out (last response: %s)", taskID, config.ReportPath)
+			return evaluationTimeoutError(taskID, config.ReportPath, rawResponse)
 		case <-time.After(config.PollInterval):
 		}
 
-		response, rawResponse, err = callEvaluationAPI(
+		nextResponse, nextRawResponse, pollErr := callEvaluationAPI(
 			ctx,
 			httpClient,
 			config,
@@ -216,10 +213,21 @@ func runEvaluation(
 			config.BaseURL+"/api/v1/evaluation?task_id="+url.QueryEscape(taskID),
 			nil,
 		)
-		if err != nil {
-			return fmt.Errorf("poll evaluation task %s: %w", taskID, err)
+		if pollErr != nil {
+			if ctx.Err() != nil {
+				return evaluationTimeoutError(taskID, config.ReportPath, rawResponse)
+			}
+			return fmt.Errorf("poll evaluation task %s: %w", taskID, pollErr)
 		}
+		response, rawResponse = nextResponse, nextRawResponse
 	}
+}
+
+func evaluationTimeoutError(taskID, reportPath string, rawResponse []byte) error {
+	if reportErr := writeEvaluationReport(reportPath, rawResponse); reportErr != nil {
+		return fmt.Errorf("evaluation task %s timed out; save last response: %w", taskID, reportErr)
+	}
+	return fmt.Errorf("evaluation task %s timed out (last response: %s)", taskID, reportPath)
 }
 
 func callEvaluationAPI(

@@ -14,7 +14,7 @@ import (
 // versionedSQLiteTables is the set of tables that SQLite migrations must
 // create to stay in sync with the versioned (PostgreSQL) migrations:
 // 000041 task queue, 000053 system settings, 000055 processing spans,
-// 000063 knowledge multi-tags, 000085 evaluation persistence.
+// 000063 knowledge multi-tags, 000090 evaluation persistence.
 var versionedSQLiteTables = []string{
 	"task_pending_ops",
 	"task_dead_letters",
@@ -37,7 +37,7 @@ var versionedSQLiteColumns = map[string][]string{
 	"mcp_oauth_tokens":   {"principal_type", "principal_id"}, // 000064
 }
 
-const expectedSQLiteMigrationVersion = 12
+const expectedSQLiteMigrationVersion = 13
 
 func TestSQLiteMigrationsCreateVersionedSchema(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
@@ -110,7 +110,7 @@ func TestSQLiteEvaluationMigrationDownRemovesTables(t *testing.T) {
 	require.NoError(t, RunMigrationsWithOptions("sqlite3://unused", MigrationOptions{SQLiteDBPath: dbPath}))
 	db := openSQLiteDB(t, dbPath)
 
-	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "sqlite", "000012_evaluation_runs.down.sql"))
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "sqlite", "000013_evaluation_runs.down.sql"))
 	require.NoError(t, err)
 	_, err = db.Exec(string(downSQL))
 	require.NoError(t, err)
@@ -120,7 +120,7 @@ func TestSQLiteEvaluationMigrationDownRemovesTables(t *testing.T) {
 
 func TestPostgresEvaluationMigrationContract(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
-	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000085_evaluation_runs.up.sql"))
+	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000090_evaluation_runs.up.sql"))
 	require.NoError(t, err)
 	up := string(upSQL)
 	for _, fragment := range []string{
@@ -134,7 +134,7 @@ func TestPostgresEvaluationMigrationContract(t *testing.T) {
 	} {
 		require.Contains(t, up, fragment)
 	}
-	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000085_evaluation_runs.down.sql"))
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000090_evaluation_runs.down.sql"))
 	require.NoError(t, err)
 	require.Contains(t, string(downSQL), "DROP TABLE IF EXISTS evaluation_run_cases")
 	require.Contains(t, string(downSQL), "DROP TABLE IF EXISTS evaluation_runs")

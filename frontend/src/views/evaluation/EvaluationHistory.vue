@@ -108,7 +108,7 @@
         </div>
         <div v-if="selectedRuns.length" class="selection-summary">
           <span>{{ t('evaluation.comparison.selected', { count: selectedRuns.length }) }}</span>
-          <t-button variant="text" size="small" @click="selectedRunIDs = []">
+          <t-button variant="text" size="small" @click="selectedRunsByID.clear()">
             {{ t('evaluation.actions.clear') }}
           </t-button>
         </div>
@@ -125,8 +125,8 @@
       >
         <template #select="{ row }">
           <t-checkbox
-            :checked="selectedRunIDs.includes(row.run_id)"
-            :disabled="!selectedRunIDs.includes(row.run_id) && selectedRunIDs.length >= 5"
+            :checked="selectedRunsByID.has(row.run_id)"
+            :disabled="!selectedRunsByID.has(row.run_id) && selectedRunsByID.size >= 5"
             @change="toggleRunSelection(row)"
           />
         </template>
@@ -296,6 +296,7 @@ import {
 } from '@/api/evaluation'
 import EvaluationRunDetailDrawer from './components/EvaluationRunDetailDrawer.vue'
 import EvaluationComparisonDrawer from './components/EvaluationComparisonDrawer.vue'
+import { toggleEvaluationRunSelection } from './evaluationSelection'
 import {
   formatEvaluationCost,
   formatEvaluationDuration,
@@ -318,7 +319,7 @@ const startDialogVisible = ref(false)
 const detailVisible = ref(false)
 const comparisonVisible = ref(false)
 const detailRunID = ref('')
-const selectedRunIDs = ref<string[]>([])
+const selectedRunsByID = reactive(new Map<string, EvaluationRunSummary>())
 const activeTask = ref<EvaluationTask | null>(null)
 const models = ref<ModelConfig[]>([])
 const knowledgeBases = ref<KnowledgeBaseOptionSource[]>([])
@@ -346,9 +347,7 @@ const startForm = reactive({
 const statusValues: EvaluationRunStatus[] = ['pending', 'running', 'success', 'partial', 'failed']
 const statusOptions = computed(() => statusValues.map((value) => ({ value, label: statusLabel(value) })))
 const canStartEvaluation = computed(() => authStore.hasRole('admin'))
-const selectedRuns = computed(() => selectedRunIDs.value
-  .map((runID) => pageData.items.find((run) => run.run_id === runID))
-  .filter((run): run is EvaluationRunSummary => Boolean(run)))
+const selectedRuns = computed(() => [...selectedRunsByID.values()])
 
 const modelOptions = (type: ModelConfig['type']) => computed(() => models.value
   .filter((model) => model.type === type && model.id)
@@ -403,8 +402,6 @@ async function loadRuns() {
     }
     const response = await listEvaluationRuns(params)
     Object.assign(pageData, response.data)
-    const visibleIDs = new Set(pageData.items.map((run) => run.run_id))
-    selectedRunIDs.value = selectedRunIDs.value.filter((runID) => visibleIDs.has(runID))
   } catch (error: any) {
     MessagePlugin.error(error?.message || t('evaluation.messages.loadFailed'))
   } finally {
@@ -429,7 +426,7 @@ async function loadResources() {
 
 function applyFilters() {
   pageData.page = 1
-  selectedRunIDs.value = []
+  selectedRunsByID.clear()
   void loadRuns()
 }
 
@@ -525,16 +522,9 @@ function handleVisibilityChange() {
 }
 
 function toggleRunSelection(run: EvaluationRunSummary) {
-  const index = selectedRunIDs.value.indexOf(run.run_id)
-  if (index >= 0) {
-    selectedRunIDs.value.splice(index, 1)
-    return
-  }
-  if (selectedRunIDs.value.length >= 5) {
+  if (toggleEvaluationRunSelection(selectedRunsByID, run) === 'limit') {
     MessagePlugin.warning(t('evaluation.messages.compareLimit'))
-    return
   }
-  selectedRunIDs.value.push(run.run_id)
 }
 
 function openDetail(runID: string) {

@@ -803,7 +803,7 @@ curl --location 'http://localhost:8080/api/v1/evaluation/comparison?baseline_id=
 
 ## Web 闭环与权限
 
-Vue 页面位于 `/platform/evaluations`，提供历史筛选与服务端分页、四维摘要、Run 详情、Case 独立分页和 2 至 5 Run 基线对比。Viewer 可以读取历史与对比；发起评测会产生真实模型调用，按钮只对 Admin/Owner 显示，后端 RBAC 始终是最终权限来源。
+Vue 页面位于 `/platform/evaluations`，提供历史筛选与服务端分页、四维摘要、Run 详情、Case 独立分页和 2 至 5 Run 基线对比。对比选择在普通翻页时保留，在重新应用筛选条件时清空，因此可以从不同页选择 Run。Viewer 可以读取历史与对比；发起评测会产生真实模型调用，按钮只对 Admin/Owner 显示，后端 RBAC 始终是最终权限来源。
 
 页面发起评测后只轮询 `GET /evaluation?task_id=...`。任务进入成功或失败终态、页面隐藏或组件卸载时停止轮询；Case 不参与轮询。要验收持久化，应在完成至少两个 Run 后重启 App，再确认历史、详情、Case 和对比仍可读取。
 

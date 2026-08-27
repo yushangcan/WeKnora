@@ -31,7 +31,7 @@ export default {
       configHash: 'Config hash',
       startedAt: 'Started at',
       completedAt: 'Completed at',
-      reproducibility: 'Reproducibility',
+      reproducibility: 'Reproduction metadata coverage',
       runId: 'Run ID',
       calls: 'Calls',
       caseId: 'Case ID',

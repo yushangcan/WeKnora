@@ -475,7 +475,7 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 - `config` 记录本次运行实际使用的数据集版本、模型身份、分块、检索、生成、索引、并发数和应用版本，`config_hash` 是这些有效参数的稳定 SHA-256 摘要。
 - `runtime` 保存应用版本、Commit SHA、工作树修改状态和 Commit 是否可获得。构建信息不可获得时不会虚构版本，而是把可重复性标记为 `partial`。
 - 模型 API Key、App ID、App Secret 和自定义 Header 不会写入评测快照；Endpoint、Prompt 和 Context 只保存指纹。扩展配置只允许非敏感行为参数进入模型参数指纹。
-- `reproducibility.status` 为 `complete` 或 `partial`，并通过 `warnings` 说明数据制品、代码版本或模型配置中未能安全固化的部分。
+- `reproducibility.status` 为 `complete` 或 `partial`，表示当前定义的非敏感复现信息是否完整，并通过 `warnings` 说明数据制品、代码版本或模型配置中未能安全固化的部分。`complete` 不代表系统可以从该快照一键重放；当前没有快照重放入口，凭据和只保存指纹的配置仍需在运行环境中另行提供。
 - 兼容字段 `params` 仍保留模型 ID 和数值参数，但 Prompt、Context、Fallback 和 Rewrite 文本在返回及持久化前会置空；运行中的模型调用继续使用原始配置。
 - `chunking.applied=true` 表示评测语料会实际使用知识库的现有分块器。每条带 PID 的数据集 passage 独立分块，不跨 passage 边界，以保持召回结果与标准 PID 的映射。
 - `task`、`config`、`metric` 和 `result` 以快照形式保存，因此源知识库或模型之后被修改、删除时，既有评测结果仍可读取。

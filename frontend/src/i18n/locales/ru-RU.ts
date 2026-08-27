@@ -6364,7 +6364,7 @@ export default {
       configHash: 'Хеш конфигурации',
       startedAt: 'Начало',
       completedAt: 'Завершение',
-      reproducibility: 'Воспроизводимость',
+      reproducibility: 'Полнота данных для воспроизведения',
       runId: 'ID запуска',
       calls: 'Вызовы',
       caseId: 'ID примера',

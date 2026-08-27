@@ -6364,7 +6364,7 @@ export default {
       configHash: '설정 해시',
       startedAt: '시작 시간',
       completedAt: '완료 시간',
-      reproducibility: '재현 가능성',
+      reproducibility: '재현 정보 완전성',
       runId: '실행 ID',
       calls: '호출',
       caseId: '케이스 ID',

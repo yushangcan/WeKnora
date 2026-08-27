@@ -6366,7 +6366,7 @@ export default {
       configHash: '配置哈希',
       startedAt: '开始时间',
       completedAt: '完成时间',
-      reproducibility: '可复现性',
+      reproducibility: '复现信息完整度',
       runId: 'Run ID',
       calls: '调用',
       caseId: 'Case ID',

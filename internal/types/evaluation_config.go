@@ -152,7 +152,8 @@ type EvaluationRuntimeConfig struct {
 	CommitAvailable    bool   `json:"commit_available"`
 }
 
-// EvaluationReproducibility states whether the stored non-secret snapshot is sufficient to repeat a run.
+// EvaluationReproducibility describes coverage of the tracked non-secret inputs.
+// A complete snapshot does not imply that an executable replay entry point exists.
 type EvaluationReproducibility struct {
 	Status   string              `json:"status"`
 	Warnings []EvaluationWarning `json:"warnings"`

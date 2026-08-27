@@ -260,6 +260,11 @@ export type EvaluationCostDeltas = Record<
   EvaluationValueDelta
 >
 
+export type EvaluationUsageDeltas = Record<
+  'calls' | 'prompt_tokens' | 'completion_tokens' | 'total_tokens' | 'cached_tokens',
+  EvaluationValueDelta
+>
+
 export type EvaluationTimingDeltas = Record<
   'total_wall_time_ms' | 'preparation_ms' | 'evaluation_ms' | 'cleanup_ms' | 'case_avg_ms' | 'case_p50_ms' | 'case_p95_ms' | 'model_call_cumulative_ms',
   EvaluationValueDelta
@@ -270,9 +275,11 @@ export interface EvaluationRunComparison {
   config: EvaluationRunConfig | null
   quality_compatibility: EvaluationComparisonCompatibility
   cost_compatibility: EvaluationComparisonCompatibility
+  usage_compatibility: EvaluationComparisonCompatibility
   timing_compatibility: EvaluationComparisonCompatibility
   quality: EvaluationQualityDeltas
   cost: EvaluationCostDeltas
+  usage: EvaluationUsageDeltas
   timing: EvaluationTimingDeltas
 }
 

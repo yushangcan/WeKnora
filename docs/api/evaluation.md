@@ -762,7 +762,8 @@ curl --location 'http://localhost:8080/api/v1/evaluation/comparison?baseline_id=
 
 - 质量要求数据集内容指纹、Metric Version 和 Result Version 相同，Run 已终结，且 Retrieval/Answer 指标存在。
 - 费用金额要求两侧 `amount` 非空、费用状态可比较、币种和 Pricing Version 相同。费用未知时 `amount` 及其差值保持 `null`，不会按 0 处理。
-- Usage 调用量、Token 与 Timing 在 Run 终态时返回差值；Timing 会附带 `timing_is_environment_dependent`，提醒耗时受机器负载和网络影响。
+- Usage 与费用金额独立判断兼容性。Run 必须已终结且两侧 Usage 至少部分可用；部分 Usage 会附带 `usage_partial`，未报告的 Token 不会被当成完整数据。旧版 `cost` 中的 Usage 差值字段暂时保留用于客户端兼容，新客户端读取独立的 `usage` 和 `usage_compatibility`。
+- Timing 在 Run 终态时返回差值，并附带 `timing_is_environment_dependent`，提醒耗时受机器负载和网络影响。
 - `partial` Run 会附带警告。任何不可比较原因只影响相应维度，不会偷偷改用当前模型配置或重算旧指标。
 
 精简响应示例：
@@ -777,6 +778,7 @@ curl --location 'http://localhost:8080/api/v1/evaluation/comparison?baseline_id=
         "run": { "run_id": "run-b" },
         "quality_compatibility": { "comparable": true, "reasons": [], "warnings": [] },
         "cost_compatibility": { "comparable": false, "reasons": ["cost_unavailable"], "warnings": [] },
+        "usage_compatibility": { "comparable": true, "reasons": [], "warnings": [] },
         "timing_compatibility": {
           "comparable": true,
           "reasons": [],

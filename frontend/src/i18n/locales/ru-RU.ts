@@ -6396,6 +6396,7 @@ export default {
       answer: 'Качество ответа',
       retrievalAnswer: 'Поиск и качество ответа',
       cost: 'Стоимость',
+      usage: 'Использование моделей',
       timing: 'Время'
     },
     metrics: {
@@ -6475,6 +6476,8 @@ export default {
       result_version_mismatch: 'Версии результата различаются',
       run_not_terminal: 'Запуск ещё не завершён',
       quality_metrics_unavailable: 'Метрики качества недоступны',
+      usage_unavailable: 'Данные использования моделей недоступны',
+      usage_partial: 'Некоторые вызовы не сообщили токены, поэтому разница использования неполна',
       cost_unavailable: 'Стоимость недоступна',
       cost_currency_unavailable: 'Валюта недоступна',
       cost_currency_mismatch: 'Валюты различаются',

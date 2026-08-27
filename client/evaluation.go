@@ -501,6 +501,14 @@ type EvaluationCostDeltas struct {
 	CachedTokens     EvaluationValueDelta `json:"cached_tokens"`
 }
 
+type EvaluationUsageDeltas struct {
+	Calls            EvaluationValueDelta `json:"calls"`
+	PromptTokens     EvaluationValueDelta `json:"prompt_tokens"`
+	CompletionTokens EvaluationValueDelta `json:"completion_tokens"`
+	TotalTokens      EvaluationValueDelta `json:"total_tokens"`
+	CachedTokens     EvaluationValueDelta `json:"cached_tokens"`
+}
+
 type EvaluationTimingDeltas struct {
 	TotalWallTimeMS       EvaluationValueDelta `json:"total_wall_time_ms"`
 	PreparationMS         EvaluationValueDelta `json:"preparation_ms"`
@@ -517,9 +525,11 @@ type EvaluationRunComparison struct {
 	Config               *EvaluationRunConfig              `json:"config"`
 	QualityCompatibility EvaluationComparisonCompatibility `json:"quality_compatibility"`
 	CostCompatibility    EvaluationComparisonCompatibility `json:"cost_compatibility"`
+	UsageCompatibility   EvaluationComparisonCompatibility `json:"usage_compatibility"`
 	TimingCompatibility  EvaluationComparisonCompatibility `json:"timing_compatibility"`
 	Quality              EvaluationQualityDeltas           `json:"quality"`
 	Cost                 EvaluationCostDeltas              `json:"cost"`
+	Usage                EvaluationUsageDeltas             `json:"usage"`
 	Timing               EvaluationTimingDeltas            `json:"timing"`
 }
 

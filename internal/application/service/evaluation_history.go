@@ -135,12 +135,14 @@ func compareEvaluationOverview(
 ) types.EvaluationRunComparison {
 	qualityCompatibility := evaluationQualityCompatibility(baseline.Summary, candidate.Summary)
 	costCompatibility := evaluationCostCompatibility(baseline.Summary, candidate.Summary)
+	usageCompatibility := evaluationUsageCompatibility(baseline.Summary, candidate.Summary)
 	timingCompatibility := evaluationTimingCompatibility(baseline.Summary, candidate.Summary)
 	result := types.EvaluationRunComparison{
 		Run:                  candidate.Summary,
 		Config:               candidate.Config,
 		QualityCompatibility: qualityCompatibility,
 		CostCompatibility:    costCompatibility,
+		UsageCompatibility:   usageCompatibility,
 		TimingCompatibility:  timingCompatibility,
 	}
 	if qualityCompatibility.Comparable {
@@ -151,26 +153,34 @@ func compareEvaluationOverview(
 			baseline.Summary.Cost.Amount, candidate.Summary.Cost.Amount,
 		)
 	}
-	if timingCompatibility.Comparable {
-		result.Cost.Calls = evaluationNumberDelta(
+	if usageCompatibility.Comparable {
+		result.Usage.Calls = evaluationNumberDelta(
 			float64(baseline.Summary.Usage.Calls.Total), float64(candidate.Summary.Usage.Calls.Total),
 		)
-		result.Cost.PromptTokens = evaluationNumberDelta(
+		result.Usage.PromptTokens = evaluationNumberDelta(
 			float64(baseline.Summary.Usage.Tokens.PromptTokens),
 			float64(candidate.Summary.Usage.Tokens.PromptTokens),
 		)
-		result.Cost.CompletionTokens = evaluationNumberDelta(
+		result.Usage.CompletionTokens = evaluationNumberDelta(
 			float64(baseline.Summary.Usage.Tokens.CompletionTokens),
 			float64(candidate.Summary.Usage.Tokens.CompletionTokens),
 		)
-		result.Cost.TotalTokens = evaluationNumberDelta(
+		result.Usage.TotalTokens = evaluationNumberDelta(
 			float64(baseline.Summary.Usage.Tokens.TotalTokens),
 			float64(candidate.Summary.Usage.Tokens.TotalTokens),
 		)
-		result.Cost.CachedTokens = evaluationNumberDelta(
+		result.Usage.CachedTokens = evaluationNumberDelta(
 			float64(baseline.Summary.Usage.Tokens.CachedTokens),
 			float64(candidate.Summary.Usage.Tokens.CachedTokens),
 		)
+		// Keep the original cost payload populated for existing API clients.
+		result.Cost.Calls = result.Usage.Calls
+		result.Cost.PromptTokens = result.Usage.PromptTokens
+		result.Cost.CompletionTokens = result.Usage.CompletionTokens
+		result.Cost.TotalTokens = result.Usage.TotalTokens
+		result.Cost.CachedTokens = result.Usage.CachedTokens
+	}
+	if timingCompatibility.Comparable {
 		result.Timing = evaluationTimingDeltas(baseline.Summary.Timing, candidate.Summary.Timing)
 	}
 	return result
@@ -248,6 +258,27 @@ func evaluationTimingCompatibility(
 	warnings := evaluationComparisonWarnings(baseline, candidate)
 	if len(reasons) == 0 {
 		warnings = append(warnings, "timing_is_environment_dependent")
+	}
+	return types.EvaluationComparisonCompatibility{
+		Comparable: len(reasons) == 0, Reasons: reasons, Warnings: warnings,
+	}
+}
+
+func evaluationUsageCompatibility(
+	baseline types.EvaluationRunSummary,
+	candidate types.EvaluationRunSummary,
+) types.EvaluationComparisonCompatibility {
+	reasons := make([]string, 0)
+	warnings := evaluationComparisonWarnings(baseline, candidate)
+	if !isTerminalEvaluationStatus(baseline.Status) || !isTerminalEvaluationStatus(candidate.Status) {
+		reasons = append(reasons, "run_not_terminal")
+	}
+	if !isComparableEvaluationUsageStatus(baseline.Usage.Status) ||
+		!isComparableEvaluationUsageStatus(candidate.Usage.Status) {
+		reasons = append(reasons, "usage_unavailable")
+	} else if baseline.Usage.Status == types.EvaluationUsageStatusPartial ||
+		candidate.Usage.Status == types.EvaluationUsageStatusPartial {
+		warnings = append(warnings, "usage_partial")
 	}
 	return types.EvaluationComparisonCompatibility{
 		Comparable: len(reasons) == 0, Reasons: reasons, Warnings: warnings,
@@ -340,6 +371,10 @@ func isTerminalEvaluationStatus(status types.EvaluationRunStatus) bool {
 
 func isComparableEvaluationCostStatus(status types.EvaluationCostStatus) bool {
 	return status == types.EvaluationCostStatusComplete || status == types.EvaluationCostStatusPartial
+}
+
+func isComparableEvaluationUsageStatus(status types.EvaluationUsageStatus) bool {
+	return status == types.EvaluationUsageStatusComplete || status == types.EvaluationUsageStatusPartial
 }
 
 func uniqueEvaluationRunIDs(values []string) []string {

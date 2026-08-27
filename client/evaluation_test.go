@@ -297,7 +297,7 @@ func TestCompareEvaluationRunsSendsOrderedIDs(t *testing.T) {
 			query["run_ids"][0] != "run-a" || query["run_ids"][1] != "run-b" {
 			t.Fatalf("unexpected comparison query: %s", r.URL.RawQuery)
 		}
-		_, _ = w.Write([]byte(`{"success":true,"data":{"baseline_id":"run-a","runs":[{"run":{"run_id":"run-a"}},{"run":{"run_id":"run-b"}}]}}`))
+		_, _ = w.Write([]byte(`{"success":true,"data":{"baseline_id":"run-a","runs":[{"run":{"run_id":"run-a"}},{"run":{"run_id":"run-b"},"usage_compatibility":{"comparable":true},"usage":{"total_tokens":{"baseline":100,"value":120,"absolute":20,"percent":20}}}]}}`))
 	}))
 	defer server.Close()
 
@@ -309,5 +309,10 @@ func TestCompareEvaluationRunsSendsOrderedIDs(t *testing.T) {
 	}
 	if comparison.BaselineID != "run-a" || len(comparison.Runs) != 2 || comparison.Runs[1].Run.RunID != "run-b" {
 		t.Fatalf("unexpected comparison: %#v", comparison)
+	}
+	if !comparison.Runs[1].UsageCompatibility.Comparable ||
+		comparison.Runs[1].Usage.TotalTokens.Absolute == nil ||
+		*comparison.Runs[1].Usage.TotalTokens.Absolute != 20 {
+		t.Fatalf("usage comparison was not decoded: %#v", comparison.Runs[1])
 	}
 }

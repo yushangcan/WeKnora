@@ -63,6 +63,7 @@ export default {
       answer: 'Answer quality',
       retrievalAnswer: 'Retrieval and answer quality',
       cost: 'Cost',
+      usage: 'Model usage',
       timing: 'Timing'
     },
     metrics: {
@@ -142,6 +143,8 @@ export default {
       result_version_mismatch: 'Result versions differ',
       run_not_terminal: 'The run is not terminal',
       quality_metrics_unavailable: 'Quality metrics are unavailable',
+      usage_unavailable: 'Model usage is unavailable',
+      usage_partial: 'Some model calls did not report tokens, so usage deltas are incomplete',
       cost_unavailable: 'Cost amount is unavailable',
       cost_currency_unavailable: 'Cost currency is unavailable',
       cost_currency_mismatch: 'Cost currencies differ',

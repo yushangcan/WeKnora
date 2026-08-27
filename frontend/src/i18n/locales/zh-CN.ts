@@ -6398,6 +6398,7 @@ export default {
       answer: '答案质量',
       retrievalAnswer: '检索与答案质量',
       cost: '成本',
+      usage: '模型调用量',
       timing: '耗时'
     },
     metrics: {
@@ -6477,6 +6478,8 @@ export default {
       result_version_mismatch: '结果版本不一致',
       run_not_terminal: 'Run 尚未结束',
       quality_metrics_unavailable: '质量指标不可用',
+      usage_unavailable: '模型调用量不可用',
+      usage_partial: '部分模型调用未报告 Token，用量差值不完整',
       cost_unavailable: '费用金额不可用',
       cost_currency_unavailable: '费用币种不可用',
       cost_currency_mismatch: '费用币种不一致',

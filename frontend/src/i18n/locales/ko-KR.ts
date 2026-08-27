@@ -6396,6 +6396,7 @@ export default {
       answer: '답변 품질',
       retrievalAnswer: '검색 및 답변 품질',
       cost: '비용',
+      usage: '모델 사용량',
       timing: '소요 시간'
     },
     metrics: {
@@ -6475,6 +6476,8 @@ export default {
       result_version_mismatch: '결과 버전이 다름',
       run_not_terminal: '실행이 아직 종료되지 않음',
       quality_metrics_unavailable: '품질 지표를 사용할 수 없음',
+      usage_unavailable: '모델 사용량을 사용할 수 없음',
+      usage_partial: '일부 모델 호출의 토큰이 보고되지 않아 사용량 차이가 불완전함',
       cost_unavailable: '비용 금액을 사용할 수 없음',
       cost_currency_unavailable: '비용 통화를 사용할 수 없음',
       cost_currency_mismatch: '비용 통화가 다름',

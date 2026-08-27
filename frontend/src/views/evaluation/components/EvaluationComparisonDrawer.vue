@@ -68,6 +68,13 @@
           :baseline-id="comparison.baseline_id"
         />
         <ComparisonDimension
+          :title="t('evaluation.dimensions.usage')"
+          :metric-keys="usageKeys"
+          :entries="comparison.runs"
+          dimension="usage"
+          :baseline-id="comparison.baseline_id"
+        />
+        <ComparisonDimension
           :title="t('evaluation.dimensions.timing')"
           :metric-keys="timingKeys"
           :entries="comparison.runs"
@@ -98,7 +105,7 @@ import {
   formatEvaluationNumber,
 } from '../evaluationComparison'
 
-type ComparisonDimensionName = 'quality' | 'cost' | 'timing'
+type ComparisonDimensionName = 'quality' | 'cost' | 'usage' | 'timing'
 type MetricKey = { key: string; label: string }
 
 const props = defineProps<{
@@ -126,7 +133,11 @@ const qualityKeys = computed<MetricKey[]>(() => [
 ].map((key) => ({ key, label: t(`evaluation.metrics.${key}`) })))
 
 const costKeys = computed<MetricKey[]>(() => [
-  'amount', 'calls', 'prompt_tokens', 'completion_tokens', 'total_tokens', 'cached_tokens',
+  'amount',
+].map((key) => ({ key, label: t(`evaluation.metrics.${key}`) })))
+
+const usageKeys = computed<MetricKey[]>(() => [
+  'calls', 'prompt_tokens', 'completion_tokens', 'total_tokens', 'cached_tokens',
 ].map((key) => ({ key, label: t(`evaluation.metrics.${key}`) })))
 
 const timingKeys = computed<MetricKey[]>(() => [
@@ -190,7 +201,7 @@ const ComparisonDimension = defineComponent({
     const valueText = (value: EvaluationValueDelta, key: string) => {
       if (componentProps.dimension === 'timing') return formatEvaluationDuration(value.value)
       if (componentProps.dimension === 'cost' && key === 'amount') return formatEvaluationNumber(value.value, 6)
-      if (componentProps.dimension === 'cost') return formatEvaluationNumber(value.value, 0)
+      if (componentProps.dimension === 'usage') return formatEvaluationNumber(value.value, 0)
       return formatEvaluationNumber(value.value)
     }
     const compatibilityMessage = (entry: EvaluationRunComparison) => {
@@ -231,7 +242,7 @@ const ComparisonDimension = defineComponent({
               const value = delta(entry, metric.key)
               return h('td', [
                 h('strong', valueText(value, metric.key)),
-                h('small', formatEvaluationDelta(value, componentProps.dimension === 'cost' && metric.key === 'amount' ? 6 : componentProps.dimension === 'cost' ? 0 : 4)),
+                h('small', formatEvaluationDelta(value, componentProps.dimension === 'cost' ? 6 : componentProps.dimension === 'usage' ? 0 : 4)),
               ])
             }),
           ]))),

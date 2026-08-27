@@ -14,6 +14,24 @@ type EvaluationService interface {
 	) (*types.EvaluationDetail, error)
 	// EvaluationResult retrieves evaluation result by task ID
 	EvaluationResult(ctx context.Context, taskID string) (*types.EvaluationDetail, error)
+	// ListEvaluationRuns returns one filtered history page for the current tenant.
+	ListEvaluationRuns(ctx context.Context, filter types.EvaluationRunListFilter) (*types.EvaluationRunPage, error)
+	// GetEvaluationRun returns one lightweight run overview without all cases.
+	GetEvaluationRun(ctx context.Context, runID string) (*types.EvaluationRunOverview, error)
+	// ListEvaluationRunCases returns one page of case audit evidence.
+	ListEvaluationRunCases(
+		ctx context.Context,
+		runID string,
+		status types.EvaluationRunStatus,
+		page int,
+		pageSize int,
+	) (*types.EvaluationCasePage, error)
+	// CompareEvaluationRuns compares persisted snapshots without rerunning metrics.
+	CompareEvaluationRuns(
+		ctx context.Context,
+		baselineID string,
+		runIDs []string,
+	) (*types.EvaluationComparison, error)
 }
 
 // Metrics defines interface for computing evaluation metrics

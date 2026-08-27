@@ -147,6 +147,26 @@ func TestEvaluationRepositoryListsRunCasesSeparately(t *testing.T) {
 	}
 }
 
+func TestEvaluationRepositoryHistoryNormalizesInterruptedRunStatus(t *testing.T) {
+	db := newEvaluationRepositoryTestDB(t)
+	repo := NewEvaluationRepository(db)
+	detail := newEvaluationRepositoryTestDetail("interrupted-history", 7)
+	detail.Result.Run.Status = types.EvaluationRunStatusRunning
+	if err := repo.CreateRun(context.Background(), detail, "temporary-interrupted-history"); err != nil {
+		t.Fatalf("create interrupted run: %v", err)
+	}
+	if _, err := repo.MarkInterruptedRunsFailed(context.Background(), time.Now(), "process_interrupted"); err != nil {
+		t.Fatalf("mark interrupted run: %v", err)
+	}
+	page, err := repo.ListRuns(context.Background(), 7, types.EvaluationRunListFilter{Page: 1, PageSize: 20})
+	if err != nil {
+		t.Fatalf("list interrupted run: %v", err)
+	}
+	if len(page.Items) != 1 || page.Items[0].Status != types.EvaluationRunStatusFailed {
+		t.Fatalf("history exposed stale running status: %#v", page.Items)
+	}
+}
+
 func TestEvaluationRepositoryBatchLoadsOnlyRequestedTenantRuns(t *testing.T) {
 	db := newEvaluationRepositoryTestDB(t)
 	base := time.Date(2026, 8, 27, 8, 0, 0, 0, time.UTC)

@@ -99,6 +99,15 @@ func TestEvaluationRepositoryListsRunsWithStableTenantScopedPagination(t *testin
 	if filtered.Items[0].Progress.Cases.Success != 1 || filtered.Items[0].Progress.Cases.Failed != 1 {
 		t.Fatalf("case status counts changed: %#v", filtered.Items[0].Progress.Cases)
 	}
+	partial, err := repo.ListRuns(context.Background(), 7, types.EvaluationRunListFilter{
+		Status: types.EvaluationRunStatusPartial, Page: 1, PageSize: 20,
+	})
+	if err != nil {
+		t.Fatalf("filter partial evaluation runs: %v", err)
+	}
+	if partial.Total != 0 {
+		t.Fatalf("successful runs were returned by the partial filter: %#v", partial)
+	}
 }
 
 func TestEvaluationRepositoryListsRunCasesSeparately(t *testing.T) {
@@ -107,6 +116,15 @@ func TestEvaluationRepositoryListsRunCasesSeparately(t *testing.T) {
 	createEvaluationHistoryRun(t, db, "run-cases", 7, base, "chat-a", types.EvaluationRunStatusPartial,
 		types.EvaluationRunStatusSuccess, types.EvaluationRunStatusFailed, types.EvaluationRunStatusSuccess)
 	repo := NewEvaluationRepository(db)
+	partialRuns, err := repo.ListRuns(context.Background(), 7, types.EvaluationRunListFilter{
+		Status: types.EvaluationRunStatusPartial, Page: 1, PageSize: 20,
+	})
+	if err != nil {
+		t.Fatalf("filter partial evaluation runs: %v", err)
+	}
+	if partialRuns.Total != 1 || len(partialRuns.Items) != 1 || partialRuns.Items[0].RunID != "run-cases" {
+		t.Fatalf("partial run was not persisted as partial: %#v", partialRuns)
+	}
 
 	page, err := repo.ListRunCases(context.Background(), 7, "run-cases", "", 2, 2)
 	if err != nil {

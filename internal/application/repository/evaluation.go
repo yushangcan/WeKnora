@@ -183,7 +183,7 @@ func newEvaluationRunRecord(
 		EmbeddingModelID:         detail.Config.Models.Embedding.ID,
 		ChatModelID:              detail.Config.Models.Chat.ID,
 		RerankModelID:            rerankModelID,
-		Status:                   persistentEvaluationStatus(detail.Task.Status),
+		Status:                   persistentEvaluationStatus(detail),
 		Total:                    detail.Task.Total,
 		Finished:                 detail.Task.Finished,
 		ErrorMessage:             evaluationobs.SafeErrorText(detail.Task.ErrMsg),
@@ -215,7 +215,7 @@ func updateEvaluationRun(tx *gorm.DB, detail *types.EvaluationDetail) error {
 	result := tx.Model(&types.EvaluationRunRecord{}).
 		Where("tenant_id = ? AND run_id = ?", detail.Task.TenantID, detail.Task.ID).
 		Updates(map[string]interface{}{
-			"status":          persistentEvaluationStatus(detail.Task.Status),
+			"status":          persistentEvaluationStatus(detail),
 			"total":           detail.Task.Total,
 			"finished":        detail.Task.Finished,
 			"error_message":   evaluationobs.SafeErrorText(detail.Task.ErrMsg),
@@ -427,8 +427,14 @@ func evaluationCompletedAt(detail *types.EvaluationDetail) *time.Time {
 	return &completedAt
 }
 
-func persistentEvaluationStatus(status types.EvaluationStatue) types.EvaluationRunStatus {
-	switch status {
+func persistentEvaluationStatus(detail *types.EvaluationDetail) types.EvaluationRunStatus {
+	if detail != nil && detail.Result != nil && detail.Result.Run.Status == types.EvaluationRunStatusPartial {
+		return types.EvaluationRunStatusPartial
+	}
+	if detail == nil || detail.Task == nil {
+		return types.EvaluationRunStatusPending
+	}
+	switch detail.Task.Status {
 	case types.EvaluationStatueRunning:
 		return types.EvaluationRunStatusRunning
 	case types.EvaluationStatueSuccess:

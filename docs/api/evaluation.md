@@ -2,14 +2,18 @@
 
 [返回目录](./README.md)
 
-| 方法 | 路径           | 描述                  |
-| ---- | -------------- | --------------------- |
-| GET  | `/evaluation/` | 获取评估任务结果       |
-| POST | `/evaluation/` | 创建评估任务          |
+| 方法 | 路径 | 描述 |
+| --- | --- | --- |
+| GET | `/evaluation` | 按任务 ID 获取评测结果 |
+| POST | `/evaluation` | 创建评测任务 |
+| GET | `/evaluation/runs` | 分页查询历史 Run |
+| GET | `/evaluation/runs/:run_id` | 获取单个 Run 概览与配置快照 |
+| GET | `/evaluation/runs/:run_id/cases` | 独立分页查询 Case 证据 |
+| GET | `/evaluation/comparison` | 比较 2 至 5 个持久化 Run |
 
 > 注：服务端路由带尾斜杠（Gin 会自动从 `/evaluation` 重定向到 `/evaluation/`），下方示例为方便阅读用了 `/evaluation`。
 
-> 当前实现会把任务状态、固定配置、四维结果和 Case 审计证据写入项目现有数据库，服务重启后仍可按任务 ID 查询。当前配置契约为 `evaluation-config/v2`，检索与生成指标输入契约为 `retrieval-generation/v2`。历史分页、跨 Run 对比和 Vue 页面属于下一阶段。
+> 当前实现会把任务状态、固定配置、四维结果和 Case 审计证据写入项目现有数据库，服务重启后仍可查询。当前配置契约为 `evaluation-config/v2`，检索与生成指标输入契约为 `retrieval-generation/v2`。历史分页、详情、Case 分页、跨 Run 对比和 Vue 页面已经接入同一套持久化快照。
 
 ## 一条命令执行评测
 
@@ -625,6 +629,181 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 SQLite 的新建库、v11 到 v12 升级、索引、外键级联和 Down Migration 已建立自动化测试。2026-08-27 已在本地 ParadeDB/PostgreSQL 17 容器中完成 migration 79 到 85 的真实升级，并验证两张表、索引、JSONB 写入、Run/Case 外键和级联删除。Down Migration 仍应在可丢弃的数据库或 CI 中验证，不能为验证回滚而破坏现有开发数据。
 
 Repository 保留了显式的 `MarkInterruptedRunsFailed` 恢复操作，但启动流程不会自动调用。该操作目前没有 Worker 归属、租约或心跳条件，若在多实例启动时直接全局执行，可能把其他实例仍在运行的任务错误关闭。安全的异常恢复需要先增加 Worker Owner 和租约过期判断，只处理确认失去所有权的 Run；在此之前，文档和 API 不宣称支持断点续跑或多实例自动接管。
+
+## GET `/evaluation/runs` - 分页查询历史 Run
+
+该接口只读取当前租户的 `evaluation_runs`，再对当前页 Run ID 一次性聚合 Case 状态计数。它不会将 Run 和 Case 直接 JOIN，因此 Case 数量不会放大分页总数，也不会产生逐 Run 查询。
+
+| 查询参数 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `page` | integer | `1` | 从 1 开始的页码 |
+| `page_size` | integer | `20` | 每页 1 至 100 条 |
+| `status` | string | 空 | `pending`、`running`、`success`、`partial` 或 `failed` |
+| `dataset_id` | string | 空 | 数据集 ID 精确匹配 |
+| `config_hash` | string | 空 | 配置哈希精确匹配 |
+| `embedding_model_id` | string | 空 | 固化的 Embedding 模型 ID |
+| `chat_model_id` | string | 空 | 固化的回答模型 ID |
+| `rerank_model_id` | string | 空 | 固化的 Rerank 模型 ID |
+| `started_from` | RFC3339 | 空 | 开始时间下界 |
+| `started_to` | RFC3339 | 空 | 开始时间上界 |
+
+请求示例：
+
+```bash
+curl --location 'http://localhost:8080/api/v1/evaluation/runs?page=1&page_size=20&dataset_id=default&status=success' \
+--header 'X-API-Key: sk-xxxxx'
+```
+
+响应中的 `items` 是轻量 Run 摘要，包含配置身份、模型快照、进度、四维聚合结果和 Case 状态计数，但不包含完整 Case 数组：
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "run_id": "run-1",
+        "status": "success",
+        "dataset": {
+          "id": "default",
+          "content_fingerprint": "sha256:<dataset-hash>"
+        },
+        "config_hash": "sha256:<config-hash>",
+        "metric_version": "retrieval-generation/v2",
+        "result_version": "evaluation-run/v1",
+        "progress": {
+          "total": 100,
+          "finished": 100,
+          "cases": {
+            "total": 100,
+            "pending": 0,
+            "running": 0,
+            "success": 100,
+            "partial": 0,
+            "failed": 0
+          }
+        },
+        "retrieval": { "precision": 0.5, "recall": 0.6 },
+        "answer": { "rougel": 0.4 },
+        "cost": {
+          "status": "unavailable",
+          "source": "not_reported",
+          "amount": null
+        },
+        "timing": { "total_wall_time_ms": 10000 }
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "page_size": 20
+  }
+}
+```
+
+示例数字只用于说明结构，不是质量或性能基线。
+
+## GET `/evaluation/runs/:run_id` - 获取 Run 概览
+
+该接口返回一个 Run 摘要、完整的不可变配置快照以及兼容的旧指标字段，不加载 Case 列表：
+
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "run_id": "run-1",
+      "status": "success",
+      "config_hash": "sha256:<config-hash>"
+    },
+    "config": {
+      "schema_version": "evaluation-config/v2",
+      "config_hash": "sha256:<config-hash>"
+    },
+    "metric": {
+      "retrieval_metrics": { "precision": 0.5 },
+      "generation_metrics": { "rougel": 0.4 }
+    }
+  }
+}
+```
+
+Run 不存在或不属于当前租户时返回 404。历史页面展示这里保存的模型和配置快照，不重新关联模型管理页中的当前配置。
+
+## GET `/evaluation/runs/:run_id/cases` - 分页查询 Case
+
+| 查询参数 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `page` | integer | `1` | 从 1 开始的页码 |
+| `page_size` | integer | `20` | 每页 1 至 100 条 |
+| `status` | string | 空 | 可选 Case 状态筛选 |
+
+```bash
+curl --location 'http://localhost:8080/api/v1/evaluation/runs/run-1/cases?page=1&page_size=20&status=failed' \
+--header 'X-API-Key: sk-xxxxx'
+```
+
+响应为 `{items, total, page, page_size}`。每个 Item 使用与单任务响应中 `result.cases` 相同的审计证据结构。前端只在打开详情抽屉时调用该接口；轮询任务状态时不会反复加载 Case。
+
+## GET `/evaluation/comparison` - 比较持久化 Run
+
+| 查询参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `baseline_id` | string | 是 | 必须出现在 `run_ids` 中的基线 Run |
+| `run_ids` | string 或重复参数 | 是 | 去重后 2 至 5 个 Run ID；支持逗号分隔 |
+
+```bash
+curl --location 'http://localhost:8080/api/v1/evaluation/comparison?baseline_id=run-a&run_ids=run-a,run-b' \
+--header 'X-API-Key: sk-xxxxx'
+```
+
+响应保持请求中的 Run 顺序。所有 `absolute` 和 `percent` 均为“候选值减基线值”；基线为 0 时百分比为 `null`。服务只比较已保存结果，不重新执行检索、生成或指标计算。
+
+每个维度都有独立的 `*_compatibility`：
+
+- 质量要求数据集内容指纹、Metric Version 和 Result Version 相同，Run 已终结，且 Retrieval/Answer 指标存在。
+- 费用金额要求两侧 `amount` 非空、费用状态可比较、币种和 Pricing Version 相同。费用未知时 `amount` 及其差值保持 `null`，不会按 0 处理。
+- Usage 调用量、Token 与 Timing 在 Run 终态时返回差值；Timing 会附带 `timing_is_environment_dependent`，提醒耗时受机器负载和网络影响。
+- `partial` Run 会附带警告。任何不可比较原因只影响相应维度，不会偷偷改用当前模型配置或重算旧指标。
+
+精简响应示例：
+
+```json
+{
+  "success": true,
+  "data": {
+    "baseline_id": "run-a",
+    "runs": [
+      {
+        "run": { "run_id": "run-b" },
+        "quality_compatibility": { "comparable": true, "reasons": [], "warnings": [] },
+        "cost_compatibility": { "comparable": false, "reasons": ["cost_unavailable"], "warnings": [] },
+        "timing_compatibility": {
+          "comparable": true,
+          "reasons": [],
+          "warnings": ["timing_is_environment_dependent"]
+        },
+        "quality": {
+          "precision": {
+            "baseline": 0.5,
+            "value": 0.6,
+            "absolute": 0.1,
+            "percent": 20
+          }
+        },
+        "cost": {
+          "amount": { "baseline": null, "value": null, "absolute": null, "percent": null }
+        }
+      }
+    ]
+  }
+}
+```
+
+## Web 闭环与权限
+
+Vue 页面位于 `/platform/evaluations`，提供历史筛选与服务端分页、四维摘要、Run 详情、Case 独立分页和 2 至 5 Run 基线对比。Viewer 可以读取历史与对比；发起评测会产生真实模型调用，按钮只对 Admin/Owner 显示，后端 RBAC 始终是最终权限来源。
+
+页面发起评测后只轮询 `GET /evaluation?task_id=...`。任务进入成功或失败终态、页面隐藏或组件卸载时停止轮询；Case 不参与轮询。要验收持久化，应在完成至少两个 Run 后重启 App，再确认历史、详情、Case 和对比仍可读取。
 
 ## POST `/evaluation` - 创建评估任务
 

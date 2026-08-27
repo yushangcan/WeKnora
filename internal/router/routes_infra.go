@@ -70,6 +70,10 @@ func RegisterEvaluationRoutes(r *gin.RouterGroup, handler *handler.EvaluationHan
 	{
 		evaluationRoutes.POST("", g.Admin(), handler.Evaluation)
 		evaluationRoutes.GET("", g.Viewer(), handler.GetEvaluationResult)
+		evaluationRoutes.GET("/runs", g.Viewer(), handler.ListEvaluationRuns)
+		evaluationRoutes.GET("/runs/:run_id", g.Viewer(), handler.GetEvaluationRun)
+		evaluationRoutes.GET("/runs/:run_id/cases", g.Viewer(), handler.ListEvaluationRunCases)
+		evaluationRoutes.GET("/comparison", g.Viewer(), handler.CompareEvaluationRuns)
 	}
 }
 

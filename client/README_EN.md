@@ -15,6 +15,7 @@ The client includes the following main functional modules:
 7. **Message Management**: Retrieve and delete session messages
 8. **Model Management**: Create, retrieve, update, and delete models
 9. **Evaluation Function**: Start evaluation tasks and get evaluation results
+10. **Sandbox skills**: Install a skill onto a sandbox config (zip upload, or ClawHub / SkillHub / GitHub source) and configure the environment variables it needs
 
 ## Usage
 
@@ -197,6 +198,78 @@ olderMessages, err := apiClient.GetMessagesBefore(context.Background(), sessionI
 if err != nil {
     // Handle error
 }
+```
+
+### Example: Install a sandbox skill from a registry
+
+`source` must be explicit: `@owner/slug` for ClawHub, or a full GitHub / SkillHub URL. Bare `owner/slug` is rejected.
+
+```go
+skillID, err := apiClient.InstallSandboxSkillFromSource(
+    context.Background(), sandboxConfigID, "@owner/slug")
+if err != nil {
+    // Handle error
+}
+_ = skillID // follow /sandbox-configs/{id}/skills/{skillID}/install-events
+```
+
+### Example: Retry a failed install
+
+Installs usually fail for reasons the bundle cannot fix — an unreachable
+sandbox, a package index that timed out. The server still holds the archive,
+so the retry needs nothing from you.
+
+```go
+skillID, err := apiClient.ReinstallSandboxSkill(context.Background(), sandboxConfigID, skillID)
+if err != nil {
+    // Handle error
+}
+```
+
+### Example: Browse files of an installed skill
+
+```go
+files, err := apiClient.ListSandboxSkillFiles(context.Background(), sandboxConfigID, skillID)
+if err != nil {
+    // Handle error
+}
+content, err := apiClient.GetSandboxSkillFile(context.Background(), sandboxConfigID, skillID, "SKILL.md")
+if err != nil {
+    // Handle error
+}
+_ = files
+_ = content
+```
+
+### Example: Configure a skill's environment variables
+
+A skill declares the environment variables it needs when it is installed. Values live in two layers: a workspace value an admin sets for everybody, and a per-identity value that overrides it for the caller alone. No endpoint reads a stored value back; they only report whether one is set.
+
+An API key and a web login are different identities: a personal value entered through the web UI does not apply to runs driven by an API key. Prefer workspace values for integrations.
+
+```go
+// Workspace-wide, applies to everybody; requires Admin or above
+skill, err := apiClient.SetSandboxSkillEnvValues(
+    context.Background(), sandboxConfigID, skillID,
+    map[string]string{"TAVILY_API_KEY": "tvly-xxxxx"})
+if err != nil {
+    // Handle error
+}
+
+// Applies to the calling identity alone
+err = apiClient.SetMySkillEnvVar(
+    context.Background(), skillID, "TAVILY_API_KEY", "tvly-yyyyy")
+if err != nil {
+    // Handle error
+}
+
+// See what is still unset. Clearing a value is a delete, not a write of ""
+groups, err := apiClient.ListMyEnvVars(context.Background())
+if err != nil {
+    // Handle error
+}
+_ = skill
+_ = groups
 ```
 
 ## Complete Example

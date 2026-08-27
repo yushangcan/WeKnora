@@ -32,6 +32,12 @@ const sessionInputEnvVar = "WEKNORA_SESSION_INPUT_DIR"
 // chain without LLM mediation.
 const artifactHistoryEnvVar = "WEKNORA_SKILL_HISTORY_ROOT"
 
+// skillDirEnvVar points a script at its own directory inside the sandbox
+// image. Installed skills run with /workspace as WorkDir, so this is how a
+// script reaches the data and helpers that were installed beside it. The
+// install-time verification pass exports the same name.
+const skillDirEnvVar = "WEKNORA_SKILL_DIR"
+
 // defaultArtifactOutputDir is used when neither the environment variable
 // (WEKNORA_SKILL_OUTPUT_DIR) nor the ExecuteConfig.Env has an override.
 // /workspace/output sits inside the base sandbox image's writable tree and
@@ -69,6 +75,17 @@ func (m *Manager) SkillOutputDir(sessionID, skillName string) string {
 type Manager struct {
 	loader     *Loader
 	sandboxMgr sandbox.Manager
+
+	// tenantSource holds the skills installed into this run's sandbox image.
+	// When set it is the only source the model is told about: the host
+	// skills/preloaded directory is not what execute_skill_script would find
+	// inside the sandbox.
+	tenantSource SkillSource
+
+	// envResolver supplies the per-caller environment for one execution. It
+	// is nil when the run has no installed skills, in which case execution
+	// keeps exactly its previous behaviour.
+	envResolver SkillEnvResolver
 
 	// Configuration
 	skillDirs     []string
@@ -109,6 +126,44 @@ func (m *Manager) IsEnabled() bool {
 	return m.enabled
 }
 
+// WithTenantSource attaches the skills an administrator installed into the
+// sandbox config this run booted from. It is part of construction - callers
+// must invoke it before Initialize, i.e. before the engine can reach the
+// manager - so it takes no lock.
+func (m *Manager) WithTenantSource(source SkillSource) *Manager {
+	m.tenantSource = source
+	return m
+}
+
+// WithEnvResolver attaches the per-caller environment resolver. Like
+// WithTenantSource it is part of construction and must be invoked before
+// Initialize, so it takes no lock.
+func (m *Manager) WithEnvResolver(resolver SkillEnvResolver) *Manager {
+	m.envResolver = resolver
+	return m
+}
+
+// resolveSource decides which source owns one skill name. An installed image
+// is the only copy the sandbox can run: falling back to a host preloaded
+// skill would advertise files that are not in the image.
+func (m *Manager) resolveSource(skillName string) SkillSource {
+	if m.tenantSource != nil {
+		return m.tenantSource
+	}
+	return m.loader
+}
+
+// discoverAllSkills returns the set the model is told about. When skills are
+// installed into the sandbox image, that image is the source of truth; the
+// deployment's skills/preloaded directory is not what execute_skill_script
+// would find inside the sandbox.
+func (m *Manager) discoverAllSkills() ([]*SkillMetadata, error) {
+	if m.tenantSource != nil {
+		return m.tenantSource.DiscoverSkills()
+	}
+	return m.loader.Reload()
+}
+
 // Initialize discovers all skills and caches their metadata
 // This should be called at startup
 func (m *Manager) Initialize(ctx context.Context) error {
@@ -116,7 +171,7 @@ func (m *Manager) Initialize(ctx context.Context) error {
 		return nil
 	}
 
-	metadata, err := m.loader.DiscoverSkills()
+	metadata, err := m.discoverAllSkills()
 	if err != nil {
 		return fmt.Errorf("failed to discover skills: %w", err)
 	}
@@ -180,7 +235,7 @@ func (m *Manager) LoadSkill(ctx context.Context, skillName string) (*Skill, erro
 		return nil, fmt.Errorf("skill not allowed: %s", skillName)
 	}
 
-	return m.loader.LoadSkillInstructions(skillName)
+	return m.resolveSource(skillName).LoadSkillInstructions(skillName)
 }
 
 // isSkillAllowed checks if a skill is in the allowed list
@@ -206,7 +261,7 @@ func (m *Manager) ReadSkillFile(ctx context.Context, skillName, filePath string)
 		return "", fmt.Errorf("skill not allowed: %s", skillName)
 	}
 
-	file, err := m.loader.LoadSkillFile(skillName, filePath)
+	file, err := m.resolveSource(skillName).LoadSkillFile(skillName, filePath)
 	if err != nil {
 		return "", err
 	}
@@ -224,7 +279,30 @@ func (m *Manager) ListSkillFiles(ctx context.Context, skillName string) ([]strin
 		return nil, fmt.Errorf("skill not allowed: %s", skillName)
 	}
 
-	return m.loader.ListSkillFiles(skillName)
+	return m.resolveSource(skillName).ListSkillFiles(skillName)
+}
+
+// SandboxSkillDir reports where a skill lives inside the sandbox image, and
+// whether that path means anything to say out loud.
+//
+// Only an installed skill has one. A preloaded skill is uploaded from the host
+// for the duration of a single call, so its base path names a directory on the
+// WeKnora machine that no shell command in the sandbox can reach — telling the
+// model about it would be worse than saying nothing.
+func (m *Manager) SandboxSkillDir(skillName string) (string, bool) {
+	if m == nil || !m.enabled || !m.isSkillAllowed(skillName) {
+		return "", false
+	}
+	image, ok := m.resolveSource(skillName).(imageSkillSource)
+	if !ok {
+		return "", false
+	}
+	dir, err := image.GetSkillBasePath(skillName)
+	if err != nil {
+		return "", false
+	}
+	dir = strings.TrimSpace(dir)
+	return dir, dir != ""
 }
 
 // ExecuteScript executes a script from a skill in the sandbox
@@ -242,20 +320,12 @@ func (m *Manager) ExecuteScript(ctx context.Context, skillName, scriptPath strin
 		return nil, fmt.Errorf("sandbox is not configured")
 	}
 
+	source := m.resolveSource(skillName)
+
 	// Get the skill base path
-	basePath, err := m.loader.GetSkillBasePath(skillName)
+	basePath, err := source.GetSkillBasePath(skillName)
 	if err != nil {
 		return nil, err
-	}
-
-	// Load the script file to verify it exists and is a script
-	file, err := m.loader.LoadSkillFile(skillName, scriptPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load script: %w", err)
-	}
-
-	if !file.IsScript {
-		return nil, fmt.Errorf("file is not an executable script: %s", scriptPath)
 	}
 
 	// Prepare execution config
@@ -275,8 +345,7 @@ func (m *Manager) ExecuteScript(ctx context.Context, skillName, scriptPath strin
 	// SessionFileStore advertises the "sandbox provides per-session file
 	// storage" capability. When present we can safely expose the input
 	// staging directory and pre-materialise the output directory; when
-	// absent (Local/Docker or fallback), stateless backends materialise
-	// directories on their own during script execution.
+	// absent, directories are materialised during script execution.
 	fileStore := sessionFileStoreFromManager(m.sandboxMgr)
 	if fileStore != nil {
 		env[sessionInputEnvVar] = sandbox.SessionInputRoot
@@ -287,17 +356,97 @@ func (m *Manager) ExecuteScript(ctx context.Context, skillName, scriptPath strin
 		}
 	}
 
-	config := &sandbox.ExecuteConfig{
-		Script:    file.Path,
-		Args:      args,
-		WorkDir:   basePath,
-		Stdin:     stdin,
-		Env:       env,
-		SessionID: sessionID,
+	// Per-caller values are resolved here rather than baked into the sandbox
+	// at creation: an IM thread can have several people sharing one sandbox,
+	// so each turn's values must belong to that turn's speaker and must not
+	// linger where the next person could read them with `env`.
+	//
+	// The resolver runs after the two artifact keys above are seeded, so
+	// applyResolvedEnv's skip-existing rule protects exactly those two. It is
+	// NOT a blanket guarantee over every WEKNORA_ key: sessionInputEnvVar is
+	// only seeded when a session file store exists, and skillDirEnvVar is set
+	// later inside buildSkillExecuteConfig and so relies on that unconditional
+	// write instead. The write-time WEKNORA_ prefix blacklist
+	// (service.validateUserEnvName) is what covers those two.
+	if m.envResolver != nil {
+		resolved, missing, err := m.envResolver.ResolveEnv(ctx, skillName)
+		if err != nil {
+			return nil, err
+		}
+		if len(missing) > 0 {
+			return nil, &MissingSkillEnvError{SkillName: skillName, Names: missing}
+		}
+		applyResolvedEnv(env, resolved)
+	}
+
+	config, err := buildSkillExecuteConfig(
+		source, skillName, scriptPath, basePath, args, stdin, env, sessionID,
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	// Execute in sandbox
 	return m.sandboxMgr.Execute(ctx, config)
+}
+
+// buildSkillExecuteConfig turns one skill script into an execution request.
+//
+// The two sources diverge here and nowhere else. A skill installed into the
+// image is run in place: there is no host-side copy to upload, and the
+// executor pins WorkDir to the session workspace and runs it as the ordinary
+// sandbox user. A preloaded skill keeps its existing behaviour exactly -
+// uploaded from the host, executed with the skill directory as WorkDir.
+func buildSkillExecuteConfig(
+	source SkillSource,
+	skillName, scriptPath, basePath string,
+	args []string,
+	stdin string,
+	env map[string]string,
+	sessionID string,
+) (*sandbox.ExecuteConfig, error) {
+	image, installed := source.(imageSkillSource)
+	if !installed {
+		// Load the script file to verify it exists and is a script
+		file, err := source.LoadSkillFile(skillName, scriptPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load script: %w", err)
+		}
+		if !file.IsScript {
+			return nil, fmt.Errorf("file is not an executable script: %s", scriptPath)
+		}
+		return &sandbox.ExecuteConfig{
+			Script:    file.Path,
+			Args:      args,
+			WorkDir:   basePath,
+			Stdin:     stdin,
+			Env:       env,
+			SessionID: sessionID,
+		}, nil
+	}
+
+	// The archive is deliberately not consulted: the image is what executes,
+	// and a skill whose archive failed to store is still installed and
+	// runnable. That leaves the extension as the only check available here,
+	// which is also the one the executor's interpreter choice depends on.
+	if !IsScript(scriptPath) {
+		return nil, fmt.Errorf("file is not an executable script: %s", scriptPath)
+	}
+	remoteScript, err := image.RemoteScriptPath(skillName, scriptPath)
+	if err != nil {
+		return nil, err
+	}
+	// The install-time verification pass exports the skill directory under
+	// this name, so the environment a script is checked in is the environment
+	// it is later called in.
+	env[skillDirEnvVar] = basePath
+	return &sandbox.ExecuteConfig{
+		RemoteScriptPath: remoteScript,
+		Args:             args,
+		Stdin:            stdin,
+		Env:              env,
+		SessionID:        sessionID,
+	}, nil
 }
 
 // sessionFileStoreFromManager returns the sandbox manager's effective
@@ -321,12 +470,13 @@ func (m *Manager) GetSkillInfo(ctx context.Context, skillName string) (*SkillInf
 		return nil, fmt.Errorf("skill not allowed: %s", skillName)
 	}
 
-	skill, err := m.loader.LoadSkillInstructions(skillName)
+	source := m.resolveSource(skillName)
+	skill, err := source.LoadSkillInstructions(skillName)
 	if err != nil {
 		return nil, err
 	}
 
-	files, err := m.loader.ListSkillFiles(skillName)
+	files, err := source.ListSkillFiles(skillName)
 	if err != nil {
 		files = []string{} // Non-fatal error
 	}
@@ -355,7 +505,7 @@ func (m *Manager) Reload(ctx context.Context) error {
 		return nil
 	}
 
-	metadata, err := m.loader.Reload()
+	metadata, err := m.discoverAllSkills()
 	if err != nil {
 		return err
 	}

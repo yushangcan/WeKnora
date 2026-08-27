@@ -142,6 +142,13 @@ func (s *sessionService) AgentQA(
 		llmContext = []chat.Message{}
 	}
 
+	// Hold the sandbox across this turn so an install that finishes while we
+	// are running cannot rebuild the VM between tool calls. Staging below is
+	// the first resolve: if the previous turn left a stale mark, that is
+	// where the new image is picked up.
+	releaseTurn := s.holdSandboxTurn(ctx, sessionID, agentConfig.SandboxConfigID)
+	defer releaseTurn()
+
 	// Reconcile all durable session attachments into the session's remote
 	// sandbox before the model can request shell or skill execution. The
 	// durable storage URL — not the ephemeral sandbox path — remains the
@@ -297,6 +304,25 @@ func (s *sessionService) buildAgentConfig(
 
 	// Configure skills based on CustomAgentConfig
 	s.configureSkillsFromAgent(ctx, agentConfig, customAgent)
+
+	// Then add the skills installed into the sandbox config this run boots.
+	//
+	// The workspace is the one on the context rather than the agent's owner,
+	// because that is where resolveSandboxForExecution reads it; skillsForRun
+	// picks the config the same way the sandbox resolution does.
+	sandboxTenantID, _ := types.TenantIDFromContext(ctx)
+	skillConfigID, tenantSkills := skillsForRun(
+		ctx, s.sandboxPinner, s.sandboxConfigRepo, s.tenantSkillRepo,
+		sandboxTenantID, req.Session.ID, agentConfig.SandboxConfigID,
+	)
+	agentConfig.TenantSkills = tenantSkills
+	if len(tenantSkills) > 0 {
+		// The config named here is the one the skills came from, which is the
+		// pinned one whenever it differs from the agent's - the only case the
+		// line is worth reading.
+		logger.Infof(ctx, "Sandbox config %s offers %d installed skill(s) to this run",
+			skillConfigID, len(tenantSkills))
+	}
 
 	// Resolve knowledge bases using shared helper
 	kbIDs, knowledgeIDs, err := s.resolveKnowledgeBases(ctx, req)
@@ -540,11 +566,10 @@ func dedupPreservingOrder(values []string) []string {
 	return result
 }
 
-// configureSkillsFromAgent configures skills settings in AgentConfig based on CustomAgentConfig
-// Returns the skill directories and allowed skills based on the selection mode:
-//   - "all": uses all preloaded skills
-//   - "selected": uses the explicitly selected skills
-//   - "none" or "": skills are disabled
+// configureSkillsFromAgent turns the agent's skill picker into runtime flags.
+// The skills themselves come from the sandbox image (TenantSkills), not from
+// the deployment's skills/preloaded directory — that host copy is not what
+// execute_skill_script would find inside the sandbox.
 func (s *sessionService) configureSkillsFromAgent(
 	ctx context.Context,
 	agentConfig *types.AgentConfig,
@@ -554,19 +579,14 @@ func (s *sessionService) configureSkillsFromAgent(
 		return
 	}
 	agentConfig.SandboxConfigID = customAgent.Config.SandboxConfigID
-	dir := getPreloadedSkillsDir()
 	switch customAgent.Config.SkillsSelectionMode {
 	case "all":
-		// Enable all preloaded skills
 		agentConfig.SkillsEnabled = true
-		agentConfig.SkillDirs = []string{dir}
-		agentConfig.AllowedSkills = nil // Empty means all skills allowed
-		logger.Infof(ctx, "SkillsSelectionMode=all: enabled all preloaded skills")
+		agentConfig.AllowedSkills = nil
+		logger.Infof(ctx, "SkillsSelectionMode=all: using installed sandbox skills")
 	case "selected":
-		// Enable only selected skills
 		if len(customAgent.Config.SelectedSkills) > 0 {
 			agentConfig.SkillsEnabled = true
-			agentConfig.SkillDirs = []string{dir}
 			agentConfig.AllowedSkills = customAgent.Config.SelectedSkills
 			logger.Infof(ctx, "SkillsSelectionMode=selected: enabled %d selected skills: %v",
 				len(customAgent.Config.SelectedSkills), customAgent.Config.SelectedSkills)
@@ -575,13 +595,10 @@ func (s *sessionService) configureSkillsFromAgent(
 			logger.Infof(ctx, "SkillsSelectionMode=selected but no skills selected: skills disabled")
 		}
 	case "none", "":
-		// Skills disabled
 		agentConfig.SkillsEnabled = false
 		logger.Infof(ctx, "SkillsSelectionMode=%s: skills disabled", customAgent.Config.SkillsSelectionMode)
 	default:
-		// Unknown mode, disable skills
 		agentConfig.SkillsEnabled = false
 		logger.Warnf(ctx, "Unknown SkillsSelectionMode=%s: skills disabled", customAgent.Config.SkillsSelectionMode)
 	}
-
 }

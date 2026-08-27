@@ -43,7 +43,7 @@ func shellExecTestContext() context.Context {
 
 func TestShellExecRejectsWorkDirOutsideWorkspace(t *testing.T) {
 	executor := &fakeShellExecutor{}
-	tool := NewShellExecTool(executor)
+	tool := NewShellExecTool(executor, nil)
 
 	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
 		`{"command":"pwd","work_dir":"/etc"}`,
@@ -51,13 +51,13 @@ func TestShellExecRejectsWorkDirOutsideWorkspace(t *testing.T) {
 
 	require.NoError(t, err)
 	require.False(t, result.Success)
-	require.Contains(t, result.Error, "outside the sandbox workspace")
+	require.Contains(t, result.Error, `work_dir "/etc" is outside the allowed sandbox roots /workspace`)
 	assert.Equal(t, time.Duration(0), executor.timeout)
 }
 
 func TestShellExecTimeoutHonorsAndCapsRequestedValue(t *testing.T) {
 	executor := &fakeShellExecutor{}
-	tool := NewShellExecTool(executor)
+	tool := NewShellExecTool(executor, nil)
 
 	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
 		`{"command":"sleep 1","timeout_sec":999}`,
@@ -68,6 +68,31 @@ func TestShellExecTimeoutHonorsAndCapsRequestedValue(t *testing.T) {
 	assert.Equal(t, shellExecMaxTimeout, executor.timeout)
 }
 
+type fakeInstallShellExecutor struct {
+	timeout time.Duration
+}
+
+func (f *fakeInstallShellExecutor) ExecShellCommandWithOptions(
+	_ context.Context, _ string, _ string, opts sandbox.ShellExecOptions,
+) (*sandbox.ExecuteResult, error) {
+	f.timeout = opts.Timeout
+	return &sandbox.ExecuteResult{ExitCode: 0}, nil
+}
+
+func TestInstallShellExecDefaultsToTheTenMinuteBudget(t *testing.T) {
+	inner := &fakeInstallShellExecutor{}
+	tool := NewInstallShellExecTool(inner)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"pip install -r requirements.txt"}`,
+	))
+
+	require.NoError(t, err)
+	require.True(t, result.Success)
+	assert.Equal(t, shellExecMaxTimeout, inner.timeout,
+		"install-mode shell_exec must not keep the ordinary 120s default")
+}
+
 func TestShellExecConfigurableOutputAndRegistryOverride(t *testing.T) {
 	content := strings.Repeat("x", 24*1024)
 	executor := &fakeShellExecutor{result: &sandbox.ExecuteResult{
@@ -75,7 +100,7 @@ func TestShellExecConfigurableOutputAndRegistryOverride(t *testing.T) {
 		ExitCode: 0,
 	}}
 	registry := NewToolRegistry()
-	registry.RegisterTool(NewShellExecTool(executor))
+	registry.RegisterTool(NewShellExecTool(executor, nil))
 
 	result, err := registry.ExecuteTool(shellExecTestContext(), ToolShellExec, json.RawMessage(
 		`{"command":"cat large.txt","max_output_bytes":32768}`,
@@ -86,10 +111,11 @@ func TestShellExecConfigurableOutputAndRegistryOverride(t *testing.T) {
 	assert.Contains(t, result.Output, content)
 	assert.NotContains(t, result.Output, "output truncated")
 	assert.Equal(t, 32768, result.Data["max_output_bytes"])
+	assert.Equal(t, "shell_exec", result.Data["display_type"])
 }
 
 func TestShellExecOutputLimitIsHardCapped(t *testing.T) {
-	tool := NewShellExecTool(&fakeShellExecutor{})
+	tool := NewShellExecTool(&fakeShellExecutor{}, nil)
 
 	limit := tool.OutputLimitChars(json.RawMessage(`{"max_output_bytes":999999}`))
 
@@ -103,7 +129,7 @@ func TestShellExecSuppressesBinaryStreams(t *testing.T) {
 		Stderr:   "text error",
 		ExitCode: 0,
 	}}
-	tool := NewShellExecTool(executor)
+	tool := NewShellExecTool(executor, nil)
 
 	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(`{"command":"cat image.bin"}`))
 
@@ -118,7 +144,7 @@ func TestShellExecSuppressesBinaryStreams(t *testing.T) {
 }
 
 func TestShellExecDescriptionSupportsGeneralExploration(t *testing.T) {
-	description := NewShellExecTool(&fakeShellExecutor{}).Description()
+	description := NewShellExecTool(&fakeShellExecutor{}, nil).Description()
 
 	for _, command := range []string{"find", "file", "sed", "head", "tail", "cat", "grep", "awk"} {
 		assert.Contains(t, description, command)
@@ -134,7 +160,7 @@ func TestShellExecBoundsStdoutStderrErrorAndTotal(t *testing.T) {
 		Error:  strings.Repeat("e", 8*1024),
 	}}
 
-	result, err := NewShellExecTool(executor).Execute(
+	result, err := NewShellExecTool(executor, nil).Execute(
 		shellExecTestContext(),
 		json.RawMessage(`{"command":"noisy","max_output_bytes":999999,"max_stderr_bytes":999999}`),
 	)
@@ -154,7 +180,7 @@ func TestShellExecBoundsStdoutStderrErrorAndTotal(t *testing.T) {
 func TestShellExecBoundsExecutorErrors(t *testing.T) {
 	executor := &fakeShellExecutor{err: errors.New(strings.Repeat("network failure ", 1024))}
 
-	result, err := NewShellExecTool(executor).Execute(
+	result, err := NewShellExecTool(executor, nil).Execute(
 		shellExecTestContext(),
 		json.RawMessage(`{"command":"echo hi"}`),
 	)
@@ -171,4 +197,150 @@ func TestTruncateShellStreamIncludesMarkerWithinLimit(t *testing.T) {
 	require.True(t, truncated)
 	assert.LessOrEqual(t, len(output), 100)
 	assert.Contains(t, output, "truncated")
+}
+
+type recordedCapture struct {
+	skillName string
+	pairs     map[string]string
+	calls     int
+}
+
+func (r *recordedCapture) capture(_ context.Context, skillName string, pairs map[string]string) {
+	r.calls++
+	r.skillName = skillName
+	r.pairs = pairs
+}
+
+// stubEnvResolver stands in for the service-layer resolver: resolved is what
+// the workspace or this caller already has stored, missing is what a required
+// declaration still needs.
+type stubEnvResolver struct {
+	resolved map[string]string
+	missing  []string
+}
+
+func (r stubEnvResolver) ResolveEnv(
+	_ context.Context, _ string,
+) (map[string]string, []string, error) {
+	return r.resolved, r.missing, nil
+}
+
+func TestShellExecCapturesUsedEnvAfterSuccessfulCommand(t *testing.T) {
+	recorder := &recordedCapture{}
+	tool := NewShellExecTool(&fakeShellExecutor{}, nil).WithEnvCapture(recorder.capture)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"export USER_TOKEN=from-command; python x.py","skill_name":"pdf-tools","env":{"EXTRA_TOKEN":"from-tool"}}`,
+	))
+
+	require.NoError(t, err)
+	require.True(t, result.Success)
+	require.Equal(t, 1, recorder.calls)
+	require.Equal(t, "pdf-tools", recorder.skillName)
+	require.Equal(t, "from-command", recorder.pairs["USER_TOKEN"])
+	require.Equal(t, "from-tool", recorder.pairs["EXTRA_TOKEN"])
+}
+
+// Guessing the skill from a path would let any successful command that merely
+// mentions a skill directory write into that skill's credentials.
+func TestShellExecDoesNotCaptureWithoutAnExplicitSkillName(t *testing.T) {
+	recorder := &recordedCapture{}
+	tool := NewShellExecTool(&fakeShellExecutor{}, nil).WithEnvCapture(recorder.capture)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"export USER_TOKEN=from-command; cd /opt/weknora/tenant/skills/pdf-tools && python x.py"}`,
+	))
+
+	require.NoError(t, err)
+	require.True(t, result.Success)
+	require.Zero(t, recorder.calls)
+}
+
+// A stored value belongs to whoever entered it. Capture may fill a blank, so a
+// name that resolved is never handed to the write path.
+func TestShellExecDoesNotCaptureAlreadyResolvedNames(t *testing.T) {
+	recorder := &recordedCapture{}
+	resolver := stubEnvResolver{resolved: map[string]string{"USER_TOKEN": "stored"}}
+	tool := NewShellExecTool(&fakeShellExecutor{}, resolver).WithEnvCapture(recorder.capture)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"python x.py","skill_name":"pdf-tools","env":{"USER_TOKEN":"model-made-this-up","NEW_TOKEN":"fresh"}}`,
+	))
+
+	require.NoError(t, err)
+	require.True(t, result.Success)
+	require.Equal(t, 1, recorder.calls)
+	require.NotContains(t, recorder.pairs, "USER_TOKEN")
+	require.Equal(t, "fresh", recorder.pairs["NEW_TOKEN"])
+}
+
+// Refusing a required variable the call itself carries would strand every user
+// without a settings page, since the value can only arrive through the chat.
+func TestShellExecRunsWhenTheCallSuppliesTheMissingRequiredValue(t *testing.T) {
+	recorder := &recordedCapture{}
+	resolver := stubEnvResolver{missing: []string{"USER_TOKEN"}}
+	tool := NewShellExecTool(&fakeShellExecutor{}, resolver).WithEnvCapture(recorder.capture)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"python x.py","skill_name":"pdf-tools","env":{"USER_TOKEN":"typed-in-chat"}}`,
+	))
+
+	require.NoError(t, err)
+	require.True(t, result.Success)
+	require.Equal(t, "typed-in-chat", recorder.pairs["USER_TOKEN"],
+		"the value that made the run possible is the one worth storing")
+}
+
+func TestShellExecStillRefusesAMissingRequiredValueNobodySupplied(t *testing.T) {
+	resolver := stubEnvResolver{missing: []string{"USER_TOKEN"}}
+	tool := NewShellExecTool(&fakeShellExecutor{}, resolver)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"python x.py","skill_name":"pdf-tools"}`,
+	))
+
+	require.NoError(t, err)
+	require.False(t, result.Success)
+	require.Contains(t, result.Error, "USER_TOKEN")
+}
+
+func TestShellExecDoesNotCaptureWhenCommandFails(t *testing.T) {
+	recorder := &recordedCapture{}
+	tool := NewShellExecTool(&fakeShellExecutor{result: &sandbox.ExecuteResult{ExitCode: 1}}, nil).
+		WithEnvCapture(recorder.capture)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"export USER_TOKEN=x; false","skill_name":"pdf-tools"}`,
+	))
+
+	require.NoError(t, err)
+	require.True(t, result.Success, "non-zero exit is still a successful tool call")
+	require.Zero(t, recorder.calls)
+}
+
+func TestShellExecDoesNotCaptureWhenExecutorErrors(t *testing.T) {
+	recorder := &recordedCapture{}
+	tool := NewShellExecTool(&fakeShellExecutor{err: errors.New("sandbox down")}, nil).
+		WithEnvCapture(recorder.capture)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"export USER_TOKEN=x; true","skill_name":"pdf-tools"}`,
+	))
+
+	require.NoError(t, err)
+	require.False(t, result.Success)
+	require.Zero(t, recorder.calls)
+}
+
+func TestInstallShellExecDoesNotCapture(t *testing.T) {
+	recorder := &recordedCapture{}
+	tool := NewInstallShellExecTool(&fakeInstallShellExecutor{}).WithEnvCapture(recorder.capture)
+
+	result, err := tool.Execute(shellExecTestContext(), json.RawMessage(
+		`{"command":"export USER_TOKEN=x; pip install x","skill_name":"pdf-tools"}`,
+	))
+
+	require.NoError(t, err)
+	require.True(t, result.Success)
+	require.Zero(t, recorder.calls)
 }

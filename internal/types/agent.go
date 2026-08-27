@@ -56,6 +56,11 @@ type AgentConfig struct {
 	// Runtime-only fields (not persisted)
 	VLMModelID      string `json:"-"` // VLM model ID for tool result image analysis (set from CustomAgent config)
 	SandboxConfigID string `json:"-"` // Workspace sandbox config ID for skill execution (set from CustomAgent config)
+	// TenantSkills are the skills installed into the selected sandbox config's
+	// snapshot image, already narrowed to the ones this run can actually
+	// invoke. Runtime only: it is derived per turn from the config the agent
+	// selected, never stored on the agent record.
+	TenantSkills []*TenantSkillEntity `json:"-"`
 	// Per-request @mention pins (runtime only; injected as <must_use> in the user message).
 	PinnedMCPServiceIDs []string `json:"-"`
 	PinnedSkillNames    []string `json:"-"`
@@ -78,6 +83,30 @@ type AgentConfig struct {
 	// Whether to execute independent tool calls in parallel (default: false).
 	// When enabled and the LLM returns multiple tool calls, they run concurrently via errgroup.
 	ParallelToolCalls bool `json:"parallel_tool_calls,omitempty"`
+
+	// skillInstallMode routes this run's shell_exec to the privileged
+	// install-mode executor (root, skills image root writable). It is
+	// unexported on purpose: JSON cannot reach it, so no stored agent record
+	// and no API payload can request the privilege, and no other package can
+	// assign it. EnableSkillInstallMode is the only way in and it refuses
+	// every agent except the built-in skill installer.
+	skillInstallMode bool
+}
+
+// EnableSkillInstallMode grants install-mode shell execution to the built-in
+// skill installer agent and to nothing else. The agent ID is checked here
+// rather than at the call site so there is exactly one place to audit.
+func (c *AgentConfig) EnableSkillInstallMode(agentID string) {
+	if c == nil || agentID != BuiltinSkillInstallerID {
+		return
+	}
+	c.skillInstallMode = true
+}
+
+// SkillInstallMode reports whether this run may use the privileged
+// install-mode shell.
+func (c *AgentConfig) SkillInstallMode() bool {
+	return c != nil && c.skillInstallMode
 }
 
 // CitationsEnabled preserves citation output for legacy runtime configs that
@@ -256,6 +285,7 @@ type AgentState struct {
 	IsComplete    bool            `json:"is_complete"`    // Whether agent has finished
 	FinalAnswer   string          `json:"final_answer"`   // The final answer to the query
 	KnowledgeRefs []*SearchResult `json:"knowledge_refs"` // Collected knowledge references
+	TurnUsage     TokenUsage      `json:"turn_usage"`     // LLM token usage accumulated across every round of this turn
 }
 
 // FunctionDefinition represents a function definition for LLM function calling

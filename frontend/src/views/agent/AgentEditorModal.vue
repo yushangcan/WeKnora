@@ -168,8 +168,8 @@
                       </div>
                     </div>
 
-                    <!-- 长期记忆。放在这里而不是「多轮对话」那一组，是因为那一组
-                         整个带了 !isAgentMode，而智能推理恰恰是最需要这个开关的模式。
+                    <!-- 长期记忆。留在基础信息这一组而不是「多轮对话」，是因为它与
+                         多轮历史窗口无关，且智能推理恰恰是最需要这个开关的模式。
                          这个开关只能"关"：空间或个人设置关闭时，这里打开也不生效。 -->
                     <div class="setting-row">
                       <div class="setting-info">
@@ -861,16 +861,19 @@
                   </div>
                 </div>
 
-                <!-- 多轮对话（仅普通模式显示，Agent模式内部自动控制） -->
-                <div v-show="currentSection === 'conversation' && !isAgentMode" class="section">
+                <!-- 多轮对话。Agent 模式下 history_turns 同样生效（session_agent_qa.go
+                     经 LoadAgentHistory 读取），所以本组不再整体按模式隐藏；开关本身仍由
+                     EnsureDefaults 强制开启，故只在普通模式展示。 -->
+                <div v-show="currentSection === 'conversation'" class="section">
                   <div class="section-header">
                     <h2>{{ $t('agent.editor.conversationSettings') }}</h2>
-                    <p class="section-description">{{ $t('agentEditor.desc.conversationSection') }}</p>
+                    <p class="section-description">{{ conversationSectionDesc }}</p>
                   </div>
 
                   <div class="settings-group">
-                    <!-- 多轮对话 -->
-                    <div class="setting-row">
+                    <!-- 多轮对话开关（仅普通模式：Agent 模式由 EnsureDefaults 强制开启，
+                         展示可关闭的开关只会被服务端改回去） -->
+                    <div v-if="!isAgentMode" class="setting-row">
                       <div class="setting-info">
                         <label>{{ $t('agent.editor.multiTurn') }}</label>
                         <p class="desc">{{ $t('agentEditor.desc.multiTurn') }}</p>
@@ -880,14 +883,26 @@
                       </div>
                     </div>
 
-                    <!-- 保留轮数 -->
-                    <div v-if="formData.config.multi_turn_enabled" class="setting-row">
+                    <!-- 保留轮数（Agent 模式恒为多轮，故不受开关状态影响） -->
+                    <div v-if="formData.config.multi_turn_enabled || isAgentMode" class="setting-row">
                       <div class="setting-info">
                         <label>{{ $t('agent.editor.historyTurns') }}</label>
                         <p class="desc">{{ $t('agentEditor.desc.historyRounds') }}</p>
                       </div>
                       <div class="setting-control">
-                        <t-input-number v-model="formData.config.history_turns" :min="1" :max="20" theme="column" />
+                        <t-input-number v-model="formData.config.history_turns" :min="1" :max="100" theme="column" />
+                      </div>
+                    </div>
+
+                    <!-- 跨轮保留检索结果。只有 agent 链路读取该值（internal/agent/observe.go），
+                         且改写的只是 KB/Wiki 这八个工具的历史结果，所以没有知识库时不展示。 -->
+                    <div v-if="isAgentMode && hasKnowledgeBase" class="setting-row">
+                      <div class="setting-info">
+                        <label>{{ $t('agent.editor.retainRetrievalHistory') }}</label>
+                        <p class="desc">{{ $t('agentEditor.desc.retainRetrievalHistory') }}</p>
+                      </div>
+                      <div class="setting-control">
+                        <t-switch v-model="formData.config.retain_retrieval_history" />
                       </div>
                     </div>
 
@@ -1245,7 +1260,7 @@
                   </div>
                 </div>
 
-                <!-- Skills 配置（仅 Agent 模式） -->
+                <!-- 技能：脚本跑在所选沙箱里，可用列表也来自这份配置 -->
                 <div v-show="currentSection === 'skills' && isAgentMode" class="section">
                   <div class="section-header">
                     <h2>{{ $t('agent.editor.skillsConfig') }}</h2>
@@ -1253,22 +1268,62 @@
                   </div>
 
                   <div class="settings-group">
-                    <!-- Skills 选择模式 -->
+                    <div class="setting-row">
+                      <div class="setting-info">
+                        <label>{{ $t('agent.editor.sandboxBackend') }}</label>
+                        <p class="desc">{{ $t('agent.editor.sandboxBackendHint') }}</p>
+                      </div>
+                      <div class="setting-control sandbox-select-control">
+                        <t-select
+                          v-model="formData.config.sandbox_config_id"
+                          :placeholder="$t('agent.editor.sandboxBackendDefault')"
+                          class="sandbox-config-select"
+                          filterable
+                          :popup-props="{ overlayClassName: 'sandbox-config-select-popup' }"
+                        >
+                          <t-option value="" :label="$t('agent.editor.sandboxBackendDefault')" />
+                          <t-option
+                            v-for="cfg in sandboxConfigOptions"
+                            :key="cfg.id"
+                            :value="cfg.id"
+                            :label="cfg.name"
+                          >
+                            <div class="sandbox-option">
+                              <span class="sandbox-option__name">{{ cfg.name }}</span>
+                              <span v-if="cfg.sandbox_type" class="sandbox-option__type">{{ backendLabel(cfg.sandbox_type) }}</span>
+                            </div>
+                          </t-option>
+                        </t-select>
+                        <a href="javascript:void(0)" class="go-settings-link"
+                          @click.prevent="uiStore.openSettings('sandbox')">
+                          {{ $t('agent.editor.goSandboxSettings') }}
+                        </a>
+                        <p v-if="sandboxConfigOptions.length === 0" class="desc empty-hint">
+                          {{ $t('agent.editor.sandboxNoConfigs') }}
+                        </p>
+                      </div>
+                    </div>
+
                     <div class="setting-row">
                       <div class="setting-info">
                         <label>{{ $t('agent.editor.skillsSelection') }}</label>
                         <p class="desc">{{ $t('agent.editor.skillsSelectionDesc') }}</p>
                       </div>
-                      <div class="setting-control">
+                      <div class="setting-control sandbox-select-control">
                         <t-radio-group v-model="skillsSelectionMode">
-                          <t-radio-button value="all">{{ $t('agent.editor.skillsAll') }}</t-radio-button>
-                          <t-radio-button value="selected">{{ $t('agent.editor.skillsSelected') }}</t-radio-button>
+                          <t-radio-button value="all" :disabled="!hasSandboxSelected">{{ $t('agent.editor.skillsAll') }}</t-radio-button>
+                          <t-radio-button value="selected" :disabled="!hasSandboxSelected">{{ $t('agent.editor.skillsSelected') }}</t-radio-button>
                           <t-radio-button value="none">{{ $t('agent.editor.skillsNone') }}</t-radio-button>
                         </t-radio-group>
+                        <p v-if="!hasSandboxSelected && sandboxConfigOptions.length > 0" class="desc empty-hint">
+                          {{ $t('agent.editor.skillsNeedSandbox') }}
+                        </p>
+                        <p v-else-if="hasSandboxSelected && skillOptions.length === 0" class="desc empty-hint">
+                          {{ $t('agent.editor.noSkillsAvailable') }}
+                        </p>
                       </div>
                     </div>
 
-                    <!-- 选择指定 Skills -->
                     <div v-if="skillsSelectionMode === 'selected' && skillOptions.length > 0"
                       class="setting-row setting-row-vertical">
                       <div class="setting-info">
@@ -1285,62 +1340,6 @@
                             </div>
                           </t-checkbox>
                         </t-checkbox-group>
-                      </div>
-                    </div>
-
-                    <!-- 无可用 Skills 提示 -->
-                    <div v-if="skillOptions.length === 0" class="setting-row">
-                      <div class="setting-info">
-                        <p class="desc empty-hint">{{ $t('agent.editor.noSkillsAvailable') }}</p>
-                      </div>
-                    </div>
-
-                    <!-- Skills 说明 -->
-                    <div class="skill-info-box">
-                      <t-icon name="lightbulb" class="info-icon" />
-                      <div class="info-content">
-                        <p><strong>{{ $t('agent.editor.skillsInfoTitle') }}</strong></p>
-                        <p>{{ $t('agent.editor.skillsInfoContent') }}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 沙箱后端配置（仅 Agent 模式）：技能脚本的运行环境 -->
-                <div v-show="currentSection === 'sandbox' && isAgentMode" class="section">
-                  <div class="section-header">
-                    <h2>{{ $t('agent.editor.sandboxConfig') }}</h2>
-                    <p class="section-description">{{ $t('agent.editor.sandboxConfigDesc') }}</p>
-                  </div>
-
-                  <div class="settings-group">
-                    <div class="setting-row">
-                      <div class="setting-info">
-                        <label>{{ $t('agent.editor.sandboxBackend') }}</label>
-                        <p class="desc">{{ $t('agent.editor.sandboxBackendHint') }}</p>
-                      </div>
-                      <div class="setting-control">
-                        <t-select v-model="formData.config.sandbox_config_id"
-                          :placeholder="$t('agent.editor.sandboxBackendDefault')" style="width: 280px">
-                          <t-option value="" :label="$t('agent.editor.sandboxBackendDefault')" />
-                          <t-option v-for="cfg in sandboxConfigOptions" :key="cfg.id" :value="cfg.id"
-                            :label="`${cfg.name} (${backendLabel(cfg.sandbox_type)})`" />
-                        </t-select>
-                      </div>
-                    </div>
-
-                    <!-- 未建具名配置时说明「默认」到底是什么，避免下拉只有一项时显得像坏了 -->
-                    <div v-if="sandboxConfigOptions.length === 0" class="setting-row">
-                      <div class="setting-info">
-                        <p class="desc empty-hint">{{ $t('agent.editor.sandboxNoConfigs') }}</p>
-                      </div>
-                    </div>
-
-                    <div class="skill-info-box">
-                      <t-icon name="cloud" class="info-icon" />
-                      <div class="info-content">
-                        <p><strong>{{ $t('agent.editor.sandboxInfoTitle') }}</strong></p>
-                        <p>{{ $t('agent.editor.sandboxInfoContent') }}</p>
                       </div>
                     </div>
                   </div>
@@ -1740,8 +1739,10 @@ import PromptTemplateSelector from '@/components/PromptTemplateSelector.vue';
 import ModelSelector from '@/components/ModelSelector.vue';
 import KBParserSettings, { type ParserEngineRule } from '@/views/knowledge/settings/KBParserSettings.vue';
 import AgentShareSettings from '@/components/AgentShareSettings.vue';
+import { SKILL_ICON } from '@/types/mention';
 import { listEmbedChannels } from '@/api/embed';
 import { getRootZoom, rectToCssPx } from '@/utils/zoom';
+import { integrationSectionKey } from '@/config/settingsRoute';
 import {
   evaluateToolRequirement,
   deriveKbFilterFromTools,
@@ -1799,7 +1800,17 @@ const copyAgentId = async () => {
   await copyWithToast(editorAgent.value?.id, 'common.copied');
 };
 
-const currentSection = ref(props.initialSection || 'basic');
+// 旧入口把技能沙箱拆成独立 tab；合并后仍接受 section=sandbox。
+const AGENT_EDITOR_SECTION_ALIASES: Record<string, string> = {
+  sandbox: 'skills',
+};
+
+function resolveEditorSection(section?: string | null): string {
+  const key = section || 'basic';
+  return AGENT_EDITOR_SECTION_ALIASES[key] || key;
+}
+
+const currentSection = ref(resolveEditorSection(props.initialSection));
 const suggestionTab = ref<'starters' | 'followUps'>('starters');
 const contentWrapperRef = ref<HTMLElement | null>(null);
 const highlightedField = ref<AgentNotReadyReasonKey | null>(null);
@@ -1866,8 +1877,10 @@ const applyInitialFieldHighlight = async (field: string) => {
 
 const onAgentEditorFocusSection = (event: Event) => {
   const section = (event as CustomEvent<{ section?: string }>).detail?.section
-  if (section && navItems.value.some((item) => item.key === section)) {
-    currentSection.value = section
+  if (!section) return
+  const resolved = resolveEditorSection(section)
+  if (navItems.value.some((item) => item.key === resolved)) {
+    currentSection.value = resolved
   }
 }
 
@@ -1927,8 +1940,30 @@ const showMcpServiceSelect = computed(() =>
 );
 const webSearchProviderList = ref<WebSearchProviderEntity[]>([]);
 const skillOptions = ref<{ name: string; description: string }[]>([]);
-// 是否允许启用 Skills（取决于后端沙箱是否启用，disabled 时为 false；未请求前为 false 避免闪显）
+// 是否允许启用 Skills（当前沙盒配置上有可执行技能时为 true；未选配置前为 false）
 const skillsAvailable = ref(false);
+const hasSandboxSelected = computed(() => !!formData.value.config.sandbox_config_id);
+
+function pruneSelectedSkills() {
+  const configId = formData.value.config.sandbox_config_id || ''
+  if (!configId) return
+  // 拉取失败时不要把用户已选项清掉
+  if (!skillsAvailable.value && skillOptions.value.length === 0) return
+  const names = new Set(skillOptions.value.map((skill) => skill.name))
+  const selected: string[] = formData.value.config.selected_skills || []
+  const kept = selected.filter((name: string) => names.has(name))
+  if (kept.length !== selected.length) {
+    formData.value.config.selected_skills = kept
+  }
+}
+
+async function syncInstalledSkills(force = false) {
+  const configId = formData.value.config.sandbox_config_id || ''
+  await editorResources.ensureSkills(configId, force)
+  skillsAvailable.value = editorResources.skillsAvailable
+  skillOptions.value = [...editorResources.skills]
+  pruneSelectedSkills()
+}
 // 空间内的具名沙箱后端配置。始终包含当前已选中的那份，即使它已被删除——
 // 否则下拉会静默显示为“不启用沙箱”，看不出该智能体其实指着一份不存在的配置。
 const sandboxConfigOptions = computed(() => {
@@ -2287,10 +2322,8 @@ const navItems = computed(() => {
     { key: 'model', icon: 'control-platform', label: t('agent.editor.modelConfig') },
     { key: 'suggestions', icon: 'help-circle', label: t('agentEditor.questionSuggestions.navLabel') },
   ];
-  // 多轮对话（仅普通模式显示，Agent模式内部自动控制）
-  if (!isAgentMode.value) {
-    items.push({ key: 'conversation', icon: 'chat', label: t('agent.editor.conversationSettings') });
-  }
+  // 多轮对话（两种模式都需要：Agent 模式同样按 history_turns 截断历史）
+  items.push({ key: 'conversation', icon: 'chat', label: t('agent.editor.conversationSettings') });
   // 知识库与检索
   items.push({ key: 'knowledge', icon: 'folder', label: t('agent.editor.knowledgeConfig') });
   if (hasKnowledgeBase.value) {
@@ -2302,12 +2335,7 @@ const navItems = computed(() => {
   if (isAgentMode.value) {
     items.push({ key: 'tools', icon: 'tools', label: t('agent.editor.toolsConfig') });
     items.push({ key: 'mcp', icon: 'server', label: t('agentEditor.mcp.label') });
-  }
-  if (isAgentMode.value && skillsAvailable.value) {
-    items.push({ key: 'skills', icon: 'lightbulb', label: t('agent.editor.skillsConfig') });
-    // 沙箱是技能脚本的运行环境：先选跑哪些技能，再选跑在哪份后端上。
-    // 与 skills 同门控——部署级沙箱关闭时技能整体不可用，选后端也就无从谈起。
-    items.push({ key: 'sandbox', icon: 'cloud', label: t('agent.editor.sandboxConfig') });
+    items.push({ key: 'skills', icon: SKILL_ICON, label: t('agent.editor.skillsConfig') });
   }
   // 发布（仅编辑模式）
   if (editorMode.value === 'edit' && editorAgent.value?.id && !editorAgent.value?.is_builtin && !authStore.isLiteMode) {
@@ -2335,7 +2363,7 @@ const navGroups = computed(() => {
     {
       key: 'capability',
       label: t('agentEditor.navGroups.capability'),
-      items: pickItems(['multimodal', 'tools', 'mcp', 'skills', 'sandbox']),
+      items: pickItems(['multimodal', 'tools', 'mcp', 'skills']),
     },
     {
       key: 'integration',
@@ -2412,6 +2440,7 @@ const defaultFormData = {
     // 多轮对话设置
     multi_turn_enabled: false,
     history_turns: 5,
+    retain_retrieval_history: false,
     // 长期记忆：默认跟随空间设置。写 true 与不写等价，只有 false 才会
     // 让这个智能体单独不读记忆。
     memory_enabled: true,
@@ -2524,6 +2553,14 @@ const hasAnyIntentCustomized = computed(() =>
   intentPromptTemplates.value.some((item) => isIntentCustomized(item.id)),
 );
 
+// Agent 模式下本组只剩「保留轮数」（以及有知识库时的检索保留），
+// 默认文案里的「问题改写」并不展示，故按模式分开。
+const conversationSectionDesc = computed(() =>
+  isAgentMode.value
+    ? t('agentEditor.desc.conversationSectionAgent')
+    : t('agentEditor.desc.conversationSection'),
+);
+
 const showRewritePrompts = computed(() =>
   !isAgentMode.value
   && formData.value.config.multi_turn_enabled
@@ -2611,7 +2648,7 @@ function gotoIntegrations(tab: 'im' | 'embed') {
   const agentId = editorAgent.value?.id;
   if (!agentId) return;
   handleClose();
-  router.push({ path: '/platform/settings', query: { section: 'integrations', agentId, tab } });
+  router.push({ path: '/platform/settings', query: { section: integrationSectionKey(tab), agentId } });
 }
 
 const filteredIntentPlaceholders = computed(() => {
@@ -2979,7 +3016,7 @@ const needsRerankModel = computed(() => {
 watch(() => props.visible, async (val) => {
   if (val) {
     savedAgent.value = null;
-    currentSection.value = props.initialSection || 'basic';
+    currentSection.value = resolveEditorSection(props.initialSection);
     // 先加载依赖数据（包括默认配置）
     await loadDependencies();
 
@@ -3117,6 +3154,8 @@ watch(() => props.visible, async (val) => {
       applyDefaultModelsIfEmpty()
     }
 
+    await syncInstalledSkills()
+
     if (props.initialHighlightField) {
       await applyInitialFieldHighlight(props.initialHighlightField);
     }
@@ -3227,6 +3266,11 @@ watch(mcpSelectionMode, (mode) => {
   // selected 模式保持 mcp_services 不变
 });
 
+watch(() => formData.value.config.sandbox_config_id, async () => {
+  if (!props.visible) return
+  await syncInstalledSkills()
+})
+
 // 监听 Skills 选择模式变化
 watch(skillsSelectionMode, (mode) => {
   formData.value.config.skills_selection_mode = mode;
@@ -3334,8 +3378,7 @@ watch(isAgentMode, (isAgent) => {
   if (isAgent && currentSection.value === 'advanced') {
     currentSection.value = 'basic';
   }
-  // 如果当前在多轮对话页面但切换到了Agent模式，切换到基础设置（Agent模式下多轮对话由内部控制）
-  if (isAgent && currentSection.value === 'conversation') {
+  if (!isAgent && (currentSection.value === 'skills' || currentSection.value === 'sandbox')) {
     currentSection.value = 'basic';
   }
 });
@@ -3347,6 +3390,7 @@ watch(() => uiStore.showSettingsModal, async (visible, prevVisible) => {
       await Promise.all([
         chatResources.ensureModels(true),
         editorResources.ensureStorageEngine(true),
+        chatResources.ensureSandboxConfigs(true),
       ]);
       if (chatResources.allModels.length > 0) {
         allModels.value = chatResources.allModels;
@@ -3354,6 +3398,7 @@ watch(() => uiStore.showSettingsModal, async (visible, prevVisible) => {
       if (editorResources.storageStatus.length > 0) {
         storageEngineStatus.value = editorResources.storageStatus;
       }
+      await syncInstalledSkills(true);
     } catch (e) {
       console.warn('Failed to refresh data after settings closed', e);
     }
@@ -3427,9 +3472,6 @@ const loadDependencies = async () => {
       .filter((shared: any) => shared.knowledge_base && !myKbIds.has(shared.knowledge_base.id))
       .map((shared: any) => mapKbToOption(shared.knowledge_base, true, shared.org_name));
     kbOptions.value = [...myKbs, ...sharedKbs];
-
-    skillsAvailable.value = editorResources.skillsAvailable;
-    skillOptions.value = editorResources.skills;
 
     agentTypePresets.value = editorResources.agentTypePresets as AgentTypePreset[];
     applyPromptTemplateDefaults(editorResources.promptTemplates);
@@ -4966,6 +5008,37 @@ const handleSave = async () => {
   }
 }
 
+.sandbox-select-control {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.sandbox-config-select {
+  width: 280px;
+}
+
+.sandbox-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.sandbox-option__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sandbox-option__type {
+  flex-shrink: 0;
+  color: var(--td-text-color-placeholder);
+  font-size: 12px;
+}
+
 // 名称输入框带头像预览
 .name-input-wrapper {
   display: flex;
@@ -5617,40 +5690,44 @@ const handleSave = async () => {
   line-height: 1.5;
 }
 
-.skill-info-box {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  background: var(--td-brand-color-light);
-  border-radius: 8px;
-  border: 1px solid var(--td-brand-color-focus);
-  margin-top: 16px;
+.hint-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--td-text-color-placeholder);
+  cursor: help;
+  line-height: 1;
 
-  .info-icon {
-    font-size: 20px;
+  &:hover,
+  &:focus-visible {
     color: var(--td-brand-color);
-    flex-shrink: 0;
-    margin-top: 2px;
+    outline: none;
   }
+}
 
-  .info-content {
-    flex: 1;
+.hint-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 340px;
+}
 
-    p {
-      margin: 0;
-      font-size: 13px;
-      color: var(--td-text-color-secondary);
-      line-height: 1.6;
+.hint-popover__title {
+  margin: 0;
+  color: var(--td-text-color-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
 
-      &:first-child {
-        margin-bottom: 4px;
-      }
-
-      strong {
-        color: var(--td-brand-color);
-      }
-    }
-  }
+.hint-popover__text {
+  margin: 0;
+  color: var(--td-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .empty-hint {
@@ -6036,6 +6113,13 @@ const handleSave = async () => {
     line-height: 1.4;
     padding: 8px 12px;
     white-space: normal;
+  }
+}
+
+.sandbox-config-select-popup {
+  .t-select-option {
+    height: auto;
+    padding: 6px 10px;
   }
 }
 

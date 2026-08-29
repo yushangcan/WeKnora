@@ -152,17 +152,32 @@ func TestEvaluationRepositoryHistoryNormalizesInterruptedRunStatus(t *testing.T)
 	repo := NewEvaluationRepository(db)
 	detail := newEvaluationRepositoryTestDetail("interrupted-history", 7)
 	detail.Result.Run.Status = types.EvaluationRunStatusRunning
+	detail.Task.Finished = 1
 	if err := repo.CreateRun(context.Background(), detail, "temporary-interrupted-history"); err != nil {
 		t.Fatalf("create interrupted run: %v", err)
 	}
-	if _, err := repo.MarkInterruptedRunsFailed(context.Background(), time.Now(), "process_interrupted"); err != nil {
+	failedAt := time.Now()
+	if err := repo.SaveCaseProgress(context.Background(), detail, &types.EvaluationCaseResult{
+		CaseID: "failed-case", Status: types.EvaluationRunStatusFailed,
+		StartedAt: detail.Task.StartTime, CompletedAt: &failedAt,
+	}); err != nil {
+		t.Fatalf("persist interrupted run case: %v", err)
+	}
+	if _, err := repo.MarkInterruptedRunsFailed(context.Background(), 7, time.Now(), "process_interrupted"); err != nil {
 		t.Fatalf("mark interrupted run: %v", err)
+	}
+	loaded, err := repo.GetRun(context.Background(), 7, detail.Task.ID)
+	if err != nil {
+		t.Fatalf("get interrupted run: %v", err)
+	}
+	if loaded.Result.Run.Status != types.EvaluationRunStatusPartial || len(loaded.Result.Cases) != 1 {
+		t.Fatalf("detail exposed inconsistent interrupted status: %#v", loaded.Result)
 	}
 	page, err := repo.ListRuns(context.Background(), 7, types.EvaluationRunListFilter{Page: 1, PageSize: 20})
 	if err != nil {
 		t.Fatalf("list interrupted run: %v", err)
 	}
-	if len(page.Items) != 1 || page.Items[0].Status != types.EvaluationRunStatusFailed {
+	if len(page.Items) != 1 || page.Items[0].Status != types.EvaluationRunStatusPartial {
 		t.Fatalf("history exposed stale running status: %#v", page.Items)
 	}
 }

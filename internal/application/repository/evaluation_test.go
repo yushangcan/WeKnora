@@ -278,6 +278,7 @@ func TestEvaluationRepositoryMarksInterruptedRunsFailed(t *testing.T) {
 	repo := NewEvaluationRepository(db)
 	pending := newEvaluationRepositoryTestDetail("evaluation-pending", 7)
 	success := newEvaluationRepositoryTestDetail("evaluation-success", 7)
+	otherTenantPending := newEvaluationRepositoryTestDetail("evaluation-other-tenant", 8)
 	success.Task.Status = types.EvaluationStatueSuccess
 	success.Result.Run.Status = types.EvaluationRunStatusSuccess
 	if err := repo.CreateRun(context.Background(), pending, "temporary-pending"); err != nil {
@@ -286,9 +287,12 @@ func TestEvaluationRepositoryMarksInterruptedRunsFailed(t *testing.T) {
 	if err := repo.CreateRun(context.Background(), success, "temporary-success"); err != nil {
 		t.Fatalf("create success run: %v", err)
 	}
+	if err := repo.CreateRun(context.Background(), otherTenantPending, "temporary-other-tenant"); err != nil {
+		t.Fatalf("create other tenant run: %v", err)
+	}
 
 	completedAt := time.Date(2026, 8, 25, 2, 0, 0, 0, time.UTC)
-	count, err := repo.MarkInterruptedRunsFailed(context.Background(), completedAt, "process_interrupted")
+	count, err := repo.MarkInterruptedRunsFailed(context.Background(), 7, completedAt, "process_interrupted")
 	if err != nil {
 		t.Fatalf("mark interrupted runs: %v", err)
 	}
@@ -309,5 +313,12 @@ func TestEvaluationRepositoryMarksInterruptedRunsFailed(t *testing.T) {
 	}
 	if loadedSuccess.Task.Status != types.EvaluationStatueSuccess {
 		t.Fatalf("terminal run was changed: %#v", loadedSuccess.Task)
+	}
+	loadedOtherTenant, err := repo.GetRun(context.Background(), 8, otherTenantPending.Task.ID)
+	if err != nil {
+		t.Fatalf("get other tenant run: %v", err)
+	}
+	if loadedOtherTenant.Task.Status != types.EvaluationStatuePending {
+		t.Fatalf("other tenant run was changed: %#v", loadedOtherTenant.Task)
 	}
 }

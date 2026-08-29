@@ -88,7 +88,10 @@ func (e *EvaluationService) saveTerminalEvaluationRun(
 		case <-timer.C:
 		}
 	}
-	return saveErr
+	if fallbackErr := e.evaluationRepository.UpdateRun(ctx, detail); fallbackErr != nil {
+		return fmt.Errorf("save terminal evaluation run: %v; save terminal run state: %w", saveErr, fallbackErr)
+	}
+	return fmt.Errorf("save terminal evaluation cases after retries: %w", saveErr)
 }
 
 // cloneEvaluationDetail prevents the API layer and background workers from
@@ -122,9 +125,14 @@ func cloneEvaluationDetail(source *types.EvaluationDetail) *types.EvaluationDeta
 	if source.Result != nil {
 		// EvaluationRunResult is a JSON response contract made of serializable
 		// value types. A JSON copy keeps all nested slices and pointers detached.
-		if data, err := json.Marshal(source.Result); err == nil {
+		data, err := json.Marshal(source.Result)
+		if err != nil {
+			logger.Errorf(context.Background(), "Failed to clone evaluation result: %v", err)
+		} else {
 			var runResult types.EvaluationRunResult
-			if err := json.Unmarshal(data, &runResult); err == nil {
+			if err := json.Unmarshal(data, &runResult); err != nil {
+				logger.Errorf(context.Background(), "Failed to decode cloned evaluation result: %v", err)
+			} else {
 				result.Result = &runResult
 			}
 		}
@@ -609,6 +617,24 @@ func (e *EvaluationService) EvalDataset(
 						caseID,
 						evaluationCaseEvidence(qaPair, chatManage, nil, "rag_pipeline"),
 					)
+				}
+
+				// Persist failed case evidence immediately. Terminal persistence still
+				// retries the complete snapshot, but it is no longer the only durable
+				// copy of a failed case.
+				var persistErr error
+				mu.Lock()
+				if observer != nil {
+					detail.Result = observer.Snapshot(detail.Task.Status, detail.Metric)
+					progressSnapshot := cloneEvaluationDetail(detail)
+					caseSnapshot := evaluationCaseResult(progressSnapshot.Result, caseID)
+					if caseSnapshot != nil {
+						persistErr = e.evaluationRepository.SaveCaseProgress(caseCtx, progressSnapshot, caseSnapshot)
+					}
+				}
+				mu.Unlock()
+				if persistErr != nil {
+					logger.Errorf(caseCtx, "Failed to persist failed evaluation case %d: %v", i, persistErr)
 				}
 				logger.Errorf(caseCtx, "Failed to process question %d: %v", i, caseErr)
 				return caseErr

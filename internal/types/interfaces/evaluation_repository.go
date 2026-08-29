@@ -41,5 +41,10 @@ type EvaluationRepository interface {
 		caseResult *types.EvaluationCaseResult,
 	) error
 	SaveTerminalRun(ctx context.Context, detail *types.EvaluationDetail) error
-	MarkInterruptedRunsFailed(ctx context.Context, completedAt time.Time, errorMessage string) (int64, error)
+	MarkInterruptedRunsFailed(
+		ctx context.Context,
+		tenantID uint64,
+		completedAt time.Time,
+		errorMessage string,
+	) (int64, error)
 }

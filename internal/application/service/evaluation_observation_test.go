@@ -55,12 +55,16 @@ func TestCloneEvaluationDetailReturnsDetachedSnapshot(t *testing.T) {
 
 type observedEvaluationRepository struct {
 	interfaces.EvaluationRepository
-	mu   sync.RWMutex
-	runs map[string]*types.EvaluationDetail
+	mu         sync.RWMutex
+	runs       map[string]*types.EvaluationDetail
+	savedCases map[string]types.EvaluationCaseResult
 }
 
 func newObservedEvaluationRepository() *observedEvaluationRepository {
-	return &observedEvaluationRepository{runs: make(map[string]*types.EvaluationDetail)}
+	return &observedEvaluationRepository{
+		runs:       make(map[string]*types.EvaluationDetail),
+		savedCases: make(map[string]types.EvaluationCaseResult),
+	}
 }
 
 func (r *observedEvaluationRepository) CreateRun(
@@ -102,11 +106,20 @@ func (r *observedEvaluationRepository) UpdateRun(
 }
 
 func (r *observedEvaluationRepository) SaveCaseProgress(
-	ctx context.Context,
+	_ context.Context,
 	detail *types.EvaluationDetail,
-	_ *types.EvaluationCaseResult,
+	caseResult *types.EvaluationCaseResult,
 ) error {
-	return r.UpdateRun(ctx, detail)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, ok := r.runs[detail.Task.ID]; !ok {
+		return errors.New("evaluation run not found")
+	}
+	r.runs[detail.Task.ID] = cloneEvaluationDetail(detail)
+	if caseResult != nil {
+		r.savedCases[detail.Task.ID+":"+caseResult.CaseID] = *caseResult
+	}
+	return nil
 }
 
 func (r *observedEvaluationRepository) SaveTerminalRun(
@@ -118,6 +131,7 @@ func (r *observedEvaluationRepository) SaveTerminalRun(
 
 func (r *observedEvaluationRepository) MarkInterruptedRunsFailed(
 	_ context.Context,
+	_ uint64,
 	completedAt time.Time,
 	errorMessage string,
 ) (int64, error) {
@@ -708,6 +722,7 @@ func TestEvaluationServiceRetainsPartialResultAfterCaseFailure(t *testing.T) {
 	cfg := &config.Config{
 		Conversation: &config.ConversationConfig{Summary: &config.SummaryConfig{}},
 	}
+	evaluationRepository := newObservedEvaluationRepository()
 	service := NewEvaluationService(
 		cfg,
 		twoCaseObservedDatasetStub{},
@@ -715,7 +730,7 @@ func TestEvaluationServiceRetainsPartialResultAfterCaseFailure(t *testing.T) {
 		&observedKnowledgeStub{},
 		partiallyFailingObservedSessionStub{},
 		observedModelStub{},
-		newObservedEvaluationRepository(),
+		evaluationRepository,
 	)
 	ctx := context.WithValue(context.Background(), types.TenantIDContextKey, uint64(7))
 
@@ -748,5 +763,12 @@ func TestEvaluationServiceRetainsPartialResultAfterCaseFailure(t *testing.T) {
 	if result.Result.Cases[1].Evidence.QID != 2 ||
 		result.Result.Cases[1].Evidence.FailureStage != "rag_pipeline" {
 		t.Fatalf("failed case audit stage was not retained: %#v", result.Result.Cases[1].Evidence)
+	}
+	evaluationRepository.mu.RLock()
+	persistedFailedCase, ok := evaluationRepository.savedCases[created.Task.ID+":2"]
+	evaluationRepository.mu.RUnlock()
+	if !ok || persistedFailedCase.Status != types.EvaluationRunStatusFailed ||
+		persistedFailedCase.Evidence.FailureStage != "rag_pipeline" {
+		t.Fatalf("failed case was not persisted during case execution: %#v", persistedFailedCase)
 	}
 }

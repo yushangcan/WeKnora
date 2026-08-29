@@ -626,9 +626,9 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 
 两张表由项目现有 PostgreSQL/SQLite 迁移创建，Case 通过外键归属 Run，删除 Run 时级联删除 Case。当前实现支持进程重启后读取已经持久化的 Run 和 Case，但不支持从中断 Case 继续执行，也不支持多实例自动接管。
 
-SQLite 的新建库、v11 到 v12 升级、索引、外键级联和 Down Migration 已建立自动化测试。2026-08-27 已在本地 ParadeDB/PostgreSQL 17 容器中完成 migration 79 到 85 的真实升级，并验证两张表、索引、JSONB 写入、Run/Case 外键和级联删除。Down Migration 仍应在可丢弃的数据库或 CI 中验证，不能为验证回滚而破坏现有开发数据。
+SQLite 的新建库、v11 到 v13 升级、索引、外键级联和 Down Migration 已建立自动化测试；PostgreSQL 000090 的表结构、JSONB、索引和级联删除也有迁移契约测试。迁移编号调整后的 PostgreSQL 85 到 90 实际升级仍需在可丢弃的数据库或 CI 中验收，不能为验证升级或回滚而改写已有开发库的迁移历史。
 
-Repository 保留了显式的 `MarkInterruptedRunsFailed` 恢复操作，但启动流程不会自动调用。该操作目前没有 Worker 归属、租约或心跳条件，若在多实例启动时直接全局执行，可能把其他实例仍在运行的任务错误关闭。安全的异常恢复需要先增加 Worker Owner 和租约过期判断，只处理确认失去所有权的 Run；在此之前，文档和 API 不宣称支持断点续跑或多实例自动接管。
+Repository 保留了按租户执行的 `MarkInterruptedRunsFailed` 恢复操作，但启动流程不会自动调用。该操作目前没有 Worker 归属、租约或心跳条件，若在多实例启动时直接执行，仍可能把同一租户下其他实例正在运行的任务错误关闭。安全的异常恢复需要先增加 Worker Owner 和租约过期判断，只处理确认失去所有权的 Run；在此之前，文档和 API 不宣称支持断点续跑或多实例自动接管。
 
 ## GET `/evaluation/runs` - 分页查询历史 Run
 

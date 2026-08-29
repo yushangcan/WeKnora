@@ -13,6 +13,8 @@ type terminalEvaluationRepositoryStub struct {
 	interfaces.EvaluationRepository
 	attempts       int
 	failuresBefore int
+	updateAttempts int
+	updateErr      error
 }
 
 func (s *terminalEvaluationRepositoryStub) SaveTerminalRun(
@@ -26,6 +28,14 @@ func (s *terminalEvaluationRepositoryStub) SaveTerminalRun(
 	return nil
 }
 
+func (s *terminalEvaluationRepositoryStub) UpdateRun(
+	_ context.Context,
+	_ *types.EvaluationDetail,
+) error {
+	s.updateAttempts++
+	return s.updateErr
+}
+
 func TestSaveTerminalEvaluationRunRetriesTemporaryFailures(t *testing.T) {
 	repository := &terminalEvaluationRepositoryStub{failuresBefore: 2}
 	service := &EvaluationService{evaluationRepository: repository}
@@ -35,5 +45,23 @@ func TestSaveTerminalEvaluationRunRetriesTemporaryFailures(t *testing.T) {
 	}
 	if repository.attempts != terminalEvaluationSaveAttempts {
 		t.Fatalf("terminal save attempts = %d, want %d", repository.attempts, terminalEvaluationSaveAttempts)
+	}
+	if repository.updateAttempts != 0 {
+		t.Fatalf("terminal fallback attempts = %d, want 0", repository.updateAttempts)
+	}
+}
+
+func TestSaveTerminalEvaluationRunFallsBackToRunState(t *testing.T) {
+	repository := &terminalEvaluationRepositoryStub{failuresBefore: terminalEvaluationSaveAttempts}
+	service := &EvaluationService{evaluationRepository: repository}
+
+	if err := service.saveTerminalEvaluationRun(context.Background(), &types.EvaluationDetail{}); err == nil {
+		t.Fatal("terminal case persistence failure was not reported")
+	}
+	if repository.attempts != terminalEvaluationSaveAttempts {
+		t.Fatalf("terminal save attempts = %d, want %d", repository.attempts, terminalEvaluationSaveAttempts)
+	}
+	if repository.updateAttempts != 1 {
+		t.Fatalf("terminal fallback attempts = %d, want 1", repository.updateAttempts)
 	}
 }

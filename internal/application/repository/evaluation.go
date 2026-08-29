@@ -60,9 +60,12 @@ func (r *evaluationRepository) GetRun(
 		return nil, err
 	}
 	detail.Result.Cases = cases
-	if record.Status == types.EvaluationRunStatusFailed && len(cases) > 0 {
-		detail.Result.Run.Status = types.EvaluationRunStatusPartial
-	}
+	detail.Result.Run.Status = normalizeEvaluationRunStatus(
+		record.Status,
+		detail.Result.Run.Status,
+		record.Finished,
+		len(cases),
+	)
 	return detail, nil
 }
 
@@ -113,12 +116,16 @@ func (r *evaluationRepository) SaveTerminalRun(
 	})
 }
 
-// MarkInterruptedRunsFailed closes non-terminal rows during an explicit recovery pass.
+// MarkInterruptedRunsFailed closes one tenant's non-terminal rows during an explicit recovery pass.
 func (r *evaluationRepository) MarkInterruptedRunsFailed(
 	ctx context.Context,
+	tenantID uint64,
 	completedAt time.Time,
 	errorMessage string,
 ) (int64, error) {
+	if tenantID == 0 {
+		return 0, errors.New("tenant ID is required to recover interrupted evaluation runs")
+	}
 	if completedAt.IsZero() {
 		completedAt = time.Now()
 	}
@@ -128,7 +135,7 @@ func (r *evaluationRepository) MarkInterruptedRunsFailed(
 	errorMessage = evaluationobs.SafeErrorText(errorMessage)
 	result := r.db.WithContext(ctx).
 		Model(&types.EvaluationRunRecord{}).
-		Where("status IN ?", []types.EvaluationRunStatus{
+		Where("tenant_id = ? AND status IN ?", tenantID, []types.EvaluationRunStatus{
 			types.EvaluationRunStatusPending,
 			types.EvaluationRunStatusRunning,
 		}).
@@ -314,18 +321,12 @@ func evaluationDetailFromRecord(record *types.EvaluationRunRecord) (*types.Evalu
 	runResult.Run.DatasetID = record.DatasetID
 	runResult.Run.StartedAt = record.StartedAt
 	runResult.Run.CompletedAt = record.CompletedAt
-	if record.Status == types.EvaluationRunStatusFailed {
-		if runResult.Run.Status != types.EvaluationRunStatusPartial &&
-			runResult.Run.Status != types.EvaluationRunStatusFailed {
-			if record.Finished > 0 || len(runResult.Cases) > 0 {
-				runResult.Run.Status = types.EvaluationRunStatusPartial
-			} else {
-				runResult.Run.Status = types.EvaluationRunStatusFailed
-			}
-		}
-	} else {
-		runResult.Run.Status = record.Status
-	}
+	runResult.Run.Status = normalizeEvaluationRunStatus(
+		record.Status,
+		runResult.Run.Status,
+		record.Finished,
+		len(runResult.Cases),
+	)
 
 	return &types.EvaluationDetail{
 		Task: &types.EvaluationTask{
@@ -343,6 +344,29 @@ func evaluationDetailFromRecord(record *types.EvaluationRunRecord) (*types.Evalu
 		Metric: metric,
 		Result: &runResult,
 	}, nil
+}
+
+// normalizeEvaluationRunStatus applies the persisted lifecycle status while
+// retaining partial-result meaning for failed runs with observed progress.
+func normalizeEvaluationRunStatus(
+	recordStatus types.EvaluationRunStatus,
+	snapshotStatus types.EvaluationRunStatus,
+	finished int,
+	caseCount int,
+) types.EvaluationRunStatus {
+	if recordStatus != types.EvaluationRunStatusFailed {
+		return recordStatus
+	}
+	if snapshotStatus == types.EvaluationRunStatusPartial {
+		return types.EvaluationRunStatusPartial
+	}
+	if snapshotStatus == types.EvaluationRunStatusFailed {
+		return types.EvaluationRunStatusFailed
+	}
+	if finished > 0 || caseCount > 0 {
+		return types.EvaluationRunStatusPartial
+	}
+	return types.EvaluationRunStatusFailed
 }
 
 func (r *evaluationRepository) listEvaluationCases(

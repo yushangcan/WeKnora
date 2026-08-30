@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Tencent/WeKnora/internal/evaluation"
+	"github.com/Tencent/WeKnora/internal/logger"
 	"github.com/Tencent/WeKnora/internal/types"
 	"github.com/Tencent/WeKnora/internal/types/interfaces"
 	"github.com/google/uuid"
@@ -163,5 +164,9 @@ func recordEvent(ctx context.Context, recorder interfaces.ModelUsageRecorder, ev
 	if recorder == nil || event == nil {
 		return
 	}
-	_ = recorder.Record(ctx, event)
+	if err := recorder.Record(ctx, event); err != nil {
+		// Usage persistence is observational. A database failure must not alter
+		// the provider result, but it remains visible for operational diagnosis.
+		logger.Errorf(ctx, "failed to persist model usage event: %v", err)
+	}
 }

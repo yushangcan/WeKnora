@@ -19,3 +19,10 @@ type ModelUsageRepository interface {
 type ModelUsageRecorder interface {
 	Record(ctx context.Context, event *types.ModelUsageEvent) error
 }
+
+// ModelUsageService exposes tenant-scoped usage history and aggregates to the
+// HTTP layer without leaking repository-specific query construction.
+type ModelUsageService interface {
+	List(ctx context.Context, filter types.ModelUsageFilter) (*types.ModelUsageEventPage, error)
+	Summary(ctx context.Context, filter types.ModelUsageFilter) (*types.ModelUsageSummary, error)
+}

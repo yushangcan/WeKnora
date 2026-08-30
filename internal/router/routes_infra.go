@@ -16,10 +16,16 @@ func RegisterModelRoutes(
 	handler *handler.ModelHandler,
 	credHandler *handler.ModelCredentialsHandler,
 	g *rbacGuards,
+	usageHandlers ...*handler.ModelUsageHandler,
 ) {
 	// 模型路由组。空间级基础设施：仅完全访问（Owner）API key 可访问。
 	models := g.apiKeyGroup(r.Group("/models"), apiKeyManageModels(apiKeyFullAccess()))
 	{
+		if len(usageHandlers) > 0 && usageHandlers[0] != nil {
+			// Keep these before /:id so "usage" is not parsed as a model ID.
+			models.GET("/usage/summary", g.Viewer(), usageHandlers[0].GetUsageSummary)
+			models.GET("/usage/events", g.Viewer(), usageHandlers[0].ListUsageEvents)
+		}
 		// 获取模型厂商列表 — Viewer+
 		models.GET("/providers", g.Viewer(), handler.ListModelProviders)
 		// 创建模型 — Admin+

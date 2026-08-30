@@ -13,6 +13,7 @@ import (
 	"github.com/Tencent/WeKnora/internal/models/embedding"
 	"github.com/Tencent/WeKnora/internal/models/provider"
 	"github.com/Tencent/WeKnora/internal/models/rerank"
+	modelusage "github.com/Tencent/WeKnora/internal/models/usage"
 	"github.com/Tencent/WeKnora/internal/models/utils/ollama"
 	"github.com/Tencent/WeKnora/internal/models/vlm"
 	"github.com/Tencent/WeKnora/internal/types"
@@ -31,6 +32,7 @@ type modelService struct {
 	ollamaService *ollama.OllamaService
 	pooler        embedding.EmbedderPooler
 	tenantService interfaces.TenantService
+	usageRecorder interfaces.ModelUsageRecorder
 }
 
 // NewModelService creates a new model service instance
@@ -41,6 +43,20 @@ func NewModelService(repo interfaces.ModelRepository,
 	pooler embedding.EmbedderPooler,
 	tenantService interfaces.TenantService,
 ) interfaces.ModelService {
+	return NewModelServiceWithUsage(repo, kbRepo, agentRepo, ollamaService, pooler, tenantService, nil)
+}
+
+// NewModelServiceWithUsage creates a model service with an optional outer
+// recorder for durable model-call usage. The legacy constructor remains for
+// callers that do not need usage persistence.
+func NewModelServiceWithUsage(repo interfaces.ModelRepository,
+	kbRepo interfaces.KnowledgeBaseRepository,
+	agentRepo interfaces.CustomAgentRepository,
+	ollamaService *ollama.OllamaService,
+	pooler embedding.EmbedderPooler,
+	tenantService interfaces.TenantService,
+	usageRecorder interfaces.ModelUsageRecorder,
+) interfaces.ModelService {
 	return &modelService{
 		repo:          repo,
 		kbRepo:        kbRepo,
@@ -48,6 +64,7 @@ func NewModelService(repo interfaces.ModelRepository,
 		ollamaService: ollamaService,
 		pooler:        pooler,
 		tenantService: tenantService,
+		usageRecorder: usageRecorder,
 	}
 }
 
@@ -455,7 +472,10 @@ func (s *modelService) GetEmbeddingModel(ctx context.Context, modelId string) (e
 	}
 
 	logger.Info(ctx, "Embedding model initialized successfully")
-	return embedding.WrapEvaluationMeter(embedder), nil
+	embedder = embedding.WrapEvaluationMeter(embedder)
+	return modelusage.WrapEmbedding(embedder, s.usageRecorder, modelusage.ModelMetadata{
+		ModelID: model.ID, ModelName: model.Name, ModelType: model.Type, Provider: model.Parameters.Provider,
+	}), nil
 }
 
 // GetEmbeddingModelForTenant retrieves and initializes an embedding model for a specific tenant
@@ -503,7 +523,11 @@ func (s *modelService) GetEmbeddingModelForTenant(ctx context.Context, modelId s
 	}
 
 	logger.Info(ctx, "Cross-tenant embedding model initialized successfully")
-	return embedding.WrapEvaluationMeter(embedder), nil
+	embedder = embedding.WrapEvaluationMeter(embedder)
+	return modelusage.WrapEmbedding(embedder, s.usageRecorder, modelusage.ModelMetadata{
+		ModelID: model.ID, ModelName: model.Name, ModelType: model.Type, Provider: model.Parameters.Provider,
+		TenantID: tenantID,
+	}), nil
 }
 
 // GetRerankModel retrieves and initializes a reranking model instance
@@ -532,7 +556,10 @@ func (s *modelService) GetRerankModel(ctx context.Context, modelId string) (rera
 	}
 
 	logger.Info(ctx, "Rerank model initialized successfully")
-	return rerank.WrapEvaluationMeter(reranker), nil
+	reranker = rerank.WrapEvaluationMeter(reranker)
+	return modelusage.WrapRerank(reranker, s.usageRecorder, modelusage.ModelMetadata{
+		ModelID: model.ID, ModelName: model.Name, ModelType: model.Type, Provider: model.Parameters.Provider,
+	}), nil
 }
 
 // GetChatModel retrieves and initializes a chat model instance
@@ -574,7 +601,10 @@ func (s *modelService) GetChatModel(ctx context.Context, modelId string) (chat.C
 		return nil, err
 	}
 
-	return chat.WrapEvaluationMeter(chatModel), nil
+	chatModel = chat.WrapEvaluationMeter(chatModel)
+	return modelusage.WrapChat(chatModel, s.usageRecorder, modelusage.ModelMetadata{
+		ModelID: model.ID, ModelName: model.Name, ModelType: model.Type, Provider: model.Parameters.Provider,
+	}), nil
 }
 
 // GetVLMModel retrieves and initializes a vision language model instance.

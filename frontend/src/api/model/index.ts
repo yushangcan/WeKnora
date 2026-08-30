@@ -162,6 +162,110 @@ export interface ModelDebugResult {
   error?: string
 }
 
+export interface ModelUsageEvent {
+  id: number
+  call_id: string
+  model_id: string
+  model_name: string
+  model_type: string
+  provider: string
+  operation: string
+  source?: string
+  started_at: string
+  completed_at?: string
+  duration_ms?: number
+  success: boolean
+  error_message?: string
+  item_count: number
+  prompt_tokens?: number
+  completion_tokens?: number
+  total_tokens?: number
+  cached_tokens?: number
+  cache_read_tokens?: number
+  cache_write_tokens?: number
+  cache_miss_tokens?: number
+  cache_reported: boolean
+  cache_status: string
+  cost_amount?: number
+  cost_currency?: string
+  cost_status: string
+}
+
+export interface ModelUsageByModel {
+  model_id: string
+  model_name: string
+  model_type: string
+  provider: string
+  calls: number
+  succeeded_calls: number
+  failed_calls: number
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  cache_miss_tokens: number
+  cache_reported_calls: number
+  cache_hit_calls: number
+  cache_hit_rate?: number
+  cost_amount?: number
+  cost_currency?: string
+  cost_status: string
+  average_duration_ms?: number
+}
+
+export interface ModelUsageSummary {
+  total_calls: number
+  succeeded_calls: number
+  failed_calls: number
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+  cached_tokens: number
+  cache_read_tokens: number
+  cache_write_tokens: number
+  cache_miss_tokens: number
+  cache_reported_calls: number
+  cache_hit_calls: number
+  cache_miss_calls: number
+  cache_hit_rate?: number
+  cost_amount?: number
+  cost_currency?: string
+  cost_status: string
+  average_duration_ms?: number
+  by_model: ModelUsageByModel[]
+}
+
+export interface ModelUsageEventPage {
+  items: ModelUsageEvent[]
+  page: number
+  page_size: number
+  total: number
+}
+
+export interface ModelUsageQuery {
+  started_from?: string
+  started_to?: string
+  model_id?: string
+  model_type?: string
+  provider?: string
+  operation?: string
+  source?: string
+  success?: boolean
+  page?: number
+  page_size?: number
+}
+
+export async function getModelUsageSummary(params: ModelUsageQuery = {}): Promise<ModelUsageSummary> {
+  const response: any = await get('/api/v1/models/usage/summary', { params })
+  return (response.data ?? response) as ModelUsageSummary
+}
+
+export async function listModelUsageEvents(params: ModelUsageQuery = {}): Promise<ModelUsageEventPage> {
+  const response: any = await get('/api/v1/models/usage/events', { params })
+  return (response.data ?? response) as ModelUsageEventPage
+}
+
 export async function debugModel(
   id: string,
   data: {

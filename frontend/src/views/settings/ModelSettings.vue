@@ -18,6 +18,14 @@
           <template #icon><play-circle-icon /></template>
           {{ $t('modelSettings.actions.debugModel') }}
         </t-button>
+        <t-button
+          type="button"
+          variant="outline"
+          size="medium"
+          @click="showUsagePanel = true"
+        >
+          调用统计
+        </t-button>
       </div>
 
       <div class="builtin-models-hint" role="note">
@@ -35,6 +43,9 @@
       </div>
     </div>
 
+    <ModelUsagePanel v-if="showUsagePanel" @close="showUsagePanel = false" />
+
+    <template v-else>
     <t-tabs v-model="activeTypeFilter" class="model-type-tabs" data-guide="settings-models">
       <t-tab-panel value="all" :label="`${$t('common.all')}(${allLegacyModels.length})`" />
       <t-tab-panel value="chat" :label="`${$t('modelSettings.typeShort.chat')}(${countByType('chat')})`" />
@@ -131,6 +142,7 @@
         </button>
       </div>
     </t-loading>
+    </template>
 
     <!-- 模型编辑器抽屉 -->
     <ModelEditorDialog v-model:visible="showDialog" :model-type="currentModelType" :model-data="editingModel"
@@ -147,6 +159,7 @@ import { AddIcon, PlayCircleIcon } from 'tdesign-icons-vue-next'
 import { useI18n } from 'vue-i18n'
 import ModelEditorDialog from '@/components/ModelEditorDialog.vue'
 import ModelDebugDrawer from '@/components/ModelDebugDrawer.vue'
+import ModelUsagePanel from './ModelUsagePanel.vue'
 import { listModels, createModel, updateModel as updateModelAPI, deleteModel as deleteModelAPI, type ModelConfig } from '@/api/model'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
@@ -159,6 +172,7 @@ type FilterType = 'all' | ModelType
 
 const showDialog = ref(false)
 const showDebugDrawer = ref(false)
+const showUsagePanel = ref(false)
 const currentModelType = ref<ModelType>('chat')
 const editingModel = ref<any>(null)
 const loading = ref(true)

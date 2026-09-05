@@ -41,14 +41,14 @@ const (
 type ModelUsageEvent struct {
 	ID                uint64                `json:"id" gorm:"primaryKey;autoIncrement"`
 	CallID            string                `json:"call_id" gorm:"column:call_id;type:varchar(64);not null;uniqueIndex"`
-	TenantID          uint64                `json:"tenant_id" gorm:"column:tenant_id;not null;index:idx_model_usage_tenant_started,priority:1;index:idx_model_usage_tenant_model_started,priority:1;index:idx_model_usage_tenant_type_started,priority:1"`
+	TenantID          uint64                `json:"tenant_id" gorm:"column:tenant_id;not null;index:idx_model_usage_tenant_started,priority:1;index:idx_model_usage_tenant_model_started,priority:1;index:idx_model_usage_tenant_type_started,priority:1;index:idx_model_usage_tenant_success_started,priority:1"`
 	ModelID           string                `json:"model_id" gorm:"column:model_id;type:varchar(64);not null;index:idx_model_usage_tenant_model_started,priority:2"`
 	ModelNameSnapshot string                `json:"model_name" gorm:"column:model_name_snapshot;type:varchar(255);not null"`
 	ModelType         ModelType             `json:"model_type" gorm:"column:model_type;type:varchar(32);not null;index:idx_model_usage_tenant_type_started,priority:2"`
 	Provider          string                `json:"provider" gorm:"column:provider;type:varchar(64);not null;default:''"`
 	Operation         string                `json:"operation" gorm:"column:operation;type:varchar(64);not null"`
 	Source            ModelUsageSource      `json:"source" gorm:"column:source;type:varchar(32);not null;default:''"`
-	StartedAt         time.Time             `json:"started_at" gorm:"column:started_at;not null;index:idx_model_usage_tenant_started,priority:2,sort:desc;index:idx_model_usage_tenant_model_started,priority:3,sort:desc;index:idx_model_usage_tenant_type_started,priority:3,sort:desc"`
+	StartedAt         time.Time             `json:"started_at" gorm:"column:started_at;not null;index:idx_model_usage_tenant_started,priority:2,sort:desc;index:idx_model_usage_tenant_model_started,priority:3,sort:desc;index:idx_model_usage_tenant_type_started,priority:3,sort:desc;index:idx_model_usage_tenant_success_started,priority:3,sort:desc"`
 	CompletedAt       *time.Time            `json:"completed_at,omitempty" gorm:"column:completed_at"`
 	DurationMS        *int64                `json:"duration_ms,omitempty" gorm:"column:duration_ms"`
 	Success           bool                  `json:"success" gorm:"column:success;not null;index:idx_model_usage_tenant_success_started,priority:2"`
@@ -104,48 +104,50 @@ type ModelUsageEventPage struct {
 // ModelUsageSummary is the aggregate for one filter range. CostAmount and
 // CacheHitRate stay nil when the required provider data is unavailable.
 type ModelUsageSummary struct {
-	TotalCalls         int64                `json:"total_calls"`
-	SucceededCalls     int64                `json:"succeeded_calls"`
-	FailedCalls        int64                `json:"failed_calls"`
-	PromptTokens       int64                `json:"prompt_tokens"`
-	CompletionTokens   int64                `json:"completion_tokens"`
-	TotalTokens        int64                `json:"total_tokens"`
-	CachedTokens       int64                `json:"cached_tokens"`
-	CacheReadTokens    int64                `json:"cache_read_tokens"`
-	CacheWriteTokens   int64                `json:"cache_write_tokens"`
-	CacheMissTokens    int64                `json:"cache_miss_tokens"`
-	CacheReportedCalls int64                `json:"cache_reported_calls"`
-	CacheHitCalls      int64                `json:"cache_hit_calls"`
-	CacheMissCalls     int64                `json:"cache_miss_calls"`
-	CacheHitRate       *float64             `json:"cache_hit_rate,omitempty"`
-	CostAmount         *float64             `json:"cost_amount,omitempty"`
-	CostCurrency       string               `json:"cost_currency,omitempty"`
-	CostStatus         ModelUsageCostStatus `json:"cost_status"`
-	AverageDurationMS  *float64             `json:"average_duration_ms,omitempty"`
-	ByModel            []ModelUsageByModel  `json:"by_model"`
+	TotalCalls          int64                `json:"total_calls"`
+	SucceededCalls      int64                `json:"succeeded_calls"`
+	FailedCalls         int64                `json:"failed_calls"`
+	PromptTokens        int64                `json:"prompt_tokens"`
+	CompletionTokens    int64                `json:"completion_tokens"`
+	TotalTokens         int64                `json:"total_tokens"`
+	CachedTokens        int64                `json:"cached_tokens"`
+	CacheReadTokens     int64                `json:"cache_read_tokens"`
+	CacheWriteTokens    int64                `json:"cache_write_tokens"`
+	CacheMissTokens     int64                `json:"cache_miss_tokens"`
+	CacheReportedCalls  int64                `json:"cache_reported_calls"`
+	CacheHitCalls       int64                `json:"cache_hit_calls"`
+	CacheMissCalls      int64                `json:"cache_miss_calls"`
+	TokensReportedCalls int64                `json:"tokens_reported_calls"`
+	CacheHitRate        *float64             `json:"cache_hit_rate,omitempty"`
+	CostAmount          *float64             `json:"cost_amount,omitempty"`
+	CostCurrency        string               `json:"cost_currency,omitempty"`
+	CostStatus          ModelUsageCostStatus `json:"cost_status"`
+	AverageDurationMS   *float64             `json:"average_duration_ms,omitempty"`
+	ByModel             []ModelUsageByModel  `json:"by_model"`
 }
 
 // ModelUsageByModel contains the same observable counters grouped by the
 // model snapshot, so deleted or renamed model configurations remain readable.
 type ModelUsageByModel struct {
-	ModelID            string               `json:"model_id"`
-	ModelName          string               `json:"model_name"`
-	ModelType          ModelType            `json:"model_type"`
-	Provider           string               `json:"provider"`
-	Calls              int64                `json:"calls"`
-	SucceededCalls     int64                `json:"succeeded_calls"`
-	FailedCalls        int64                `json:"failed_calls"`
-	TotalTokens        int64                `json:"total_tokens"`
-	PromptTokens       int64                `json:"prompt_tokens"`
-	CompletionTokens   int64                `json:"completion_tokens"`
-	CacheReadTokens    int64                `json:"cache_read_tokens"`
-	CacheWriteTokens   int64                `json:"cache_write_tokens"`
-	CacheMissTokens    int64                `json:"cache_miss_tokens"`
-	CacheReportedCalls int64                `json:"cache_reported_calls"`
-	CacheHitCalls      int64                `json:"cache_hit_calls"`
-	CacheHitRate       *float64             `json:"cache_hit_rate,omitempty"`
-	CostAmount         *float64             `json:"cost_amount,omitempty"`
-	CostCurrency       string               `json:"cost_currency,omitempty"`
-	CostStatus         ModelUsageCostStatus `json:"cost_status"`
-	AverageDurationMS  *float64             `json:"average_duration_ms,omitempty"`
+	ModelID             string               `json:"model_id"`
+	ModelName           string               `json:"model_name"`
+	ModelType           ModelType            `json:"model_type"`
+	Provider            string               `json:"provider"`
+	Calls               int64                `json:"calls"`
+	SucceededCalls      int64                `json:"succeeded_calls"`
+	FailedCalls         int64                `json:"failed_calls"`
+	TotalTokens         int64                `json:"total_tokens"`
+	PromptTokens        int64                `json:"prompt_tokens"`
+	CompletionTokens    int64                `json:"completion_tokens"`
+	CacheReadTokens     int64                `json:"cache_read_tokens"`
+	CacheWriteTokens    int64                `json:"cache_write_tokens"`
+	CacheMissTokens     int64                `json:"cache_miss_tokens"`
+	CacheReportedCalls  int64                `json:"cache_reported_calls"`
+	CacheHitCalls       int64                `json:"cache_hit_calls"`
+	TokensReportedCalls int64                `json:"tokens_reported_calls"`
+	CacheHitRate        *float64             `json:"cache_hit_rate,omitempty"`
+	CostAmount          *float64             `json:"cost_amount,omitempty"`
+	CostCurrency        string               `json:"cost_currency,omitempty"`
+	CostStatus          ModelUsageCostStatus `json:"cost_status"`
+	AverageDurationMS   *float64             `json:"average_duration_ms,omitempty"`
 }

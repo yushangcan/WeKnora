@@ -30,7 +30,7 @@ func (w *chatRecorder) Chat(ctx context.Context, messages []chat.Message, opts *
 	startedAt := time.Now()
 	response, err := w.inner.Chat(ctx, messages, opts)
 	var usage *types.TokenUsage
-	if response != nil {
+	if response != nil && hasReportedTokenUsage(response.Usage) {
 		copy := response.Usage
 		usage = &copy
 	}
@@ -53,16 +53,24 @@ func (w *chatRecorder) ChatStream(ctx context.Context, messages []chat.Message, 
 	go func() {
 		defer close(out)
 		var usage *types.TokenUsage
+		var streamErr error
 		for {
 			select {
 			case response, ok := <-in:
 				if !ok {
-					recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "chat_stream", startedAt, 1, true, nil, usage))
+					recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "chat_stream", startedAt, 1, streamErr == nil, streamErr, usage))
 					return
 				}
-				if response.Usage != nil {
+				if response.Usage != nil && hasReportedTokenUsage(*response.Usage) {
 					copy := *response.Usage
 					usage = &copy
+				}
+				if response.ResponseType == types.ResponseTypeError && streamErr == nil {
+					message := response.Content
+					if message == "" {
+						message = "chat stream returned an error"
+					}
+					streamErr = errors.New(message)
 				}
 				select {
 				case out <- response:
@@ -108,20 +116,28 @@ func WrapEmbedding(inner embedding.Embedder, recorder interfaces.ModelUsageRecor
 func (w *embeddingRecorder) Embed(ctx context.Context, text string) ([]float32, error) {
 	startedAt := time.Now()
 	result, err := w.inner.Embed(ctx, text)
-	recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "embed", startedAt, 1, err == nil, err, nil))
+	if !embedding.IsEmbeddingPoolSubcall(ctx) {
+		recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "embed", startedAt, 1, err == nil, err, nil))
+	}
 	return result, err
 }
 
 func (w *embeddingRecorder) BatchEmbed(ctx context.Context, texts []string) ([][]float32, error) {
 	startedAt := time.Now()
 	result, err := w.inner.BatchEmbed(ctx, texts)
-	recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "batch_embed", startedAt, len(texts), err == nil, err, nil))
+	if !embedding.IsEmbeddingPoolSubcall(ctx) {
+		recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "batch_embed", startedAt, len(texts), err == nil, err, nil))
+	}
 	return result, err
 }
 
 func (w *embeddingRecorder) BatchEmbedWithPool(ctx context.Context, model embedding.Embedder, texts []string) ([][]float32, error) {
 	startedAt := time.Now()
-	result, err := w.inner.BatchEmbedWithPool(ctx, w.inner, texts)
+	poolModel := model
+	if poolModel == nil || poolModel == w {
+		poolModel = w.inner
+	}
+	result, err := w.inner.BatchEmbedWithPool(ctx, poolModel, texts)
 	recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "batch_embed", startedAt, len(texts), err == nil, err, nil))
 	return result, err
 }

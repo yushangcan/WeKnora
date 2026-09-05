@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -59,6 +60,10 @@ func parseModelUsageFilter(c *gin.Context) (types.ModelUsageFilter, bool) {
 		Operation: secutils.SanitizeForLog(strings.TrimSpace(c.Query("operation"))),
 		Source:    types.ModelUsageSource(secutils.SanitizeForLog(strings.TrimSpace(c.Query("source")))),
 	}
+	if err := validateModelUsageFilterValues(filter); err != nil {
+		_ = c.Error(apperrors.NewValidationError(err.Error()))
+		return types.ModelUsageFilter{}, false
+	}
 	for _, field := range []struct {
 		name string
 		dest **time.Time
@@ -73,6 +78,10 @@ func parseModelUsageFilter(c *gin.Context) (types.ModelUsageFilter, bool) {
 			return types.ModelUsageFilter{}, false
 		}
 		*field.dest = &parsed
+	}
+	if filter.StartedFrom != nil && filter.StartedTo != nil && !filter.StartedFrom.Before(*filter.StartedTo) {
+		_ = c.Error(apperrors.NewValidationError("started_from must be earlier than started_to"))
+		return types.ModelUsageFilter{}, false
 	}
 	if raw := strings.TrimSpace(c.Query("success")); raw != "" {
 		success, err := strconv.ParseBool(raw)
@@ -94,6 +103,33 @@ func parseModelUsageFilter(c *gin.Context) (types.ModelUsageFilter, bool) {
 	}
 	filter.Page, filter.PageSize = page, pageSize
 	return filter, true
+}
+
+func validateModelUsageFilterValues(filter types.ModelUsageFilter) error {
+	if filter.ModelType != "" {
+		switch filter.ModelType {
+		case types.ModelTypeKnowledgeQA, types.ModelTypeEmbedding, types.ModelTypeRerank,
+			types.ModelTypeVLLM, types.ModelTypeASR:
+		default:
+			return errors.New("model_type is not supported")
+		}
+	}
+	if filter.Operation != "" {
+		switch filter.Operation {
+		case "chat", "chat_stream", "embed", "batch_embed", "rerank":
+		default:
+			return errors.New("operation is not supported")
+		}
+	}
+	if filter.Source != "" {
+		switch filter.Source {
+		case types.ModelUsageSourceChat, types.ModelUsageSourceEvaluation,
+			types.ModelUsageSourceWiki, types.ModelUsageSourceIngestion:
+		default:
+			return errors.New("source is not supported")
+		}
+	}
+	return nil
 }
 
 func parseModelUsageInt(raw string, fallback int) (int, error) {

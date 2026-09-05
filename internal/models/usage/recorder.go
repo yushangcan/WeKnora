@@ -76,6 +76,12 @@ func buildEvent(ctx context.Context, metadata ModelMetadata, operation string, s
 		return nil
 	}
 	purpose, _ := types.LLMCallMetadataFromContext(ctx)
+	source := sourceForPurpose(purpose)
+	if evaluation.CurrentRunID(ctx) != "" {
+		// Evaluation scopes are authoritative even when the evaluated path does
+		// not attach a product-purpose label to its model call.
+		source = types.ModelUsageSourceEvaluation
+	}
 	event := &types.ModelUsageEvent{
 		CallID:            uuid.NewString(),
 		TenantID:          tenantID,
@@ -84,7 +90,7 @@ func buildEvent(ctx context.Context, metadata ModelMetadata, operation string, s
 		ModelType:         metadata.ModelType,
 		Provider:          metadata.Provider,
 		Operation:         operation,
-		Source:            sourceForPurpose(purpose),
+		Source:            source,
 		StartedAt:         startedAt,
 		Success:           success,
 		ItemCount:         itemCount,
@@ -134,13 +140,28 @@ func applyTokenUsage(event *types.ModelUsageEvent, usage *types.TokenUsage) {
 	}
 }
 
+func hasReportedTokenUsage(usage types.TokenUsage) bool {
+	return usage.PromptTokens != 0 ||
+		usage.CompletionTokens != 0 ||
+		usage.TotalTokens != 0 ||
+		usage.CachedTokens != 0 ||
+		usage.CacheReadTokens != 0 ||
+		usage.CacheWriteTokens != 0 ||
+		usage.CacheMissTokens != 0 ||
+		usage.CacheReported
+}
+
 func sourceForPurpose(purpose string) types.ModelUsageSource {
-	switch strings.ToLower(strings.TrimSpace(purpose)) {
+	normalizedPurpose := strings.ToLower(strings.TrimSpace(purpose))
+	if strings.HasPrefix(normalizedPurpose, "wiki_") {
+		return types.ModelUsageSourceWiki
+	}
+	switch normalizedPurpose {
 	case "evaluation", "eval":
 		return types.ModelUsageSourceEvaluation
-	case "wiki", "wiki_page_modify", "wiki_ingest":
+	case "wiki", "wiki_ingest":
 		return types.ModelUsageSourceWiki
-	case "ingestion", "document_ingestion", "document_parse":
+	case "ingestion", "document_ingestion", "document_parse", "document_summary", "question_generation", "document_auto_tag", "auto_tag":
 		return types.ModelUsageSourceIngestion
 	default:
 		return types.ModelUsageSourceChat
@@ -151,11 +172,12 @@ func safeErrorMessage(err error) string {
 	if err == nil {
 		return ""
 	}
-	// Keep the type and a bounded, single-line message for diagnostics while
-	// avoiding full provider payloads and potentially embedded credentials.
-	message := strings.Join(strings.Fields(err.Error()), " ")
-	if len(message) > 256 {
-		message = message[:256]
+	// Reuse the evaluation error sanitizer so provider payloads cannot persist
+	// common API keys, bearer tokens, or credentials embedded in a URL.
+	message := evaluation.SafeErrorMessage(err)
+	runes := []rune(message)
+	if len(runes) > 256 {
+		message = string(runes[:256])
 	}
 	return fmt.Sprintf("%T: %s", err, message)
 }
@@ -164,7 +186,10 @@ func recordEvent(ctx context.Context, recorder interfaces.ModelUsageRecorder, ev
 	if recorder == nil || event == nil {
 		return
 	}
-	if err := recorder.Record(ctx, event); err != nil {
+	// A provider call can finish with context.Canceled when a client stops
+	// reading a stream. The completed usage fact is still useful, so do not
+	// discard it solely because the request context has been canceled.
+	if err := recorder.Record(context.WithoutCancel(ctx), event); err != nil {
 		// Usage persistence is observational. A database failure must not alter
 		// the provider result, but it remains visible for operational diagnosis.
 		logger.Errorf(ctx, "failed to persist model usage event: %v", err)

@@ -9,9 +9,67 @@
 | GET    | `/models/providers` | 获取模型服务商列表    |
 | POST   | `/models`           | 创建模型              |
 | GET    | `/models`           | 获取模型列表          |
+| GET    | `/models/usage/summary` | 查询模型调用汇总与按模型统计 |
+| GET    | `/models/usage/events`  | 分页查询模型调用明细         |
 | GET    | `/models/:id`       | 获取模型详情          |
 | PUT    | `/models/:id`       | 更新模型              |
 | DELETE | `/models/:id`       | 删除模型              |
+
+## 模型调用统计
+
+模型调用统计复用当前空间的模型管理读取权限。所有查询都由登录上下文确定空间，
+请求参数不接受 `tenant_id`，因此不能通过接口读取其他空间的数据。统计记录由
+Chat、Chat Stream、Embedding（含批量请求）和 Rerank 的真实 Provider 往返产生；
+一次批量 Embedding 或 Rerank 请求计为一次调用，`item_count` 表示其中的文本或文档数量。
+
+### 查询参数
+
+`GET /models/usage/summary` 和 `GET /models/usage/events` 支持相同的筛选参数：
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `started_from` | RFC3339 | 开始时间（包含） |
+| `started_to` | RFC3339 | 结束时间（不包含）；必须晚于 `started_from` |
+| `model_id` | string | 模型配置 ID |
+| `model_type` | string | `KnowledgeQA`、`Embedding`、`Rerank`、`VLLM` 或 `ASR` |
+| `provider` | string | Provider 标识 |
+| `operation` | string | `chat`、`chat_stream`、`embed`、`batch_embed` 或 `rerank` |
+| `source` | string | `chat`、`evaluation`、`wiki` 或 `ingestion` |
+| `success` | boolean | 是否成功 |
+| `page` | positive integer | 明细页码，默认 `1` |
+| `page_size` | integer | 明细页大小，默认 `20`，最大 `100`；汇总接口会忽略分页字段 |
+
+### 汇总响应
+
+```bash
+curl --location 'http://localhost:8080/api/v1/models/usage/summary?model_type=KnowledgeQA' \
+  --header 'X-API-Key: your_api_key'
+```
+
+响应中的 `by_model` 按模型名称快照分组，即使模型配置后来改名或删除，历史记录仍可解释。
+`average_duration_ms` 是已完成调用的平均耗时，`cache_hit_rate` 只在 Provider 报告缓存状态时计算。
+
+Token、缓存和费用字段使用空值语义：Provider 没有上报时返回 `null`（前端显示 `—`），
+不把未知值当作 0。费用只有金额和币种都可靠时才汇总；混合币种或部分调用缺少费用时，
+`cost_status` 会标记为 `partial`，金额可能为空。阶段二不自行推断价格，也不保存 Prompt、
+Response、API Key、Header 或完整 BaseURL。
+
+### 明细响应
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [],
+    "page": 1,
+    "page_size": 20,
+    "total": 0
+  }
+}
+```
+
+明细按 `started_at DESC, id DESC` 稳定排序。失败调用也会保留一条记录，并只保存经过截断和
+脱敏的错误摘要；流式调用在正常关闭、中途错误或请求取消时都只产生一条最终事件。
 
 ## 服务商支持 (Provider Support)
 

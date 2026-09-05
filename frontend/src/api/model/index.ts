@@ -188,7 +188,14 @@ export interface ModelUsageEvent {
   cache_status: string
   cost_amount?: number
   cost_currency?: string
+  pricing_version?: string
   cost_status: string
+  usage_source?: string
+  session_id?: string
+  evaluation_run_id?: string
+  evaluation_case_id?: string
+  trace_id?: string
+  created_at?: string
 }
 
 export interface ModelUsageByModel {
@@ -207,6 +214,7 @@ export interface ModelUsageByModel {
   cache_miss_tokens: number
   cache_reported_calls: number
   cache_hit_calls: number
+  tokens_reported_calls: number
   cache_hit_rate?: number
   cost_amount?: number
   cost_currency?: string
@@ -228,6 +236,7 @@ export interface ModelUsageSummary {
   cache_reported_calls: number
   cache_hit_calls: number
   cache_miss_calls: number
+  tokens_reported_calls: number
   cache_hit_rate?: number
   cost_amount?: number
   cost_currency?: string

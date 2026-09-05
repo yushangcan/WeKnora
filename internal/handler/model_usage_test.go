@@ -43,12 +43,15 @@ func TestModelUsageHandlerParsesFiltersAndPagination(t *testing.T) {
 		},
 	}
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/usage/events?page=2&page_size=25&model_id=chat-1&model_type=KnowledgeQA&success=false&started_from=2026-08-30T00:00:00Z", nil)
+	req := httptest.NewRequest(http.MethodGet, "/usage/events?page=2&page_size=25&model_id=chat-1&provider=openai&model_type=KnowledgeQA&operation=chat&source=evaluation&success=false&started_from=2026-08-30T00:00:00Z&started_to=2026-08-31T00:00:00Z", nil)
 	modelUsageTestRouter(NewModelUsageHandler(service)).ServeHTTP(w, req)
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d body=%s", w.Code, w.Body.String())
 	}
-	if captured.Page != 2 || captured.PageSize != 25 || captured.ModelID != "chat-1" || captured.ModelType != types.ModelTypeKnowledgeQA || captured.Success == nil || *captured.Success {
+	if captured.Page != 2 || captured.PageSize != 25 || captured.ModelID != "chat-1" ||
+		captured.Provider != "openai" || captured.ModelType != types.ModelTypeKnowledgeQA ||
+		captured.Operation != "chat" || captured.Source != types.ModelUsageSourceEvaluation ||
+		captured.StartedFrom == nil || captured.StartedTo == nil || captured.Success == nil || *captured.Success {
 		t.Fatalf("filters were not parsed: %#v", captured)
 	}
 }
@@ -65,6 +68,40 @@ func TestModelUsageHandlerRejectsInvalidQuery(t *testing.T) {
 	modelUsageTestRouter(NewModelUsageHandler(service)).ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestModelUsageHandlerRejectsReversedTimeRange(t *testing.T) {
+	service := &modelUsageServiceStub{
+		list: func(context.Context, types.ModelUsageFilter) (*types.ModelUsageEventPage, error) {
+			t.Fatal("service must not be called")
+			return nil, nil
+		},
+	}
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodGet, "/usage/events?started_from=2026-08-31T00:00:00Z&started_to=2026-08-30T00:00:00Z", nil)
+	modelUsageTestRouter(NewModelUsageHandler(service)).ServeHTTP(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d body=%s", w.Code, w.Body.String())
+	}
+}
+
+func TestModelUsageHandlerRejectsUnsupportedFilterValues(t *testing.T) {
+	for _, query := range []string{"operation=unknown", "source=unknown", "model_type=unknown"} {
+		t.Run(query, func(t *testing.T) {
+			service := &modelUsageServiceStub{
+				list: func(context.Context, types.ModelUsageFilter) (*types.ModelUsageEventPage, error) {
+					t.Fatal("service must not be called")
+					return nil, nil
+				},
+			}
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest(http.MethodGet, "/usage/events?"+query, nil)
+			modelUsageTestRouter(NewModelUsageHandler(service)).ServeHTTP(w, req)
+			if w.Code != http.StatusBadRequest {
+				t.Fatalf("status = %d body=%s", w.Code, w.Body.String())
+			}
+		})
 	}
 }
 

@@ -51,6 +51,7 @@ type modelUsageAggregateRow struct {
 	PromptTokens, CompletionTokens, TotalTokens                      int64
 	CachedTokens, CacheReadTokens, CacheWriteTokens, CacheMissTokens int64
 	CacheReportedCalls, CacheHitCalls, CacheMissCalls                int64
+	TokensReportedCalls                                              int64
 	AverageDurationMS                                                sql.NullFloat64
 }
 
@@ -62,6 +63,7 @@ type modelUsageByModelRow struct {
 	PromptTokens, CompletionTokens                     int64
 	CacheReadTokens, CacheWriteTokens, CacheMissTokens int64
 	CacheReportedCalls, CacheHitCalls                  int64
+	TokensReportedCalls                                int64
 	AverageDurationMS                                  sql.NullFloat64
 }
 
@@ -84,6 +86,7 @@ COALESCE(SUM(cache_miss_tokens), 0) AS cache_miss_tokens,
 COALESCE(SUM(CASE WHEN cache_reported = TRUE THEN 1 ELSE 0 END), 0) AS cache_reported_calls,
 COALESCE(SUM(CASE WHEN cache_reported = TRUE AND cache_status = 'hit' THEN 1 ELSE 0 END), 0) AS cache_hit_calls,
 COALESCE(SUM(CASE WHEN cache_reported = TRUE AND cache_status = 'miss' THEN 1 ELSE 0 END), 0) AS cache_miss_calls,
+COALESCE(SUM(CASE WHEN prompt_tokens IS NOT NULL OR completion_tokens IS NOT NULL OR total_tokens IS NOT NULL THEN 1 ELSE 0 END), 0) AS tokens_reported_calls,
 AVG(duration_ms) AS average_duration_ms`
 	if err := base.Select(selectSQL).Scan(&row).Error; err != nil {
 		return nil, err
@@ -94,7 +97,8 @@ AVG(duration_ms) AS average_duration_ms`
 		CachedTokens: row.CachedTokens, CacheReadTokens: row.CacheReadTokens, CacheWriteTokens: row.CacheWriteTokens,
 		CacheMissTokens: row.CacheMissTokens, CacheReportedCalls: row.CacheReportedCalls,
 		CacheHitCalls: row.CacheHitCalls, CacheMissCalls: row.CacheMissCalls,
-		CostStatus: types.ModelUsageCostStatusUnavailable, ByModel: []types.ModelUsageByModel{},
+		TokensReportedCalls: row.TokensReportedCalls,
+		CostStatus:          types.ModelUsageCostStatusUnavailable, ByModel: []types.ModelUsageByModel{},
 	}
 	if row.AverageDurationMS.Valid {
 		result.AverageDurationMS = &row.AverageDurationMS.Float64
@@ -105,23 +109,27 @@ AVG(duration_ms) AS average_duration_ms`
 	}
 
 	var cost struct {
-		KnownCalls int64
-		Amount     sql.NullFloat64
-		Currency   sql.NullString
+		KnownCalls  int64
+		AmountCalls int64
+		Amount      sql.NullFloat64
+		Currency    sql.NullString
+		Currencies  int64
 	}
-	if err := base.Select("COUNT(cost_amount) AS known_calls, SUM(cost_amount) AS amount, MAX(NULLIF(cost_currency, '')) AS currency").Scan(&cost).Error; err != nil {
+	if err := base.Select("COUNT(CASE WHEN cost_amount IS NOT NULL AND NULLIF(cost_currency, '') IS NOT NULL THEN 1 END) AS known_calls, COUNT(cost_amount) AS amount_calls, SUM(CASE WHEN cost_amount IS NOT NULL AND NULLIF(cost_currency, '') IS NOT NULL THEN cost_amount END) AS amount, MAX(NULLIF(cost_currency, '')) AS currency, COUNT(DISTINCT NULLIF(cost_currency, '')) AS currencies").Scan(&cost).Error; err != nil {
 		return nil, err
 	}
-	if cost.KnownCalls > 0 && cost.Amount.Valid {
+	if cost.KnownCalls > 0 && cost.Amount.Valid && cost.Currencies == 1 && cost.Currency.Valid {
 		result.CostAmount = &cost.Amount.Float64
-		if cost.Currency.Valid {
-			result.CostCurrency = cost.Currency.String
-		}
-		if cost.KnownCalls == row.TotalCalls {
+		result.CostCurrency = cost.Currency.String
+		if cost.KnownCalls == row.TotalCalls && cost.AmountCalls == row.TotalCalls {
 			result.CostStatus = types.ModelUsageCostStatusAvailable
 		} else {
 			result.CostStatus = types.ModelUsageCostStatusPartial
 		}
+	} else if cost.AmountCalls > 0 {
+		// Amounts without a currency, or across multiple currencies, cannot be
+		// compared safely. Keep the partial status but leave the amount hidden.
+		result.CostStatus = types.ModelUsageCostStatusPartial
 	}
 
 	var grouped []modelUsageByModelRow
@@ -137,6 +145,7 @@ COALESCE(SUM(cache_write_tokens), 0) AS cache_write_tokens,
 COALESCE(SUM(cache_miss_tokens), 0) AS cache_miss_tokens,
 COALESCE(SUM(CASE WHEN cache_reported = TRUE THEN 1 ELSE 0 END), 0) AS cache_reported_calls,
 COALESCE(SUM(CASE WHEN cache_reported = TRUE AND cache_status = 'hit' THEN 1 ELSE 0 END), 0) AS cache_hit_calls,
+COALESCE(SUM(CASE WHEN prompt_tokens IS NOT NULL OR completion_tokens IS NOT NULL OR total_tokens IS NOT NULL THEN 1 ELSE 0 END), 0) AS tokens_reported_calls,
 AVG(duration_ms) AS average_duration_ms`
 	if err := base.Select(groupSelect).Group("model_id, model_name_snapshot, model_type, provider").Order("calls DESC, model_id ASC").Scan(&grouped).Error; err != nil {
 		return nil, err
@@ -148,7 +157,8 @@ AVG(duration_ms) AS average_duration_ms`
 			TotalTokens: item.TotalTokens, PromptTokens: item.PromptTokens, CompletionTokens: item.CompletionTokens,
 			CacheReadTokens: item.CacheReadTokens, CacheWriteTokens: item.CacheWriteTokens, CacheMissTokens: item.CacheMissTokens,
 			CacheReportedCalls: item.CacheReportedCalls, CacheHitCalls: item.CacheHitCalls,
-			CostStatus: types.ModelUsageCostStatusUnavailable,
+			TokensReportedCalls: item.TokensReportedCalls,
+			CostStatus:          types.ModelUsageCostStatusUnavailable,
 		}
 		if item.AverageDurationMS.Valid {
 			entry.AverageDurationMS = &item.AverageDurationMS.Float64
@@ -160,23 +170,25 @@ AVG(duration_ms) AS average_duration_ms`
 		costQuery := applyModelUsageFilters(r.db.WithContext(ctx).Model(&types.ModelUsageEvent{}).
 			Where("tenant_id = ? AND model_id = ? AND model_name_snapshot = ? AND model_type = ? AND provider = ?", tenantID, item.ModelID, item.ModelName, item.ModelType, item.Provider), filter)
 		var groupedCost struct {
-			KnownCalls int64
-			Amount     sql.NullFloat64
-			Currency   sql.NullString
+			KnownCalls  int64
+			AmountCalls int64
+			Amount      sql.NullFloat64
+			Currency    sql.NullString
+			Currencies  int64
 		}
-		if err := costQuery.Select("COUNT(cost_amount) AS known_calls, SUM(cost_amount) AS amount, MAX(NULLIF(cost_currency, '')) AS currency").Scan(&groupedCost).Error; err != nil {
+		if err := costQuery.Select("COUNT(CASE WHEN cost_amount IS NOT NULL AND NULLIF(cost_currency, '') IS NOT NULL THEN 1 END) AS known_calls, COUNT(cost_amount) AS amount_calls, SUM(CASE WHEN cost_amount IS NOT NULL AND NULLIF(cost_currency, '') IS NOT NULL THEN cost_amount END) AS amount, MAX(NULLIF(cost_currency, '')) AS currency, COUNT(DISTINCT NULLIF(cost_currency, '')) AS currencies").Scan(&groupedCost).Error; err != nil {
 			return nil, err
 		}
-		if groupedCost.KnownCalls > 0 && groupedCost.Amount.Valid {
+		if groupedCost.KnownCalls > 0 && groupedCost.Amount.Valid && groupedCost.Currencies == 1 && groupedCost.Currency.Valid {
 			entry.CostAmount = &groupedCost.Amount.Float64
-			if groupedCost.Currency.Valid {
-				entry.CostCurrency = groupedCost.Currency.String
-			}
-			if groupedCost.KnownCalls == item.Calls {
+			entry.CostCurrency = groupedCost.Currency.String
+			if groupedCost.KnownCalls == item.Calls && groupedCost.AmountCalls == item.Calls {
 				entry.CostStatus = types.ModelUsageCostStatusAvailable
 			} else {
 				entry.CostStatus = types.ModelUsageCostStatusPartial
 			}
+		} else if groupedCost.AmountCalls > 0 {
+			entry.CostStatus = types.ModelUsageCostStatusPartial
 		}
 		result.ByModel = append(result.ByModel, entry)
 	}

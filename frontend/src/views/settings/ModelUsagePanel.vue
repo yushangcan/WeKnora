@@ -17,14 +17,32 @@
           <option v-for="model in models" :key="model.id" :value="model.id">{{ model.name }}</option>
         </select>
       </label>
+      <label>Provider<input v-model="filters.provider" type="text" placeholder="全部 Provider" /></label>
       <label>模型类型
         <select v-model="filters.modelType">
           <option value="">全部类型</option>
           <option value="KnowledgeQA">Chat</option>
           <option value="Embedding">Embedding</option>
           <option value="Rerank">Rerank</option>
-          <option value="VLLM">VLLM</option>
-          <option value="ASR">ASR</option>
+        </select>
+      </label>
+      <label>调用操作
+        <select v-model="filters.operation">
+          <option value="">全部操作</option>
+          <option value="chat">Chat</option>
+          <option value="chat_stream">Chat Stream</option>
+          <option value="embed">Embed</option>
+          <option value="batch_embed">Batch Embed</option>
+          <option value="rerank">Rerank</option>
+        </select>
+      </label>
+      <label>调用来源
+        <select v-model="filters.source">
+          <option value="">全部来源</option>
+          <option value="chat">Chat</option>
+          <option value="evaluation">评测</option>
+          <option value="wiki">Wiki</option>
+          <option value="ingestion">文档解析</option>
         </select>
       </label>
       <label>状态
@@ -45,10 +63,10 @@
     <div class="usage-cards">
       <div class="usage-card"><span>总调用次数</span><strong>{{ summary.total_calls }}</strong></div>
       <div class="usage-card"><span>成功 / 失败</span><strong>{{ summary.succeeded_calls }} / {{ summary.failed_calls }}</strong></div>
-      <div class="usage-card"><span>总 Tokens</span><strong>{{ formatNumber(summary.total_tokens) }}</strong></div>
+      <div class="usage-card"><span>总 Tokens</span><strong>{{ formatAggregateTokens(summary.total_tokens, summary.tokens_reported_calls) }}</strong></div>
       <div class="usage-card"><span>平均耗时</span><strong>{{ formatDuration(summary.average_duration_ms) }}</strong></div>
       <div class="usage-card"><span>缓存命中率</span><strong>{{ formatRate(summary.cache_hit_rate) }}</strong></div>
-      <div class="usage-card"><span>费用</span><strong>{{ formatCost(summary.cost_amount, summary.cost_currency) }}</strong></div>
+      <div class="usage-card"><span>费用</span><strong>{{ formatCost(summary.cost_amount, summary.cost_currency) }}</strong><small v-if="summary.cost_status === 'partial'">费用数据不完整</small></div>
     </div>
 
     <section class="usage-section">
@@ -57,14 +75,14 @@
         <table class="usage-table">
           <thead><tr><th>模型</th><th>类型 / Provider</th><th>调用</th><th>成功 / 失败</th><th>Tokens</th><th>缓存命中率</th><th>费用</th><th>平均耗时</th></tr></thead>
           <tbody>
-            <tr v-for="item in summary.by_model" :key="`${item.model_id}-${item.model_type}-${item.provider}`">
+            <tr v-for="item in summary.by_model" :key="`${item.model_id}-${item.model_name}-${item.model_type}-${item.provider}`">
               <td>{{ item.model_name }}<small>{{ item.model_id }}</small></td>
               <td>{{ modelTypeLabel(item.model_type) }}<small>{{ item.provider || '—' }}</small></td>
               <td>{{ item.calls }}</td>
               <td>{{ item.succeeded_calls }} / {{ item.failed_calls }}</td>
-              <td>{{ formatNumber(item.total_tokens) }}</td>
+              <td>{{ formatAggregateTokens(item.total_tokens, item.tokens_reported_calls) }}</td>
               <td>{{ formatRate(item.cache_hit_rate) }}</td>
-              <td>{{ formatCost(item.cost_amount, item.cost_currency) }}</td>
+              <td>{{ formatCost(item.cost_amount, item.cost_currency) }}<small v-if="item.cost_status === 'partial'">费用数据不完整</small></td>
               <td>{{ formatDuration(item.average_duration_ms) }}</td>
             </tr>
             <tr v-if="!loading && summary.by_model.length === 0"><td colspan="8" class="empty-cell">暂无调用汇总</td></tr>
@@ -122,11 +140,13 @@ const loading = ref(false)
 const errorMessage = ref('')
 const page = ref(1)
 const models = ref<ModelConfig[]>([])
-const filters = reactive({ startedFrom: '', startedTo: '', modelId: '', modelType: '', success: '' })
+const filters = reactive({
+  startedFrom: '', startedTo: '', modelId: '', provider: '', modelType: '', operation: '', source: '', success: '',
+})
 const summary = ref<ModelUsageSummary>({
   total_calls: 0, succeeded_calls: 0, failed_calls: 0, prompt_tokens: 0, completion_tokens: 0,
   total_tokens: 0, cached_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0, cache_miss_tokens: 0,
-  cache_reported_calls: 0, cache_hit_calls: 0, cache_miss_calls: 0, cost_status: 'unavailable', by_model: [],
+  cache_reported_calls: 0, cache_hit_calls: 0, cache_miss_calls: 0, tokens_reported_calls: 0, cost_status: 'unavailable', by_model: [],
 })
 const events = ref<ModelUsageEventPage>({ items: [], page: 1, page_size: pageSize, total: 0 })
 const totalPages = computed(() => Math.max(1, Math.ceil(events.value.total / pageSize)))
@@ -136,7 +156,10 @@ function toQuery(): ModelUsageQuery {
   if (filters.startedFrom) query.started_from = new Date(filters.startedFrom).toISOString()
   if (filters.startedTo) query.started_to = new Date(filters.startedTo).toISOString()
   if (filters.modelId) query.model_id = filters.modelId
+  if (filters.provider) query.provider = filters.provider
   if (filters.modelType) query.model_type = filters.modelType
+  if (filters.operation) query.operation = filters.operation
+  if (filters.source) query.source = filters.source
   if (filters.success !== '') query.success = filters.success === 'true'
   return query
 }
@@ -171,16 +194,24 @@ function resetFilters() {
   filters.startedFrom = ''
   filters.startedTo = ''
   filters.modelId = ''
+  filters.provider = ''
   filters.modelType = ''
+  filters.operation = ''
+  filters.source = ''
   filters.success = ''
   void reload()
 }
 
 function formatNumber(value?: number) { return value == null ? '—' : new Intl.NumberFormat().format(value) }
+function formatAggregateTokens(value: number | undefined, reportedCalls: number | undefined) {
+  return !reportedCalls ? '—' : formatNumber(value)
+}
 function tokenValue(value?: number) { return value == null ? '—' : String(value) }
 function formatDuration(value?: number) { return value == null ? '—' : `${Math.round(value)} ms` }
 function formatRate(value?: number) { return value == null ? '—' : `${(value * 100).toFixed(1)}%` }
-function formatCost(value?: number, currency?: string) { return value == null ? '—' : `${currency || 'USD'} ${value.toFixed(6)}` }
+function formatCost(value?: number, currency?: string) {
+  return value == null || !currency ? '—' : `${currency} ${value.toFixed(6)}`
+}
 function formatDate(value?: string) { return value ? new Date(value).toLocaleString() : '—' }
 function modelTypeLabel(value: string) { return value === 'KnowledgeQA' ? 'Chat' : value || '—' }
 
@@ -204,6 +235,7 @@ onMounted(async () => {
 .usage-card { padding: 14px 16px; background: var(--td-bg-color-container); border: 1px solid var(--td-component-stroke); border-radius: 8px; }
 .usage-card span { display: block; color: var(--td-text-color-secondary); font-size: 12px; }
 .usage-card strong { display: block; margin-top: 8px; font-size: 20px; font-weight: 600; }
+.usage-card small { display: block; margin-top: 3px; color: var(--td-text-color-placeholder); font-size: 11px; }
 .usage-section { margin-top: 22px; }
 .usage-section h3 { margin: 0 0 10px; font-size: 16px; }
 .table-scroll { overflow-x: auto; border: 1px solid var(--td-component-stroke); border-radius: 8px; }

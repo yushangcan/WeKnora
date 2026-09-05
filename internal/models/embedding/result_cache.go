@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -402,6 +403,10 @@ type resultCacheEmbedder struct {
 	group            singleflight.Group
 	metrics          *cacheMetrics
 	inflight         sync.Map
+	lockClient       redis.UniversalClient
+	lockLease        time.Duration
+	lockWait         time.Duration
+	lockRenewal      time.Duration
 }
 
 type embeddingPoolSubcallContextKey struct{}
@@ -450,6 +455,11 @@ func WrapResultCache(inner Embedder, cache ResultCache, config Config, tenantID 
 	if _, disabled := cache.(noopResultCache); disabled {
 		return inner
 	}
+	lockLease, lockWait, lockRenewal := embeddingCacheLockSettings()
+	var lockClient redis.UniversalClient
+	if embeddingDistributedLockEnabled() {
+		lockClient = cacheLockClient(cache)
+	}
 	return &resultCacheEmbedder{
 		inner:            inner,
 		cache:            cache,
@@ -457,6 +467,10 @@ func WrapResultCache(inner Embedder, cache ResultCache, config Config, tenantID 
 		tenantID:         tenantID,
 		ttl:              resolveEmbeddingCacheTTL(),
 		metrics:          ensureCacheMetrics(cacheMetricsFor(cache)),
+		lockClient:       lockClient,
+		lockLease:        lockLease,
+		lockWait:         lockWait,
+		lockRenewal:      lockRenewal,
 	}
 }
 
@@ -491,17 +505,19 @@ func (w *resultCacheEmbedder) Embed(ctx context.Context, text string) ([]float32
 	release := w.trackSingleflight(key)
 	defer release()
 	value, err, _ := w.group.Do(key, func() (interface{}, error) {
-		if vector, ok := w.get(ctx, key); ok {
+		return w.runMiss(ctx, key, func(callCtx context.Context) (interface{}, error) {
+			if vector, ok := w.get(callCtx, key); ok {
+				return vector, nil
+			}
+			w.metrics.providerRequests.Add(1)
+			w.metrics.providerItems.Add(1)
+			vector, err := w.inner.Embed(callCtx, text)
+			if err != nil {
+				return nil, err
+			}
+			w.store(callCtx, key, vector)
 			return vector, nil
-		}
-		w.metrics.providerRequests.Add(1)
-		w.metrics.providerItems.Add(1)
-		vector, err := w.inner.Embed(ctx, text)
-		if err != nil {
-			return nil, err
-		}
-		w.store(ctx, key, vector)
-		return vector, nil
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -553,13 +569,27 @@ func (w *resultCacheEmbedder) BatchEmbed(ctx context.Context, texts []string) ([
 	release := w.trackSingleflight(batchKey)
 	defer release()
 	value, err, _ := w.group.Do(batchKey, func() (interface{}, error) {
-		w.metrics.providerRequests.Add(1)
-		w.metrics.providerItems.Add(int64(len(misses)))
-		vectors, err := w.inner.BatchEmbed(ctx, misses)
-		if err != nil {
-			return nil, err
-		}
-		return vectors, nil
+		return w.runMiss(ctx, batchKey, func(callCtx context.Context) (interface{}, error) {
+			keys := make([]string, 0, len(misses))
+			for _, text := range misses {
+				keys = append(keys, EmbeddingCacheKey(w.tenantID, w.modelFingerprint, text))
+			}
+			cached := w.getMany(callCtx, keys)
+			if len(cached) == len(misses) {
+				vectors := make([][]float32, len(misses))
+				for index, key := range keys {
+					vectors[index] = cached[key]
+				}
+				return vectors, nil
+			}
+			w.metrics.providerRequests.Add(1)
+			w.metrics.providerItems.Add(int64(len(misses)))
+			vectors, err := w.inner.BatchEmbed(callCtx, misses)
+			if err != nil {
+				return nil, err
+			}
+			return vectors, nil
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -582,6 +612,27 @@ func (w *resultCacheEmbedder) BatchEmbed(ctx context.Context, texts []string) ([
 	}
 	w.storeMany(ctx, entries)
 	return result, nil
+}
+
+func (w *resultCacheEmbedder) runMiss(
+	ctx context.Context,
+	key string,
+	provider func(context.Context) (interface{}, error),
+) (interface{}, error) {
+	if w.lockClient == nil {
+		return provider(ctx)
+	}
+	value, err := withEmbeddingRedisLock(ctx, w.lockClient, key, w.lockLease, w.lockWait, w.lockRenewal, provider)
+	if err == nil {
+		return value, nil
+	}
+	if errors.Is(err, errEmbeddingLockWaitTimeout) || errors.Is(err, errEmbeddingLockUnavailable) {
+		w.metrics.lockWaits.Add(1)
+		// Cache coordination is best effort. A Redis outage or a bounded wait
+		// must never turn an Embedding request into a service outage.
+		return provider(ctx)
+	}
+	return value, err
 }
 
 func (w *resultCacheEmbedder) trackSingleflight(key string) func() {

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Tencent/WeKnora/internal/common/redislock"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 )
@@ -161,6 +162,72 @@ func TestResultCacheCoalescesConcurrentEmbedMisses(t *testing.T) {
 	wg.Wait()
 	if inner.embedCalls != 1 {
 		t.Fatalf("concurrent provider calls = %d, want 1", inner.embedCalls)
+	}
+}
+
+func TestResultCacheDistributedMissesShareProviderCall(t *testing.T) {
+	server := miniredis.RunT(t)
+	client := redis.NewClient(&redis.Options{Addr: server.Addr()})
+	firstInner := &cacheTestEmbedder{embedDelay: 80 * time.Millisecond}
+	secondInner := &cacheTestEmbedder{embedDelay: 80 * time.Millisecond}
+	first := WrapResultCache(firstInner, &redisResultCache{client: client, metrics: &cacheMetrics{}}, testCacheConfig(), 42)
+	second := WrapResultCache(secondInner, &redisResultCache{client: client, metrics: &cacheMetrics{}}, testCacheConfig(), 42)
+
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	for _, model := range []Embedder{first, second} {
+		wg.Add(1)
+		go func(model Embedder) {
+			defer wg.Done()
+			<-start
+			if _, err := model.Embed(context.Background(), "distributed"); err != nil {
+				t.Errorf("Embed: %v", err)
+			}
+		}(model)
+	}
+	close(start)
+	wg.Wait()
+
+	firstInner.mu.Lock()
+	firstCalls := firstInner.embedCalls
+	firstInner.mu.Unlock()
+	secondInner.mu.Lock()
+	secondCalls := secondInner.embedCalls
+	secondInner.mu.Unlock()
+	if firstCalls+secondCalls != 1 {
+		t.Fatalf("distributed provider calls = %d, want 1", firstCalls+secondCalls)
+	}
+}
+
+func TestResultCacheDistributedLockFailsOpenAfterBoundedWait(t *testing.T) {
+	t.Setenv("WEKNORA_EMBEDDING_CACHE_LOCK_WAIT", "10ms")
+	server := miniredis.RunT(t)
+	client := redis.NewClient(&redis.Options{Addr: server.Addr()})
+	cache := &redisResultCache{client: client, metrics: &cacheMetrics{}}
+	token, err := redislock.NewToken()
+	if err != nil {
+		t.Fatal(err)
+	}
+	key := EmbeddingCacheKey(42, EmbeddingCacheIdentity(testCacheConfig()), "busy") + ":lock"
+	acquired, err := redislock.TryAcquire(context.Background(), client, key, token, time.Minute)
+	if err != nil || !acquired {
+		t.Fatalf("seed lock: acquired=%v err=%v", acquired, err)
+	}
+	t.Cleanup(func() { _, _ = redislock.Release(context.Background(), client, key, token) })
+
+	inner := &cacheTestEmbedder{}
+	wrapped := WrapResultCache(inner, cache, testCacheConfig(), 42)
+	if _, err := wrapped.Embed(context.Background(), "busy"); err != nil {
+		t.Fatalf("Embed should fail open: %v", err)
+	}
+	inner.mu.Lock()
+	calls := inner.embedCalls
+	inner.mu.Unlock()
+	if calls != 1 {
+		t.Fatalf("fallback provider calls = %d, want 1", calls)
+	}
+	if got := CacheMetrics(cache); got.LockWaits == 0 {
+		t.Fatalf("lock wait metric was not recorded: %#v", got)
 	}
 }
 

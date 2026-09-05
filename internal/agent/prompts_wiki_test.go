@@ -379,6 +379,32 @@ func TestWikiCacheablePromptPrefixes(t *testing.T) {
 	}
 }
 
+func TestWikiDeduplicationPrompt_PutsRulesBeforeCandidates(t *testing.T) {
+	const marker = "\n<items>\n"
+	idx := strings.Index(WikiDeduplicationPrompt, marker)
+	if idx < 0 {
+		t.Fatalf("deduplication prompt missing candidates marker %q", marker)
+	}
+	for _, rule := range []string{
+		"### Hard constraints",
+		"### Merge criteria — ALL must be true:",
+		"### JSON Formatting Rules",
+		`Return a JSON object with a "merges" map.`,
+		"Output ONLY valid JSON. Example:",
+	} {
+		ruleIdx := strings.Index(WikiDeduplicationPrompt, rule)
+		if ruleIdx < 0 {
+			t.Fatalf("deduplication prompt missing rule %q", rule)
+		}
+		if ruleIdx > idx {
+			t.Errorf("rule %q appears after dynamic candidates block", rule)
+		}
+	}
+	if strings.Index(WikiDeduplicationPrompt, "{{.Candidates}}") < idx {
+		t.Fatalf("Candidates placeholder must remain inside the dynamic candidates block")
+	}
+}
+
 func TestWikiPromptsParseWithAllTemplateFields(t *testing.T) {
 	data := map[string]string{
 		"AvailableSlugs":          "entity/acme",

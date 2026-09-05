@@ -451,10 +451,6 @@ Output ONLY the updated title and introduction paragraph. Do NOT generate any di
 // between newly extracted items and existing wiki pages.
 const WikiDeduplicationPrompt = `You are a strict deduplication system. You are given a list of newly extracted items. Each item carries its OWN short list of existing wiki pages that are surface-similar to it (its <candidates>). For each item, decide whether it refers to the **exact same** real-world entity or concept as ONE of its own candidates.
 
-<items>
-{{.Candidates}}
-</items>
-
 <instructions>
 ### How to read the input
 Each <item> is a newly extracted entity/concept. The <candidates> nested inside it are the ONLY existing pages you may merge that item into — they were pre-selected as similar to that specific item. A page listed under one item tells you NOTHING about any other item.
@@ -496,7 +492,11 @@ If no items match any existing pages, return: {"merges": {}}
 </instructions>
 
 Output ONLY valid JSON. Example:
-{"merges": {"entity/acme-corporation": "entity/acme-corp", "concept/rag": "concept/retrieval-augmented-generation"}}`
+{"merges": {"entity/acme-corporation": "entity/acme-corp", "concept/rag": "concept/retrieval-augmented-generation"}}
+
+<items>
+{{.Candidates}}
+</items>`
 
 // Granularity guidance blocks injected into WikiCandidateSlugPrompt. The
 // pipeline resolves a KnowledgeBase's configured granularity to one of these

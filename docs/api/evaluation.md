@@ -57,6 +57,21 @@ go run ./cmd/evaluation
 
 `make eval` 输出 task ID、进度、Config Hash、Metric Version 和检索、答案、成本、耗时摘要。业务失败和超时会以非零状态退出，同时尽可能保留最后一次响应，便于本地验收或后续 CI 使用。
 
+### 比较已保存的 Run
+
+基线比较命令只读取已持久化的 Run，不重新执行评测：
+
+```bash
+export EVALUATION_BASELINE_RUN_ID=run-a
+export EVALUATION_COMPARISON_RUN_IDS=run-a,run-b
+export EVALUATION_COMPARISON_REPORT_PATH=tmp/evaluation-comparison.json
+go run ./cmd/evaluation compare
+```
+
+命令调用 `GET /api/v1/evaluation/comparison`，保留服务端返回的质量、Usage、成本和耗时兼容性判断，并把原始响应保存到比较报告。`EVALUATION_BASELINE_RUN_ID` 必须出现在 `EVALUATION_COMPARISON_RUN_IDS` 中，Run ID 去重后至少需要两个；缺少成本或 Token 证据时报告保留 `null`，不会把未知值当成零。
+
+定时 CI 使用相同 CLI，但只有配置了 `WEKNORA_BASE_URL`、`WEKNORA_TENANT_ID`、`WEKNORA_API_KEY` 和 `EVALUATION_DATASET_ID` 后才执行真实 Provider 评测。缺少这些配置时，工作流会生成明确的 skipped 状态 artifact，不会伪造通过结果。
+
 ## GET `/evaluation` - 获取评估任务结果
 
 **参数说明（查询参数）**:

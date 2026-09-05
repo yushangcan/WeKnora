@@ -29,7 +29,11 @@ func (d *debugEmbedder) BatchEmbed(ctx context.Context, texts []string) ([][]flo
 }
 
 func (d *debugEmbedder) BatchEmbedWithPool(ctx context.Context, model Embedder, texts []string) ([][]float32, error) {
-	return d.inner.BatchEmbedWithPool(ctx, d, texts)
+	poolModel := model
+	if poolModel == nil || poolModel == d {
+		poolModel = d
+	}
+	return d.inner.BatchEmbedWithPool(ctx, poolModel, texts)
 }
 
 func (d *debugEmbedder) GetModelName() string { return d.inner.GetModelName() }

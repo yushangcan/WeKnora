@@ -41,14 +41,18 @@ func (w *concurrencyEmbedder) BatchEmbed(ctx context.Context, texts []string) ([
 	return w.inner.BatchEmbed(ctx, texts)
 }
 
-// BatchEmbedWithPool threads THIS wrapper down as the model so the pooler's
-// per-sub-batch callbacks land on our gated BatchEmbed above, rather than on
-// the raw embedder. The wait for each slot is held only around the actual
-// per-sub-batch provider round-trip.
+// BatchEmbedWithPool preserves an explicitly supplied outer wrapper (for
+// example the result-cache wrapper) so pool sub-batches cannot bypass it. A
+// direct call still threads THIS wrapper down, preserving the concurrency gate
+// around each actual provider round-trip.
 func (w *concurrencyEmbedder) BatchEmbedWithPool(
 	ctx context.Context, model Embedder, texts []string,
 ) ([][]float32, error) {
-	return w.inner.BatchEmbedWithPool(ctx, w, texts)
+	poolModel := model
+	if poolModel == nil || poolModel == w {
+		poolModel = w
+	}
+	return w.inner.BatchEmbedWithPool(ctx, poolModel, texts)
 }
 
 func (w *concurrencyEmbedder) GetModelName() string { return w.inner.GetModelName() }

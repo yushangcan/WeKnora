@@ -20,7 +20,7 @@ func WrapEvaluationMeter(inner Embedder) Embedder {
 }
 
 func (m *evaluationMeterEmbedder) Embed(ctx context.Context, text string) ([]float32, error) {
-	if evaluationobs.ObserverFromContext(ctx) == nil {
+	if evaluationobs.ObserverFromContext(ctx) == nil || IsEmbeddingPoolSubcall(ctx) {
 		return m.inner.Embed(ctx, text)
 	}
 	startedAt := time.Now()
@@ -30,7 +30,7 @@ func (m *evaluationMeterEmbedder) Embed(ctx context.Context, text string) ([]flo
 }
 
 func (m *evaluationMeterEmbedder) BatchEmbed(ctx context.Context, texts []string) ([][]float32, error) {
-	if evaluationobs.ObserverFromContext(ctx) == nil {
+	if evaluationobs.ObserverFromContext(ctx) == nil || IsEmbeddingPoolSubcall(ctx) {
 		return m.inner.BatchEmbed(ctx, texts)
 	}
 	startedAt := time.Now()
@@ -41,16 +41,21 @@ func (m *evaluationMeterEmbedder) BatchEmbed(ctx context.Context, texts []string
 
 func (m *evaluationMeterEmbedder) BatchEmbedWithPool(
 	ctx context.Context,
-	_ Embedder,
+	model Embedder,
 	texts []string,
 ) ([][]float32, error) {
-	if evaluationobs.ObserverFromContext(ctx) == nil {
-		return m.inner.BatchEmbedWithPool(ctx, m.inner, texts)
+	poolModel := model
+	if poolModel == nil || poolModel == m {
+		poolModel = m.inner
+	}
+	if evaluationobs.ObserverFromContext(ctx) == nil || IsEmbeddingPoolSubcall(ctx) {
+		return m.inner.BatchEmbedWithPool(ctx, poolModel, texts)
 	}
 	startedAt := time.Now()
-	// Pass the inner decorator chain into the pool. This records one logical
-	// application call and avoids counting its internal sub-batches twice.
-	result, err := m.inner.BatchEmbedWithPool(ctx, m.inner, texts)
+	// Pass the cache-aware model into the pool while recording one logical
+	// application call. Internal sub-batches use that model directly and do
+	// not re-enter the evaluation wrapper.
+	result, err := m.inner.BatchEmbedWithPool(ctx, poolModel, texts)
 	m.record(ctx, types.EvaluationOperationBatchEmbed, len(texts), startedAt, err)
 	return result, err
 }

@@ -75,7 +75,11 @@ func (l *langfuseEmbedder) BatchEmbed(ctx context.Context, texts []string) ([][]
 }
 
 func (l *langfuseEmbedder) BatchEmbedWithPool(ctx context.Context, model Embedder, texts []string) ([][]float32, error) {
-	return l.inner.BatchEmbedWithPool(ctx, l, texts)
+	poolModel := model
+	if poolModel == nil || poolModel == l {
+		poolModel = l
+	}
+	return l.inner.BatchEmbedWithPool(ctx, poolModel, texts)
 }
 
 func (l *langfuseEmbedder) GetModelName() string { return l.inner.GetModelName() }

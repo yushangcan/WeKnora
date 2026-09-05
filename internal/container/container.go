@@ -160,6 +160,7 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	must(container.Provide(repository.NewModelRepository))
 	must(container.Provide(repository.NewModelUsageEventsRepository))
 	must(container.Provide(modelusage.NewDatabaseRecorder))
+	must(container.Provide(embedding.NewEmbeddingResultCache))
 	must(container.Provide(repository.NewEvaluationRepository))
 	must(container.Provide(repository.NewUserRepository))
 	must(container.Provide(repository.NewAuthTokenRepository))
@@ -217,7 +218,7 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	must(container.Provide(service.NewChunkService))
 	must(container.Provide(service.NewKnowledgeTagService))
 	must(container.Provide(embedding.NewBatchEmbedder))
-	must(container.Provide(service.NewModelServiceWithUsage))
+	must(container.Provide(service.NewModelServiceWithUsageAndEmbeddingCache))
 	must(container.Provide(service.NewModelUsageService))
 	must(container.Provide(service.NewDatasetService))
 	must(container.Provide(service.NewEvaluationService))
@@ -774,6 +775,12 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 		logger.Infof(context.Background(), "Auto-migration is disabled (AUTO_MIGRATE=false)")
 	}
 
+	// Evaluation runs execute in process-local goroutines, so non-terminal rows
+	// cannot be resumed by another worker after an application restart. This
+	// recovery is independent of the migration toggle because production
+	// deployments may manage schema changes separately.
+	recoverInterruptedEvaluationRuns(db)
+
 	// Get underlying SQL DB object
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -821,6 +828,7 @@ func resolveStorageProviderPending(db *gorm.DB) {
 
 	// Reset any pending tasks left over from previous aborted runs (Lite App mode)
 	resetPendingTasks(db)
+
 }
 
 // migrateLegacyStorageBackends backfills the storage_backends table from each

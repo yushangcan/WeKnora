@@ -154,6 +154,9 @@ func (e *WeKnoraCloudEmbedder) BatchEmbed(ctx context.Context, texts []string) (
 }
 
 func (e *WeKnoraCloudEmbedder) BatchEmbedWithPool(ctx context.Context, model Embedder, texts []string) ([][]float32, error) {
+	if model != nil && model != e {
+		return model.BatchEmbed(ctx, texts)
+	}
 	return e.BatchEmbed(ctx, texts)
 }
 

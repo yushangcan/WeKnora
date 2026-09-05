@@ -85,6 +85,30 @@ func TestResultCacheEmbedReusesVector(t *testing.T) {
 	}
 }
 
+func TestResultCacheReportsApplicationMetrics(t *testing.T) {
+	inner := &cacheTestEmbedder{}
+	cache := newMemoryResultCache(8)
+	wrapped := WrapResultCache(inner, cache, testCacheConfig(), 42)
+
+	if _, err := wrapped.Embed(context.Background(), "same text"); err != nil {
+		t.Fatalf("cold Embed: %v", err)
+	}
+	if _, err := wrapped.Embed(context.Background(), "same text"); err != nil {
+		t.Fatalf("warm Embed: %v", err)
+	}
+	if _, err := wrapped.BatchEmbed(context.Background(), []string{"same text", "new text", "new text"}); err != nil {
+		t.Fatalf("mixed BatchEmbed: %v", err)
+	}
+
+	got := CacheMetrics(cache)
+	if got.Requests != 3 || got.HitItems != 2 || got.MissItems != 2 {
+		t.Fatalf("unexpected request metrics: %#v", got)
+	}
+	if got.ProviderRequests != 2 || got.ProviderItems != 2 {
+		t.Fatalf("unexpected provider metrics: %#v", got)
+	}
+}
+
 func TestResultCacheBatchDeduplicatesAndRestoresOrder(t *testing.T) {
 	inner := &cacheTestEmbedder{}
 	wrapped := WrapResultCache(inner, newMemoryResultCache(8), testCacheConfig(), 42)

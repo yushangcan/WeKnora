@@ -70,7 +70,7 @@ func NewEmbeddingResultCache(redisClient *redis.Client) ResultCache {
 	}
 	if redisClient != nil {
 		logger.Infof(context.Background(), "[EmbeddingCache] enabled backend=redis ttl=%s", resolveEmbeddingCacheTTL())
-		return &redisResultCache{client: redisClient}
+		return &redisResultCache{client: redisClient, metrics: &cacheMetrics{}}
 	}
 	logger.Infof(context.Background(), "[EmbeddingCache] enabled backend=memory ttl=%s max_entries=%d", resolveEmbeddingCacheTTL(), resolveEmbeddingCacheSize())
 	return newMemoryResultCache(resolveEmbeddingCacheSize())
@@ -109,7 +109,8 @@ func resolveEmbeddingCacheSize() int {
 }
 
 type redisResultCache struct {
-	client *redis.Client
+	client  *redis.Client
+	metrics *cacheMetrics
 }
 
 func (r *redisResultCache) Get(ctx context.Context, key string) ([]float32, bool, error) {
@@ -125,12 +126,18 @@ func (r *redisResultCache) Get(ctx context.Context, key string) ([]float32, bool
 	}
 	vector, err := decodeEmbedding(payload)
 	if err != nil {
+		if r.metrics != nil {
+			r.metrics.invalidEntries.Add(1)
+		}
 		// A malformed value is treated as a miss. Deletion is best effort so a
 		// corrupt entry cannot poison every subsequent request for the key.
 		_ = r.client.Del(ctx, key).Err()
 		return nil, false, err
 	}
 	if !validEmbedding(vector, 0) {
+		if r.metrics != nil {
+			r.metrics.invalidEntries.Add(1)
+		}
 		_ = r.client.Del(ctx, key).Err()
 		return nil, false, embeddingPayloadError()
 	}
@@ -215,6 +222,7 @@ type memoryResultCache struct {
 	maxEntries int
 	items      map[string]*list.Element
 	order      *list.List
+	metrics    *cacheMetrics
 }
 
 type memoryCacheEntry struct {
@@ -231,7 +239,22 @@ func newMemoryResultCache(maxEntries int) ResultCache {
 		maxEntries: maxEntries,
 		items:      make(map[string]*list.Element, maxEntries),
 		order:      list.New(),
+		metrics:    &cacheMetrics{},
 	}
+}
+
+func (r *redisResultCache) cacheMetrics() *cacheMetrics {
+	if r == nil {
+		return nil
+	}
+	return r.metrics
+}
+
+func (m *memoryResultCache) cacheMetrics() *cacheMetrics {
+	if m == nil {
+		return nil
+	}
+	return m.metrics
 }
 
 func (m *memoryResultCache) Get(_ context.Context, key string) ([]float32, bool, error) {
@@ -377,6 +400,8 @@ type resultCacheEmbedder struct {
 	tenantID         uint64
 	ttl              time.Duration
 	group            singleflight.Group
+	metrics          *cacheMetrics
+	inflight         sync.Map
 }
 
 type embeddingPoolSubcallContextKey struct{}
@@ -431,18 +456,46 @@ func WrapResultCache(inner Embedder, cache ResultCache, config Config, tenantID 
 		modelFingerprint: EmbeddingCacheIdentity(config),
 		tenantID:         tenantID,
 		ttl:              resolveEmbeddingCacheTTL(),
+		metrics:          ensureCacheMetrics(cacheMetricsFor(cache)),
 	}
 }
 
+func ensureCacheMetrics(metrics *cacheMetrics) *cacheMetrics {
+	if metrics == nil {
+		return &cacheMetrics{}
+	}
+	return metrics
+}
+
+func cacheMetricsFor(cache ResultCache) *cacheMetrics {
+	if provider, ok := cache.(interface{ cacheMetrics() *cacheMetrics }); ok {
+		return provider.cacheMetrics()
+	}
+	return nil
+}
+
 func (w *resultCacheEmbedder) Embed(ctx context.Context, text string) ([]float32, error) {
+	if !isEmbeddingPoolSubcall(ctx) {
+		w.metrics.requests.Add(1)
+	}
 	key := EmbeddingCacheKey(w.tenantID, w.modelFingerprint, text)
 	if vector, ok := w.get(ctx, key); ok {
+		if !isEmbeddingPoolSubcall(ctx) {
+			w.metrics.hitItems.Add(1)
+		}
 		return vector, nil
 	}
+	if !isEmbeddingPoolSubcall(ctx) {
+		w.metrics.missItems.Add(1)
+	}
+	release := w.trackSingleflight(key)
+	defer release()
 	value, err, _ := w.group.Do(key, func() (interface{}, error) {
 		if vector, ok := w.get(ctx, key); ok {
 			return vector, nil
 		}
+		w.metrics.providerRequests.Add(1)
+		w.metrics.providerItems.Add(1)
 		vector, err := w.inner.Embed(ctx, text)
 		if err != nil {
 			return nil, err
@@ -457,6 +510,9 @@ func (w *resultCacheEmbedder) Embed(ctx context.Context, text string) ([]float32
 }
 
 func (w *resultCacheEmbedder) BatchEmbed(ctx context.Context, texts []string) ([][]float32, error) {
+	if !isEmbeddingPoolSubcall(ctx) {
+		w.metrics.requests.Add(1)
+	}
 	if len(texts) == 0 {
 		return w.inner.BatchEmbed(ctx, texts)
 	}
@@ -476,8 +532,14 @@ func (w *resultCacheEmbedder) BatchEmbed(ctx context.Context, texts []string) ([
 	cachedByKey := w.getMany(ctx, keys)
 	for index, text := range texts {
 		if vector, ok := cachedByKey[keyByText[text]]; ok {
+			if !isEmbeddingPoolSubcall(ctx) {
+				w.metrics.hitItems.Add(1)
+			}
 			result[index] = vector
 			continue
+		}
+		if !isEmbeddingPoolSubcall(ctx) {
+			w.metrics.missItems.Add(1)
 		}
 		if _, seen := missIndexes[text]; !seen {
 			misses = append(misses, text)
@@ -488,7 +550,11 @@ func (w *resultCacheEmbedder) BatchEmbed(ctx context.Context, texts []string) ([
 		return result, nil
 	}
 	batchKey := batchCacheKey(w.tenantID, w.modelFingerprint, misses)
+	release := w.trackSingleflight(batchKey)
+	defer release()
 	value, err, _ := w.group.Do(batchKey, func() (interface{}, error) {
+		w.metrics.providerRequests.Add(1)
+		w.metrics.providerItems.Add(int64(len(misses)))
 		vectors, err := w.inner.BatchEmbed(ctx, misses)
 		if err != nil {
 			return nil, err
@@ -518,6 +584,13 @@ func (w *resultCacheEmbedder) BatchEmbed(ctx context.Context, texts []string) ([
 	return result, nil
 }
 
+func (w *resultCacheEmbedder) trackSingleflight(key string) func() {
+	if _, loaded := w.inflight.LoadOrStore(key, struct{}{}); loaded {
+		w.metrics.singleflightWaits.Add(1)
+	}
+	return func() { w.inflight.Delete(key) }
+}
+
 func batchCacheKey(tenantID uint64, modelFingerprint string, texts []string) string {
 	hash := sha256.New()
 	_, _ = hash.Write([]byte("batch:"))
@@ -535,6 +608,9 @@ func batchCacheKey(tenantID uint64, modelFingerprint string, texts []string) str
 }
 
 func (w *resultCacheEmbedder) BatchEmbedWithPool(ctx context.Context, _ Embedder, texts []string) ([][]float32, error) {
+	if !isEmbeddingPoolSubcall(ctx) {
+		w.metrics.requests.Add(1)
+	}
 	if len(texts) > 0 {
 		cached := make([][]float32, len(texts))
 		allHit := true
@@ -542,8 +618,14 @@ func (w *resultCacheEmbedder) BatchEmbedWithPool(ctx context.Context, _ Embedder
 			key := EmbeddingCacheKey(w.tenantID, w.modelFingerprint, text)
 			vector, ok := w.get(ctx, key)
 			if !ok {
+				if !isEmbeddingPoolSubcall(ctx) {
+					w.metrics.missItems.Add(1)
+				}
 				allHit = false
-				break
+				continue
+			}
+			if !isEmbeddingPoolSubcall(ctx) {
+				w.metrics.hitItems.Add(1)
 			}
 			cached[index] = vector
 		}
@@ -563,10 +645,15 @@ func (w *resultCacheEmbedder) GetModelID() string   { return w.inner.GetModelID(
 
 func (w *resultCacheEmbedder) get(ctx context.Context, key string) ([]float32, bool) {
 	vector, ok, err := w.cache.Get(ctx, key)
-	if err != nil || !ok {
+	if err != nil {
+		w.metrics.getErrors.Add(1)
+		return nil, false
+	}
+	if !ok {
 		return nil, false
 	}
 	if !validEmbedding(vector, w.inner.GetDimensions()) {
+		w.metrics.invalidEntries.Add(1)
 		if deletable, ok := w.cache.(deletableResultCache); ok {
 			_ = deletable.Delete(ctx, key)
 		}
@@ -584,11 +671,13 @@ func (w *resultCacheEmbedder) getMany(ctx context.Context, keys []string) map[st
 				if validEmbedding(vector, w.inner.GetDimensions()) {
 					result[key] = cloneEmbedding(vector)
 				} else if deletable, deletableOK := w.cache.(deletableResultCache); deletableOK {
+					w.metrics.invalidEntries.Add(1)
 					_ = deletable.Delete(ctx, key)
 				}
 			}
 			return result
 		}
+		w.metrics.getErrors.Add(1)
 	}
 	result := make(map[string][]float32, len(keys))
 	for _, key := range keys {
@@ -601,9 +690,12 @@ func (w *resultCacheEmbedder) getMany(ctx context.Context, keys []string) map[st
 
 func (w *resultCacheEmbedder) store(ctx context.Context, key string, vector []float32) {
 	if !validEmbedding(vector, w.inner.GetDimensions()) {
+		w.metrics.invalidEntries.Add(1)
 		return
 	}
-	_ = w.cache.Set(ctx, key, vector, w.ttl)
+	if err := w.cache.Set(ctx, key, vector, w.ttl); err != nil {
+		w.metrics.setErrors.Add(1)
+	}
 }
 
 func (w *resultCacheEmbedder) storeMany(ctx context.Context, entries map[string][]float32) {
@@ -611,6 +703,8 @@ func (w *resultCacheEmbedder) storeMany(ctx context.Context, entries map[string]
 	for key, vector := range entries {
 		if validEmbedding(vector, w.inner.GetDimensions()) {
 			valid[key] = vector
+		} else {
+			w.metrics.invalidEntries.Add(1)
 		}
 	}
 	if len(valid) == 0 {
@@ -619,10 +713,14 @@ func (w *resultCacheEmbedder) storeMany(ctx context.Context, entries map[string]
 	if batchCache, ok := w.cache.(BatchResultCache); ok {
 		if err := batchCache.SetMany(ctx, valid, w.ttl); err == nil {
 			return
+		} else {
+			w.metrics.setErrors.Add(1)
 		}
 	}
 	for key, vector := range valid {
-		_ = w.cache.Set(ctx, key, vector, w.ttl)
+		if err := w.cache.Set(ctx, key, vector, w.ttl); err != nil {
+			w.metrics.setErrors.Add(1)
+		}
 	}
 }
 

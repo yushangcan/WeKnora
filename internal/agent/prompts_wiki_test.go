@@ -247,3 +247,186 @@ func TestWikiPageModifyUserPrompt_SharedSourceContextPrecedesPageVariables(t *te
 		t.Fatalf("shared source context is not part of the cacheable prefix: %s", a[:ia])
 	}
 }
+
+// TestWikiCacheablePromptPrefixes covers the remaining wiki calls that are
+// repeated while one document is being processed.  Each case names the first
+// per-call data block for that template; bytes before that block must remain
+// identical when only the data block changes, otherwise a provider prefix
+// cache cannot reuse the prompt prefix.
+func TestWikiCacheablePromptPrefixes(t *testing.T) {
+	tests := []struct {
+		name        string
+		prompt      string
+		base        map[string]string
+		vary        string
+		first       string
+		required    []string
+		constraints []string
+	}{
+		{
+			name:   "taxonomy",
+			prompt: WikiTaxonomyPlanPrompt,
+			base: map[string]string{
+				"ExistingTaxonomy": "folder: engineering",
+				"Items":            "entity/acme",
+				"Language":         "English",
+			},
+			vary:  "Items",
+			first: "\n<items>\n",
+			required: []string{
+				"{{.ExistingTaxonomy}}", "{{.Items}}", "{{.Language}}",
+			},
+			constraints: []string{
+				"### JSON Formatting Rules", "Output format:", "Every item slug",
+			},
+		},
+		{
+			name:   "knowledge-extract",
+			prompt: WikiKnowledgeExtractPrompt,
+			base: map[string]string{
+				"Content":       "document A",
+				"PreviousSlugs": "concept/rag = RAG",
+				"Language":      "English",
+			},
+			vary:  "Content",
+			first: "\n<content>\n",
+			required: []string{
+				"{{.Content}}", "{{.PreviousSlugs}}", "{{.Language}}",
+			},
+			constraints: []string{
+				"### Slug Continuity Rules", "### Deduplication Rules", "Output ONLY valid JSON",
+			},
+		},
+		{
+			name:   "deduplication",
+			prompt: WikiDeduplicationPrompt,
+			base: map[string]string{
+				"Candidates": "<item slug=\"concept/rag\">RAG</item>",
+			},
+			vary:  "Candidates",
+			first: "\n<items>\n",
+			required: []string{
+				"{{.Candidates}}",
+			},
+			constraints: []string{
+				"Hard constraints", "Merge criteria", "Output ONLY valid JSON",
+			},
+		},
+		{
+			name:   "index-intro",
+			prompt: WikiIndexIntroPrompt,
+			base: map[string]string{
+				"DocumentSummaries": "summary A",
+				"Language":          "English",
+			},
+			vary:  "DocumentSummaries",
+			first: "\n<document_summaries>\n",
+			required: []string{
+				"{{.DocumentSummaries}}", "{{.Language}}",
+			},
+			constraints: []string{
+				"Write a title line", "2-3 sentences", "Output ONLY the title",
+			},
+		},
+		{
+			name:   "index-intro-update",
+			prompt: WikiIndexIntroUpdatePrompt,
+			base: map[string]string{
+				"ExistingIntro":     "# Existing wiki\n\nAn introduction.",
+				"ChangeDescription": "added a document",
+				"DocumentSummaries": "summary A",
+				"Language":          "English",
+			},
+			vary:  "ChangeDescription",
+			first: "\n<changes>\n",
+			required: []string{
+				"{{.ExistingIntro}}", "{{.ChangeDescription}}", "{{.DocumentSummaries}}", "{{.Language}}",
+			},
+			constraints: []string{
+				"Update the introduction", "1 title line + 2-3 sentences", "Output ONLY the updated title",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, field := range tc.required {
+				if !strings.Contains(tc.prompt, field) {
+					t.Errorf("prompt lost template field %q", field)
+				}
+			}
+			for _, constraint := range tc.constraints {
+				if !strings.Contains(tc.prompt, constraint) {
+					t.Errorf("prompt lost output constraint %q", constraint)
+				}
+			}
+
+			firstData := renderWikiPrompt(t, tc.name, tc.prompt, tc.base)
+			changed := mergePromptData(tc.base, map[string]string{tc.vary: tc.base[tc.vary] + " (changed)"})
+			secondData := renderWikiPrompt(t, tc.name, tc.prompt, changed)
+			firstIndex := strings.Index(firstData, tc.first)
+			secondIndex := strings.Index(secondData, tc.first)
+			if firstIndex < 0 || secondIndex < 0 {
+				t.Fatalf("rendered prompt missing dynamic marker %q", tc.first)
+			}
+			if firstData[:firstIndex] != secondData[:secondIndex] {
+				t.Fatalf("prompt prefix before %s changed with dynamic data", tc.first)
+			}
+			if firstIndex == 0 {
+				t.Fatalf("dynamic marker %s has no static prefix", tc.first)
+			}
+		})
+	}
+}
+
+func TestWikiPromptsParseWithAllTemplateFields(t *testing.T) {
+	data := map[string]string{
+		"AvailableSlugs":          "entity/acme",
+		"Candidates":              "<item>candidate</item>",
+		"CandidateSlugs":          "entity/acme = Acme",
+		"ChangeDescription":       "added a document",
+		"ChunksXML":               `<c id="c001">chunk</c>`,
+		"Content":                 "document content",
+		"DeletedContent":          "deleted content",
+		"DocumentSummaries":       "summary",
+		"ExistingContent":         "existing page",
+		"ExistingIntro":           "# Existing",
+		"ExistingTaxonomy":        "folder: engineering",
+		"ExtractedSlugs":          "entity/acme = Acme",
+		"Granularity":             "standard",
+		"GranularityGuidance":     "balanced guidance",
+		"Items":                   "entity/acme",
+		"Language":                "English",
+		"NewContent":              "new content",
+		"PageAliases":             "Acme",
+		"PageSlug":                "entity/acme",
+		"PageTitle":               "Acme",
+		"PageType":                "entity",
+		"PreviousSlugs":           "entity/acme = Acme",
+		"RemainingSourcesContent": "remaining source",
+		"SharedSourceContexts":    "shared context",
+		"HasAdditions":            "1",
+		"HasRetractions":          "1",
+	}
+
+	prompts := map[string]string{
+		"taxonomy":           WikiTaxonomyPlanPrompt,
+		"summary":            WikiSummaryPrompt,
+		"knowledge-extract":  WikiKnowledgeExtractPrompt,
+		"candidate":          WikiCandidateSlugPrompt,
+		"chunk-citation":     WikiChunkCitationPrompt,
+		"page-modify-system": WikiPageModifySystemPrompt,
+		"page-modify-user":   WikiPageModifyUserPrompt,
+		"index-intro":        WikiIndexIntroPrompt,
+		"index-intro-update": WikiIndexIntroUpdatePrompt,
+		"deduplication":      WikiDeduplicationPrompt,
+	}
+	for name, prompt := range prompts {
+		t.Run(name, func(t *testing.T) {
+			if _, err := template.New(name).Parse(prompt); err != nil {
+				t.Fatalf("parse prompt: %v", err)
+			}
+			_ = renderWikiPrompt(t, name, prompt, data)
+		})
+	}
+}

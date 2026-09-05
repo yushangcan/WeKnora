@@ -182,6 +182,8 @@ type ChatResponse struct {
 	ToolCalls        []LLMToolCall `json:"tool_calls,omitempty"`
 	FinishReason     string        `json:"finish_reason,omitempty"`
 	Usage            TokenUsage    `json:"usage"`
+	// ProviderUsage is transient adapter metadata copied into usage events.
+	ProviderUsage *ProviderUsage `json:"-"`
 
 	// AnswerStreamed reports whether the user-facing answer text was already
 	// streamed live to the final-answer UI area during this round (i.e. the
@@ -260,7 +262,9 @@ type StreamResponse struct {
 	ToolCalls           []LLMToolCall          `json:"tool_calls,omitempty"`
 	Data                map[string]interface{} `json:"data,omitempty"`
 	Usage               *TokenUsage            `json:"usage,omitempty"`
-	FinishReason        string                 `json:"finish_reason,omitempty"`
+	// ProviderUsage is emitted with the terminal response when available.
+	ProviderUsage *ProviderUsage `json:"-"`
+	FinishReason  string         `json:"finish_reason,omitempty"`
 }
 
 // References references

@@ -140,6 +140,36 @@ func TestWrapChatRecordsSuccessAndProviderUsage(t *testing.T) {
 	}
 }
 
+func TestWrapChatPropagatesProviderUsageScope(t *testing.T) {
+	amount := 0.0123
+	response := &types.ChatResponse{
+		ProviderUsage: &types.ProviderUsage{
+			Amount:        &amount,
+			Currency:      "USD",
+			BillableUnits: map[string]float64{"input": 120},
+			RawSource:     "provider-response",
+		},
+	}
+	recorder := &recordingStub{}
+	wrapped := WrapChat(&stubChat{response: response}, recorder, ModelMetadata{
+		ModelID: "chat-id", ModelName: "chat-name", ModelType: types.ModelTypeKnowledgeQA,
+	})
+	if _, err := wrapped.Chat(usageTestContext(), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	if len(recorder.events) != 1 || recorder.events[0].ProviderUsage == nil {
+		t.Fatalf("provider usage scope = %#v", recorder.events)
+	}
+	got := recorder.events[0].ProviderUsage
+	if got.Currency != "USD" || got.RawSource != "provider-response" || got.Amount == nil || *got.Amount != amount || got.BillableUnits["input"] != 120 {
+		t.Fatalf("provider usage scope = %#v", got)
+	}
+	response.ProviderUsage.BillableUnits["input"] = 999
+	if got.BillableUnits["input"] != 120 {
+		t.Fatal("usage event retained a mutable provider scope")
+	}
+}
+
 func TestWrapChatStreamRecordsOneEventAfterChannelCloses(t *testing.T) {
 	readUsage := types.TokenUsage{PromptTokens: 8, CompletionTokens: 2, TotalTokens: 10}
 	recorder := &recordingStub{}

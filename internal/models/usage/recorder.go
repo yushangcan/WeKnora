@@ -195,3 +195,9 @@ func recordEvent(ctx context.Context, recorder interfaces.ModelUsageRecorder, ev
 		logger.Errorf(ctx, "failed to persist model usage event: %v", err)
 	}
 }
+
+func attachProviderUsage(event *types.ModelUsageEvent, scope *types.ProviderUsage) {
+	if event != nil && scope != nil {
+		event.ProviderUsage = scope.Clone()
+	}
+}

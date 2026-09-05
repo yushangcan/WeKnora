@@ -30,11 +30,16 @@ func (w *chatRecorder) Chat(ctx context.Context, messages []chat.Message, opts *
 	startedAt := time.Now()
 	response, err := w.inner.Chat(ctx, messages, opts)
 	var usage *types.TokenUsage
+	var providerUsage *types.ProviderUsage
 	if response != nil && hasReportedTokenUsage(response.Usage) {
 		copy := response.Usage
 		usage = &copy
 	}
+	if response != nil {
+		providerUsage = response.ProviderUsage
+	}
 	event := buildEvent(ctx, w.metadata, "chat", startedAt, 1, err == nil, err, usage)
+	attachProviderUsage(event, providerUsage)
 	recordEvent(ctx, w.recorder, event)
 	return response, err
 }
@@ -53,17 +58,21 @@ func (w *chatRecorder) ChatStream(ctx context.Context, messages []chat.Message, 
 	go func() {
 		defer close(out)
 		var usage *types.TokenUsage
+		var providerUsage *types.ProviderUsage
 		var streamErr error
 		for {
 			select {
 			case response, ok := <-in:
 				if !ok {
-					recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "chat_stream", startedAt, 1, streamErr == nil, streamErr, usage))
+					recordChatStreamEvent(ctx, w.recorder, w.metadata, startedAt, streamErr == nil, streamErr, usage, providerUsage)
 					return
 				}
 				if response.Usage != nil && hasReportedTokenUsage(*response.Usage) {
 					copy := *response.Usage
 					usage = &copy
+				}
+				if response.ProviderUsage != nil {
+					providerUsage = response.ProviderUsage
 				}
 				if response.ResponseType == types.ResponseTypeError && streamErr == nil {
 					message := response.Content
@@ -75,7 +84,7 @@ func (w *chatRecorder) ChatStream(ctx context.Context, messages []chat.Message, 
 				select {
 				case out <- response:
 				case <-ctx.Done():
-					recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "chat_stream", startedAt, 1, false, ctx.Err(), usage))
+					recordChatStreamEvent(ctx, w.recorder, w.metadata, startedAt, false, ctx.Err(), usage, providerUsage)
 					go func() {
 						for range in {
 						}
@@ -83,7 +92,7 @@ func (w *chatRecorder) ChatStream(ctx context.Context, messages []chat.Message, 
 					return
 				}
 			case <-ctx.Done():
-				recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "chat_stream", startedAt, 1, false, ctx.Err(), usage))
+				recordChatStreamEvent(ctx, w.recorder, w.metadata, startedAt, false, ctx.Err(), usage, providerUsage)
 				go func() {
 					for range in {
 					}
@@ -97,6 +106,12 @@ func (w *chatRecorder) ChatStream(ctx context.Context, messages []chat.Message, 
 
 func (w *chatRecorder) GetModelName() string { return w.inner.GetModelName() }
 func (w *chatRecorder) GetModelID() string   { return w.inner.GetModelID() }
+
+func recordChatStreamEvent(ctx context.Context, recorder interfaces.ModelUsageRecorder, metadata ModelMetadata, startedAt time.Time, success bool, callErr error, usage *types.TokenUsage, providerUsage *types.ProviderUsage) {
+	event := buildEvent(ctx, metadata, "chat_stream", startedAt, 1, success, callErr, usage)
+	attachProviderUsage(event, providerUsage)
+	recordEvent(ctx, recorder, event)
+}
 
 type embeddingRecorder struct {
 	inner    embedding.Embedder

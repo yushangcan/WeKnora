@@ -73,6 +73,9 @@ type ModelUsageEvent struct {
 	EvaluationCaseID  string                `json:"evaluation_case_id,omitempty" gorm:"column:evaluation_case_id;type:varchar(128);not null;default:''"`
 	TraceID           string                `json:"trace_id,omitempty" gorm:"column:trace_id;type:varchar(255);not null;default:''"`
 	CreatedAt         time.Time             `json:"created_at" gorm:"column:created_at;not null"`
+	// ProviderUsage is transient until request identity and pricing persistence
+	// are introduced by later usage-governance commits.
+	ProviderUsage *ProviderUsage `json:"-" gorm:"-"`
 }
 
 // TableName pins the durable model-call table used by both database drivers.

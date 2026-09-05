@@ -14,7 +14,7 @@ import (
 // versionedSQLiteTables is the set of tables that SQLite migrations must
 // create to stay in sync with the versioned (PostgreSQL) migrations:
 // 000041 task queue, 000053 system settings, 000055 processing spans,
-// 000063 knowledge multi-tags, 000090 evaluation persistence.
+// 000063 knowledge multi-tags, 000091 evaluation persistence, 000092 model usage events.
 var versionedSQLiteTables = []string{
 	"task_pending_ops",
 	"task_dead_letters",
@@ -23,6 +23,7 @@ var versionedSQLiteTables = []string{
 	"knowledge_tag_relations",
 	"evaluation_runs",
 	"evaluation_run_cases",
+	"model_usage_events",
 }
 
 // versionedSQLiteColumns maps each existing table to the columns that the
@@ -37,7 +38,7 @@ var versionedSQLiteColumns = map[string][]string{
 	"mcp_oauth_tokens":   {"principal_type", "principal_id"}, // 000064
 }
 
-const expectedSQLiteMigrationVersion = 13
+const expectedSQLiteMigrationVersion = 14
 
 func TestSQLiteMigrationsCreateVersionedSchema(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
@@ -69,6 +70,7 @@ func TestSQLiteMigrationsCreateVersionedSchema(t *testing.T) {
 	assertSQLiteShareLinkInvitationsWork(t, db)
 	assertSQLiteMCPOAuthPrincipalUpsertWorks(t, db)
 	assertSQLiteEvaluationSchemaWorks(t, db)
+	assertSQLiteModelUsageSchemaWorks(t, db)
 	require.False(t, sqliteColumnExists(t, db, "knowledges", "tag_id"),
 		"SQLite migrations must drop legacy knowledges.tag_id after multi-tag migration")
 }
@@ -101,6 +103,7 @@ func TestSQLiteMigrationsUpgradeV11PreservesData(t *testing.T) {
 	).Scan(&sentinelName))
 	require.Equal(t, "v11-sentinel", sentinelName)
 	assertSQLiteEvaluationSchemaWorks(t, db)
+	assertSQLiteModelUsageSchemaWorks(t, db)
 }
 
 func TestSQLiteEvaluationMigrationDownRemovesTables(t *testing.T) {
@@ -120,7 +123,7 @@ func TestSQLiteEvaluationMigrationDownRemovesTables(t *testing.T) {
 
 func TestPostgresEvaluationMigrationContract(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
-	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000090_evaluation_runs.up.sql"))
+	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000091_evaluation_runs.up.sql"))
 	require.NoError(t, err)
 	up := string(upSQL)
 	for _, fragment := range []string{
@@ -134,10 +137,32 @@ func TestPostgresEvaluationMigrationContract(t *testing.T) {
 	} {
 		require.Contains(t, up, fragment)
 	}
-	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000090_evaluation_runs.down.sql"))
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000091_evaluation_runs.down.sql"))
 	require.NoError(t, err)
 	require.Contains(t, string(downSQL), "DROP TABLE IF EXISTS evaluation_run_cases")
 	require.Contains(t, string(downSQL), "DROP TABLE IF EXISTS evaluation_runs")
+}
+
+func TestPostgresModelUsageMigrationContract(t *testing.T) {
+	repoRoot := sqliteRepoRoot(t)
+	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000092_model_usage_events.up.sql"))
+	require.NoError(t, err)
+	up := string(upSQL)
+	for _, fragment := range []string{
+		"CREATE TABLE IF NOT EXISTS model_usage_events",
+		"call_id VARCHAR(64) NOT NULL UNIQUE",
+		"tenant_id BIGINT NOT NULL",
+		"prompt_tokens BIGINT",
+		"cache_status VARCHAR(16) NOT NULL",
+		"cost_amount DOUBLE PRECISION",
+		"idx_model_usage_tenant_started",
+		"idx_model_usage_evaluation_run",
+	} {
+		require.Contains(t, up, fragment)
+	}
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000092_model_usage_events.down.sql"))
+	require.NoError(t, err)
+	require.Contains(t, string(downSQL), "DROP TABLE IF EXISTS model_usage_events")
 }
 
 func TestSQLiteMigrationsUpgradeV4PreservesData(t *testing.T) {
@@ -188,6 +213,7 @@ func TestSQLiteMigrationsUpgradeV4PreservesData(t *testing.T) {
 			)
 		}
 	}
+	assertSQLiteModelUsageSchemaWorks(t, db)
 
 	var sentinelName string
 	require.NoError(t, db.QueryRow("SELECT name FROM tenants WHERE business = ?", "migration-test").Scan(&sentinelName))
@@ -319,6 +345,27 @@ func assertSQLiteEvaluationSchemaWorks(t *testing.T, db *sql.DB) {
 		"SELECT COUNT(*) FROM evaluation_run_cases WHERE run_id = ?", "migration-run",
 	).Scan(&caseCount))
 	require.Equal(t, 0, caseCount)
+}
+
+func assertSQLiteModelUsageSchemaWorks(t *testing.T, db *sql.DB) {
+	t.Helper()
+	require.True(t, sqliteTableExists(t, db, "model_usage_events"))
+	for _, column := range []string{
+		"call_id", "tenant_id", "model_id", "model_name_snapshot", "model_type",
+		"operation", "started_at", "success", "total_tokens", "cache_status",
+		"cost_amount", "cost_status", "evaluation_run_id",
+	} {
+		require.Truef(t, sqliteColumnExists(t, db, "model_usage_events", column), "SQLite model usage migration must add column %s", column)
+	}
+	for _, index := range []string{
+		"idx_model_usage_tenant_started",
+		"idx_model_usage_tenant_model_started",
+		"idx_model_usage_tenant_type_started",
+		"idx_model_usage_tenant_success_started",
+		"idx_model_usage_evaluation_run",
+	} {
+		require.Truef(t, sqliteIndexExists(t, db, index), "SQLite model usage migration must create index %s", index)
+	}
 }
 
 func assertSQLiteShareLinkInvitationsWork(t *testing.T, db *sql.DB) {

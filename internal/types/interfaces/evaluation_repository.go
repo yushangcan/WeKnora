@@ -47,4 +47,11 @@ type EvaluationRepository interface {
 		completedAt time.Time,
 		errorMessage string,
 	) (int64, error)
+	// MarkAllInterruptedRunsFailed closes non-terminal rows left by an
+	// application restart across all tenants.
+	MarkAllInterruptedRunsFailed(
+		ctx context.Context,
+		completedAt time.Time,
+		errorMessage string,
+	) (int64, error)
 }

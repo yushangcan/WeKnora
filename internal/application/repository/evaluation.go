@@ -126,6 +126,26 @@ func (r *evaluationRepository) MarkInterruptedRunsFailed(
 	if tenantID == 0 {
 		return 0, errors.New("tenant ID is required to recover interrupted evaluation runs")
 	}
+	return r.markInterruptedRunsFailed(ctx, &tenantID, completedAt, errorMessage)
+}
+
+// MarkAllInterruptedRunsFailed closes every non-terminal run left by an
+// application restart. The status becomes partial when progress was persisted,
+// otherwise it becomes failed.
+func (r *evaluationRepository) MarkAllInterruptedRunsFailed(
+	ctx context.Context,
+	completedAt time.Time,
+	errorMessage string,
+) (int64, error) {
+	return r.markInterruptedRunsFailed(ctx, nil, completedAt, errorMessage)
+}
+
+func (r *evaluationRepository) markInterruptedRunsFailed(
+	ctx context.Context,
+	tenantID *uint64,
+	completedAt time.Time,
+	errorMessage string,
+) (int64, error) {
 	if completedAt.IsZero() {
 		completedAt = time.Now()
 	}
@@ -133,20 +153,87 @@ func (r *evaluationRepository) MarkInterruptedRunsFailed(
 		errorMessage = "evaluation process interrupted before completion"
 	}
 	errorMessage = evaluationobs.SafeErrorText(errorMessage)
-	result := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Model(&types.EvaluationRunRecord{}).
-		Where("tenant_id = ? AND status IN ?", tenantID, []types.EvaluationRunStatus{
+		Where("status IN ?", []types.EvaluationRunStatus{
 			types.EvaluationRunStatusPending,
 			types.EvaluationRunStatusRunning,
-		}).
-		Updates(map[string]interface{}{
-			"status":        types.EvaluationRunStatusFailed,
-			"error_message": errorMessage,
-			"completed_at":  completedAt,
-			"updated_at":    completedAt,
-			"revision":      gorm.Expr("revision + 1"),
 		})
-	return result.RowsAffected, result.Error
+	if tenantID != nil {
+		query = query.Where("tenant_id = ?", *tenantID)
+	}
+	var records []types.EvaluationRunRecord
+	if err := query.Find(&records).Error; err != nil {
+		return 0, err
+	}
+	if len(records) == 0 {
+		return 0, nil
+	}
+
+	var recovered int64
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for i := range records {
+			record := &records[i]
+			status := interruptedEvaluationStatus(record)
+			updates := map[string]interface{}{
+				"status":        status,
+				"error_message": errorMessage,
+				"completed_at":  completedAt,
+				"updated_at":    completedAt,
+				"revision":      gorm.Expr("revision + 1"),
+			}
+			if snapshot := interruptedEvaluationResultSnapshot(record.ResultSnapshot, status, completedAt); snapshot != nil {
+				updates["result_snapshot"] = snapshot
+			}
+
+			rowQuery := tx.Model(&types.EvaluationRunRecord{}).
+				Where("run_id = ? AND status IN ?", record.RunID, []types.EvaluationRunStatus{
+					types.EvaluationRunStatusPending,
+					types.EvaluationRunStatusRunning,
+				})
+			if tenantID != nil {
+				rowQuery = rowQuery.Where("tenant_id = ?", *tenantID)
+			}
+			result := rowQuery.Updates(updates)
+			if result.Error != nil {
+				return result.Error
+			}
+			recovered += result.RowsAffected
+		}
+		return nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	return recovered, nil
+}
+
+func interruptedEvaluationStatus(record *types.EvaluationRunRecord) types.EvaluationRunStatus {
+	if record != nil && record.Finished > 0 {
+		return types.EvaluationRunStatusPartial
+	}
+	return types.EvaluationRunStatusFailed
+}
+
+func interruptedEvaluationResultSnapshot(
+	snapshot types.JSON,
+	status types.EvaluationRunStatus,
+	completedAt time.Time,
+) types.JSON {
+	if !hasEvaluationSnapshot(snapshot) {
+		return nil
+	}
+	var result types.EvaluationRunResult
+	if err := unmarshalEvaluationSnapshot(snapshot, &result); err != nil {
+		return nil
+	}
+	result.Run.Status = status
+	result.Run.CompletedAt = &completedAt
+	updated, err := marshalEvaluationSnapshot(&result)
+	if err != nil {
+		return nil
+	}
+	return updated
 }
 
 func newEvaluationRunRecord(

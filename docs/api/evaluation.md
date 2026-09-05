@@ -624,11 +624,11 @@ curl --location 'http://localhost:8080/api/v1/evaluation?task_id=c34563ad-b09f-4
 | `evaluation_runs` | Run 身份、生命周期、配置快照、兼容参数快照、聚合指标和四维结果 | Case 明细、凭据、问题或答案正文 |
 | `evaluation_run_cases` | Case 状态、耗时、Usage、Warning、PID 排名、指标和文本指纹 | 问题、参考答案、生成答案或文档正文 |
 
-两张表由项目现有 PostgreSQL/SQLite 迁移创建，Case 通过外键归属 Run，删除 Run 时级联删除 Case。当前实现支持进程重启后读取已经持久化的 Run 和 Case，但不支持从中断 Case 继续执行，也不支持多实例自动接管。
+两张表由项目现有 PostgreSQL/SQLite 迁移创建，Case 通过外键归属 Run，删除 Run 时级联删除 Case。当前实现支持进程重启后读取已经持久化的 Run 和 Case；服务启动时会将遗留的 `pending`/`running` Run 关闭为 `failed` 或 `partial`，但不支持从中断 Case 继续执行，也不提供安全的多实例自动接管。
 
-SQLite 的新建库、v11 到 v13 升级、索引、外键级联和 Down Migration 已建立自动化测试；PostgreSQL 000090 的表结构、JSONB、索引和级联删除也有迁移契约测试。迁移编号调整后的 PostgreSQL 85 到 90 实际升级仍需在可丢弃的数据库或 CI 中验收，不能为验证升级或回滚而改写已有开发库的迁移历史。
+SQLite 的新建库、v11 到 v13 升级、索引、外键级联和 Down Migration 已建立自动化测试；PostgreSQL 000091 的表结构、JSONB、索引和级联删除也有迁移契约测试。迁移编号调整后的 PostgreSQL 85 到 91 实际升级仍需在可丢弃的数据库或 CI 中验收，不能为验证升级或回滚而改写已有开发库的迁移历史。
 
-Repository 保留了按租户执行的 `MarkInterruptedRunsFailed` 恢复操作，但启动流程不会自动调用。该操作目前没有 Worker 归属、租约或心跳条件，若在多实例启动时直接执行，仍可能把同一租户下其他实例正在运行的任务错误关闭。安全的异常恢复需要先增加 Worker Owner 和租约过期判断，只处理确认失去所有权的 Run；在此之前，文档和 API 不宣称支持断点续跑或多实例自动接管。
+Repository 提供了按租户执行的 `MarkInterruptedRunsFailed` 和跨租户执行的 `MarkAllInterruptedRunsFailed`，应用启动时会调用后者清理上次进程退出留下的非终态 Run。该操作目前没有 Worker 归属、租约或心跳条件，多实例同时运行时仍可能把其他实例正在执行的任务错误关闭；因此部署多个评测实例前需要先增加 Worker Owner 和租约过期判断，当前文档和 API 不宣称支持断点续跑或多实例自动接管。
 
 ## GET `/evaluation/runs` - 分页查询历史 Run
 

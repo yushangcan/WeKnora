@@ -322,3 +322,146 @@ func TestEvaluationRepositoryMarksInterruptedRunsFailed(t *testing.T) {
 		t.Fatalf("other tenant run was changed: %#v", loadedOtherTenant.Task)
 	}
 }
+
+func TestEvaluationRepositoryMarksAllInterruptedRunsWithTerminalState(t *testing.T) {
+	db := newEvaluationRepositoryTestDB(t)
+	repo := NewEvaluationRepository(db)
+
+	pending := newEvaluationRepositoryTestDetail("evaluation-all-pending", 7)
+	running := newEvaluationRepositoryTestDetail("evaluation-all-running", 7)
+	running.Task.Status = types.EvaluationStatueRunning
+	running.Result.Run.Status = types.EvaluationRunStatusRunning
+	running.Task.Finished = 1
+
+	terminal := newEvaluationRepositoryTestDetail("evaluation-all-success", 7)
+	terminal.Task.Status = types.EvaluationStatueSuccess
+	terminal.Result.Run.Status = types.EvaluationRunStatusSuccess
+	otherTenant := newEvaluationRepositoryTestDetail("evaluation-all-other-tenant", 8)
+	otherTenant.Task.Status = types.EvaluationStatueRunning
+	otherTenant.Result.Run.Status = types.EvaluationRunStatusRunning
+	otherTenant.Task.Finished = 1
+
+	for _, detail := range []*types.EvaluationDetail{pending, running, terminal, otherTenant} {
+		if err := repo.CreateRun(context.Background(), detail, "temporary-"+detail.Task.ID); err != nil {
+			t.Fatalf("create run %s: %v", detail.Task.ID, err)
+		}
+	}
+
+	completedAt := time.Date(2026, 8, 31, 5, 0, 0, 0, time.UTC)
+	count, err := repo.MarkAllInterruptedRunsFailed(
+		context.Background(), completedAt, "restart interrupted api_key=secret",
+	)
+	if err != nil {
+		t.Fatalf("mark all interrupted runs: %v", err)
+	}
+	if count != 3 {
+		t.Fatalf("marked %d runs, want 3", count)
+	}
+
+	var records []types.EvaluationRunRecord
+	if err := db.Order("run_id ASC").Find(&records).Error; err != nil {
+		t.Fatalf("load recovered runs: %v", err)
+	}
+	if len(records) != 4 {
+		t.Fatalf("loaded %d runs, want 4", len(records))
+	}
+	byID := make(map[string]types.EvaluationRunRecord, len(records))
+	for _, record := range records {
+		byID[record.RunID] = record
+	}
+	if byID[pending.Task.ID].Status != types.EvaluationRunStatusFailed {
+		t.Fatalf("pending run status = %s, want failed", byID[pending.Task.ID].Status)
+	}
+	if byID[running.Task.ID].Status != types.EvaluationRunStatusPartial {
+		t.Fatalf("running run status = %s, want partial", byID[running.Task.ID].Status)
+	}
+	if byID[otherTenant.Task.ID].Status != types.EvaluationRunStatusPartial {
+		t.Fatalf("other-tenant run status = %s, want partial", byID[otherTenant.Task.ID].Status)
+	}
+	var recoveredSnapshot types.EvaluationRunResult
+	if err := json.Unmarshal(byID[running.Task.ID].ResultSnapshot, &recoveredSnapshot); err != nil {
+		t.Fatalf("decode recovered result snapshot: %v", err)
+	}
+	if recoveredSnapshot.Run.Status != types.EvaluationRunStatusPartial ||
+		recoveredSnapshot.Run.CompletedAt == nil || !recoveredSnapshot.Run.CompletedAt.Equal(completedAt) {
+		t.Fatalf("result snapshot was not closed consistently: %#v", recoveredSnapshot.Run)
+	}
+	if byID[terminal.Task.ID].Status != types.EvaluationRunStatusSuccess {
+		t.Fatalf("terminal run status changed to %s", byID[terminal.Task.ID].Status)
+	}
+	for _, runID := range []string{pending.Task.ID, running.Task.ID, otherTenant.Task.ID} {
+		record := byID[runID]
+		if record.CompletedAt == nil || !record.CompletedAt.Equal(completedAt) {
+			t.Fatalf("run %s completed_at = %v, want %v", runID, record.CompletedAt, completedAt)
+		}
+		if record.ErrorMessage != "restart interrupted api_key=[REDACTED]" {
+			t.Fatalf("run %s error message = %q, want sanitized message", runID, record.ErrorMessage)
+		}
+		if record.Revision != 2 {
+			t.Fatalf("run %s revision = %d, want 2", runID, record.Revision)
+		}
+	}
+
+	loaded, err := repo.GetRun(context.Background(), 7, running.Task.ID)
+	if err != nil {
+		t.Fatalf("get recovered partial run: %v", err)
+	}
+	if loaded.Task.Status != types.EvaluationStatueFailed ||
+		loaded.Result.Run.Status != types.EvaluationRunStatusPartial || loaded.Result.Run.CompletedAt == nil {
+		t.Fatalf("recovered partial run was not exposed consistently: %#v", loaded.Result.Run)
+	}
+	overview, err := repo.GetRunOverview(context.Background(), 7, running.Task.ID)
+	if err != nil {
+		t.Fatalf("get recovered run overview: %v", err)
+	}
+	if overview.Summary.Status != types.EvaluationRunStatusPartial {
+		t.Fatalf("recovered run overview status = %s, want partial", overview.Summary.Status)
+	}
+
+	count, err = repo.MarkAllInterruptedRunsFailed(context.Background(), completedAt, "second pass")
+	if err != nil {
+		t.Fatalf("repeat recovery pass: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("repeat recovery marked %d runs, want 0", count)
+	}
+}
+
+func TestEvaluationRepositorySaveTerminalRunUpsertsCases(t *testing.T) {
+	db := newEvaluationRepositoryTestDB(t)
+	repo := NewEvaluationRepository(db)
+	detail := newEvaluationRepositoryTestDetail("evaluation-terminal-retry", 7)
+	detail.Task.Status = types.EvaluationStatueSuccess
+	detail.Result.Run.Status = types.EvaluationRunStatusSuccess
+	completedAt := detail.Task.StartTime.Add(time.Minute)
+	detail.Result.Run.CompletedAt = &completedAt
+	detail.Result.Cases = []types.EvaluationCaseResult{
+		{CaseID: "case-1", Status: types.EvaluationRunStatusSuccess, StartedAt: detail.Task.StartTime, CompletedAt: &completedAt},
+	}
+	if err := repo.CreateRun(context.Background(), detail, "temporary-terminal-retry"); err != nil {
+		t.Fatalf("create terminal retry run: %v", err)
+	}
+	if err := repo.SaveTerminalRun(context.Background(), detail); err != nil {
+		t.Fatalf("save terminal run: %v", err)
+	}
+	if err := repo.SaveTerminalRun(context.Background(), detail); err != nil {
+		t.Fatalf("repeat terminal run save: %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&types.EvaluationRunCaseRecord{}).
+		Where("tenant_id = ? AND run_id = ?", 7, detail.Task.ID).
+		Count(&count).Error; err != nil {
+		t.Fatalf("count persisted cases: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("persisted %d cases after retry, want 1", count)
+	}
+	loaded, err := repo.GetRun(context.Background(), 7, detail.Task.ID)
+	if err != nil {
+		t.Fatalf("get terminal retry run: %v", err)
+	}
+	if loaded.Result.Run.Status != types.EvaluationRunStatusSuccess || len(loaded.Result.Cases) != 1 {
+		t.Fatalf("terminal retry changed durable state: %#v", loaded.Result)
+	}
+}

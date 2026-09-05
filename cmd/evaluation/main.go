@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -55,6 +56,47 @@ type evaluationComparisonResponse struct {
 	Data    json.RawMessage `json:"data"`
 }
 
+type qualityGateConfig struct {
+	ReportPath string
+	Tolerance  float64
+	Metrics    []string
+}
+
+type comparisonReport struct {
+	BaselineID string          `json:"baseline_id"`
+	Runs       []comparisonRun `json:"runs"`
+}
+
+type comparisonRun struct {
+	Run struct {
+		RunID  string `json:"run_id"`
+		Status string `json:"status"`
+	} `json:"run"`
+	QualityCompatibility struct {
+		Comparable bool `json:"comparable"`
+	} `json:"quality_compatibility"`
+	Quality qualityDeltas `json:"quality"`
+}
+
+type qualityDeltas struct {
+	Precision valueDelta `json:"precision"`
+	Recall    valueDelta `json:"recall"`
+	NDCG3     valueDelta `json:"ndcg3"`
+	NDCG10    valueDelta `json:"ndcg10"`
+	MRR       valueDelta `json:"mrr"`
+	MAP       valueDelta `json:"map"`
+	BLEU1     valueDelta `json:"bleu1"`
+	BLEU2     valueDelta `json:"bleu2"`
+	BLEU4     valueDelta `json:"bleu4"`
+	ROUGE1    valueDelta `json:"rouge1"`
+	ROUGE2    valueDelta `json:"rouge2"`
+	ROUGEL    valueDelta `json:"rougel"`
+}
+
+type valueDelta struct {
+	Absolute *float64 `json:"absolute"`
+}
+
 type evaluationDetail struct {
 	Task struct {
 		ID       string `json:"id"`
@@ -86,6 +128,20 @@ type evaluationDetail struct {
 }
 
 func main() {
+	if len(os.Args) > 1 && strings.EqualFold(strings.TrimSpace(os.Args[1]), "gate") {
+		config, err := loadQualityGateConfig(os.Getenv)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), configTimeout(os.Getenv))
+		defer cancel()
+		if err := runQualityGate(ctx, config, os.Stdout); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	config, err := loadCommandConfig(os.Getenv)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -103,6 +159,14 @@ func main() {
 		fmt.Fprintln(os.Stderr, runErr)
 		os.Exit(1)
 	}
+}
+
+func configTimeout(getenv func(string) string) time.Duration {
+	duration, err := envDuration(getenv, "EVALUATION_TIMEOUT", 30*time.Minute)
+	if err != nil {
+		return 30 * time.Minute
+	}
+	return duration
 }
 
 func loadCommandConfig(getenv func(string) string) (commandConfig, error) {
@@ -196,6 +260,112 @@ func splitRunIDs(raw string) []string {
 		ids = append(ids, value)
 	}
 	return ids
+}
+
+func loadQualityGateConfig(getenv func(string) string) (qualityGateConfig, error) {
+	config := qualityGateConfig{
+		ReportPath: envOrDefault(getenv, "EVALUATION_COMPARISON_REPORT_PATH", "tmp/evaluation-comparison.json"),
+		Metrics:    splitRunIDs(envOrDefault(getenv, "EVALUATION_GATE_METRICS", "precision,recall,ndcg10,mrr,map,bleu1,bleu2,bleu4,rouge1,rouge2,rougel")),
+	}
+	rawTolerance := envOrDefault(getenv, "EVALUATION_QUALITY_TOLERANCE", "0")
+	tolerance, err := strconv.ParseFloat(rawTolerance, 64)
+	if err != nil || tolerance < 0 {
+		return qualityGateConfig{}, errors.New("EVALUATION_QUALITY_TOLERANCE must be a non-negative number")
+	}
+	if config.ReportPath == "" || len(config.Metrics) == 0 {
+		return qualityGateConfig{}, errors.New("quality gate report path and metrics are required")
+	}
+	config.Tolerance = tolerance
+	return config, nil
+}
+
+func runQualityGate(ctx context.Context, config qualityGateConfig, output io.Writer) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+	raw, err := os.ReadFile(config.ReportPath)
+	if err != nil {
+		return fmt.Errorf("read comparison report: %w", err)
+	}
+	var envelope evaluationComparisonResponse
+	if err := json.Unmarshal(raw, &envelope); err != nil {
+		return fmt.Errorf("decode comparison report: %w", err)
+	}
+	data := envelope.Data
+	if len(data) == 0 || string(data) == "null" {
+		data = raw
+	}
+	var comparison comparisonReport
+	if err := json.Unmarshal(data, &comparison); err != nil {
+		return fmt.Errorf("decode evaluation comparison: %w", err)
+	}
+	if comparison.BaselineID == "" || len(comparison.Runs) < 2 {
+		return errors.New("comparison report must contain a baseline and at least one candidate")
+	}
+	metricReaders := qualityMetricReaders()
+	var failures []string
+	checked := 0
+	for _, candidate := range comparison.Runs {
+		if candidate.Run.RunID == comparison.BaselineID {
+			continue
+		}
+		checked++
+		if candidate.Run.Status != "success" {
+			failures = append(failures, candidate.Run.RunID+": run status is "+candidate.Run.Status)
+			continue
+		}
+		if !candidate.QualityCompatibility.Comparable {
+			failures = append(failures, candidate.Run.RunID+": quality comparison is incompatible")
+			continue
+		}
+		for _, metric := range config.Metrics {
+			reader, ok := metricReaders[metric]
+			if !ok {
+				return fmt.Errorf("unsupported quality metric %q", metric)
+			}
+			delta := reader(candidate.Quality)
+			if delta.Absolute == nil {
+				failures = append(failures, candidate.Run.RunID+": "+metric+" has no comparable delta")
+				continue
+			}
+			if *delta.Absolute < -config.Tolerance {
+				failures = append(failures, fmt.Sprintf("%s: %s delta %.6f is below tolerance -%.6f", candidate.Run.RunID, metric, *delta.Absolute, config.Tolerance))
+			}
+		}
+	}
+	if checked == 0 {
+		return errors.New("comparison report contains no candidate run")
+	}
+	fmt.Fprintf(output, "evaluation quality gate: baseline=%s candidates=%d tolerance=%.6f\n", comparison.BaselineID, checked, config.Tolerance)
+	if len(failures) > 0 {
+		for _, failure := range failures {
+			fmt.Fprintf(output, "evaluation quality regression: %s\n", failure)
+		}
+		return fmt.Errorf("quality gate failed with %d finding(s)", len(failures))
+	}
+	fmt.Fprintln(output, "evaluation quality gate: passed")
+	return nil
+}
+
+type qualityMetricReader func(qualityDeltas) valueDelta
+
+func qualityMetricReaders() map[string]qualityMetricReader {
+	return map[string]qualityMetricReader{
+		"precision": func(d qualityDeltas) valueDelta { return d.Precision },
+		"recall":    func(d qualityDeltas) valueDelta { return d.Recall },
+		"ndcg3":     func(d qualityDeltas) valueDelta { return d.NDCG3 },
+		"ndcg10":    func(d qualityDeltas) valueDelta { return d.NDCG10 },
+		"mrr":       func(d qualityDeltas) valueDelta { return d.MRR },
+		"map":       func(d qualityDeltas) valueDelta { return d.MAP },
+		"bleu1":     func(d qualityDeltas) valueDelta { return d.BLEU1 },
+		"bleu2":     func(d qualityDeltas) valueDelta { return d.BLEU2 },
+		"bleu4":     func(d qualityDeltas) valueDelta { return d.BLEU4 },
+		"rouge1":    func(d qualityDeltas) valueDelta { return d.ROUGE1 },
+		"rouge2":    func(d qualityDeltas) valueDelta { return d.ROUGE2 },
+		"rougel":    func(d qualityDeltas) valueDelta { return d.ROUGEL },
+	}
 }
 
 func callEvaluationComparisonAPI(ctx context.Context, httpClient *http.Client, config commandConfig, endpoint string) (evaluationComparisonResponse, []byte, error) {

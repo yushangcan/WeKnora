@@ -267,3 +267,45 @@ func TestSplitRunIDsDeduplicatesAndTrims(t *testing.T) {
 		t.Fatalf("splitRunIDs = %#v", got)
 	}
 }
+
+func TestRunQualityGatePassesWithinTolerance(t *testing.T) {
+	reportPath := filepath.Join(t.TempDir(), "comparison.json")
+	report := `{"success":true,"data":{"baseline_id":"run-a","runs":[{"run":{"run_id":"run-a","status":"success"}},{"run":{"run_id":"run-b","status":"success"},"quality_compatibility":{"comparable":true},"quality":{"precision":{"absolute":-0.01},"recall":{"absolute":0.02}}}]}}`
+	if err := os.WriteFile(reportPath, []byte(report), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	config := qualityGateConfig{ReportPath: reportPath, Tolerance: 0.01, Metrics: []string{"precision", "recall"}}
+	var output bytes.Buffer
+	if err := runQualityGate(context.Background(), config, &output); err != nil {
+		t.Fatalf("quality gate: %v", err)
+	}
+	if !strings.Contains(output.String(), "passed") {
+		t.Fatalf("quality gate output = %s", output.String())
+	}
+}
+
+func TestRunQualityGateBlocksRegressionAndIncompatibleRuns(t *testing.T) {
+	reportPath := filepath.Join(t.TempDir(), "comparison.json")
+	report := `{"baseline_id":"run-a","runs":[{"run":{"run_id":"run-a","status":"success"}},{"run":{"run_id":"run-b","status":"success"},"quality_compatibility":{"comparable":true},"quality":{"precision":{"absolute":-0.02}}},{"run":{"run_id":"run-c","status":"partial"},"quality_compatibility":{"comparable":false},"quality":{"precision":{"absolute":0.2}}}]}`
+	if err := os.WriteFile(reportPath, []byte(report), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	config := qualityGateConfig{ReportPath: reportPath, Tolerance: 0.01, Metrics: []string{"precision"}}
+	var output bytes.Buffer
+	err := runQualityGate(context.Background(), config, &output)
+	if err == nil || !strings.Contains(err.Error(), "quality gate failed") {
+		t.Fatalf("quality gate error = %v", err)
+	}
+	for _, fragment := range []string{"run-b", "run-c", "quality regression"} {
+		if !strings.Contains(output.String(), fragment) {
+			t.Fatalf("quality gate output missing %q: %s", fragment, output.String())
+		}
+	}
+}
+
+func TestLoadQualityGateConfigValidatesTolerance(t *testing.T) {
+	values := map[string]string{"EVALUATION_QUALITY_TOLERANCE": "-0.1"}
+	if _, err := loadQualityGateConfig(func(name string) string { return values[name] }); err == nil {
+		t.Fatal("negative quality tolerance was accepted")
+	}
+}

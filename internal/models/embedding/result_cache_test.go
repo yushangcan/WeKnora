@@ -65,6 +65,20 @@ func testCacheConfig() Config {
 	return Config{ModelID: "model-1", ModelName: "embed-v1", Provider: "test", Dimensions: 2}
 }
 
+type failingResultCache struct {
+	metrics *cacheMetrics
+}
+
+func (failingResultCache) Get(context.Context, string) ([]float32, bool, error) {
+	return nil, false, errors.New("cache read unavailable")
+}
+
+func (failingResultCache) Set(context.Context, string, []float32, time.Duration) error {
+	return errors.New("cache write unavailable")
+}
+
+func (f failingResultCache) cacheMetrics() *cacheMetrics { return f.metrics }
+
 func TestResultCacheEmbedReusesVector(t *testing.T) {
 	inner := &cacheTestEmbedder{}
 	wrapped := WrapResultCache(inner, newMemoryResultCache(4), testCacheConfig(), 42)
@@ -239,6 +253,25 @@ func TestResultCacheFailsOpenAndDoesNotStoreInvalidVector(t *testing.T) {
 	}
 	if inner.embedCalls != 1 {
 		t.Fatalf("provider calls = %d, want 1", inner.embedCalls)
+	}
+}
+
+func TestResultCacheFailsOpenWhenBackendErrors(t *testing.T) {
+	inner := &cacheTestEmbedder{}
+	cache := failingResultCache{metrics: &cacheMetrics{}}
+	wrapper := WrapResultCache(inner, cache, testCacheConfig(), 42)
+	if _, err := wrapper.Embed(context.Background(), "backend-error"); err != nil {
+		t.Fatalf("Embed should preserve provider result: %v", err)
+	}
+	inner.mu.Lock()
+	calls := inner.embedCalls
+	inner.mu.Unlock()
+	if calls != 1 {
+		t.Fatalf("provider calls = %d, want 1", calls)
+	}
+	metrics := CacheMetrics(cache)
+	if metrics.GetErrors != 1 || metrics.SetErrors != 1 {
+		t.Fatalf("cache errors were not observed: %#v", metrics)
 	}
 }
 

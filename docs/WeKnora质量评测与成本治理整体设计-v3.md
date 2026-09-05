@@ -40,7 +40,7 @@
 | Persistence | evaluation_runs、evaluation_run_cases、分页、comparison、租户条件已有 | migration 需同步上游后重验 |
 | Recovery | 启动会把所有 pending/running Run 关闭为失败/partial | 这是单实例假设，多实例需 owner/lease/heartbeat |
 | Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页已有 | Provider-specific Embed/Rerank usage、VLM/ASR 覆盖和费用仍缺 |
-| Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、Fail Open 已有 | 多实例防击穿、命中指标、冷/热/禁用真实对照 |
+| Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open 已有 | 冷/热/禁用和真实多实例对照仍待验证 |
 | Wiki Prompt | 部分模板固定前缀和 fingerprint 已有，wiki_* 已归 source=wiki | Provider 命中证据和其余模板收益未验证 |
 | CLI | cmd/evaluation 可 POST、轮询、保存报告 | 需认证后的真实 Provider 运行 |
 | CI/Parser | 尚未形成门禁；八解析器横评尚未开始 | 不得按已完成汇报 |
@@ -123,7 +123,7 @@ Cache Key 绑定 schema_version、tenant_id、model_id、model_updated_at/config
 
 算法：Get/GetMany -> Hit 返回副本 -> Miss 进入 singleflight -> 只发送 Miss -> 校验数量/维度/有限浮点/顺序 -> Set/SetMany。错误、取消、超时、空向量、维度错、NaN/Inf、数量不匹配不得缓存。Lite 用 LRU+TTL+容量上限；Redis 用独立 namespace；缓存故障 Fail Open。
 
-当前只有进程内 singleflight。多实例需 Redis token-owned lock：Leader 调 Provider、校验、写缓存、释放锁；Waiter 有界退避读缓存；Redis/锁异常或超时 Fail Open。没有协调测试不宣称多实例能力。
+Redis 模式已经增加 Redis token-owned lock：Leader 调 Provider、校验、写缓存、释放锁；Waiter 有界退避读缓存；Redis/锁异常或超时 Fail Open。Lite 模式只使用进程内 singleflight。代码级协调测试已存在，但没有真实多实例部署报告前，不宣称生产吞吐收益。
 
 新增应用缓存指标：requests、hit_items、miss_items、provider_requests、provider_items、get/set_errors、invalid_entries、singleflight_waits、lock_waits。不能复用 Provider Cache 字段。
 

@@ -59,30 +59,31 @@ Output format:
 // the document content provided below.
 const WikiSummaryPrompt = `You are a wiki editor. Given the following document content, create a structured wiki summary page in Markdown format.
 
-<document>
-<content>
-{{.Content}}
-</content>
-</document>
-
-<available_wiki_pages>
-{{.ExtractedSlugs}}
-</available_wiki_pages>
-
 <instructions>
 1. The FIRST line of your output MUST be: SUMMARY: {one sentence, 15-40 words, describing what this document is about — for wiki index listing}
 2. After the SUMMARY line, write a comprehensive summary of the document in Markdown format.
 3. Include the key facts, arguments, and conclusions.
 4. Use proper heading hierarchy (## for sections, ### for subsections).
-5. **Wiki-link rule**: The available_wiki_pages list above maps slugs to display names and their aliases (format: "[[slug]] = display name (Aliases: a, b)"). Whenever you mention a name or alias that matches a listed entry, you MUST write it as [[slug|display name]] (e.g. [[entity/zhong-guo|中国]]), NOT as bold (**name**) or bare [[slug]]. Use the EXACT slugs provided — do NOT invent new slugs.
+5. **Wiki-link rule**: The available_wiki_pages list below maps slugs to display names and their aliases (format: "[[slug]] = display name (Aliases: a, b)"). Whenever you mention a name or alias that matches a listed entry, you MUST write it as [[slug|display name]] (e.g. [[entity/zhong-guo|中国]]), NOT as bold (**name**) or bare [[slug]]. Use the EXACT slugs provided — do NOT invent new slugs.
 6. **Image rule**: If the document contains <images> tags with <image> elements, you SHOULD include the relevant images in your summary using the Markdown syntax: ![caption](url). Place the images where they are contextually relevant to the text. The URL inside ![caption](url) is an opaque token; reproduce it EXACTLY and VERBATIM, do not alter, shorten, or normalize it.
 7. At the end, include a "## Key Takeaways" section with bullet points.
 8. Write in {{.Language}}.
 9. Keep the summary concise but thorough (500-1500 words depending on document length).
-10. **Empty content rule**: If the <content> block above is empty, contains only image references with no extracted text, or otherwise carries no substantive information, output exactly: "SUMMARY: No textual content was extractable from this document." followed by a brief note explaining that the document could not be summarised. Do NOT invent a topic, do NOT guess from any other clue.
+10. **Empty content rule**: If the <content> block below is empty, contains only image references with no extracted text, or otherwise carries no substantive information, output exactly: "SUMMARY: No textual content was extractable from this document." followed by a brief note explaining that the document could not be summarised. Do NOT invent a topic, do NOT guess from any other clue.
 </instructions>
 
-Output the SUMMARY line first, then the Markdown content. Do not include any other preamble.`
+Output the SUMMARY line first, then the Markdown content. Do not include any other preamble.
+
+<available_wiki_pages>
+{{.ExtractedSlugs}}
+</available_wiki_pages>
+
+<document>
+<content>
+{{.Content}}
+</content>
+</document>
+`
 
 // WikiKnowledgeExtractPrompt extracts both entities and concepts in a single LLM call.
 // Returns a JSON object with "entities" and "concepts" arrays.
@@ -171,27 +172,17 @@ Output ONLY valid JSON. Example:
 // longer has to carry full facts per item, it stays cheap even for long docs.
 const WikiCandidateSlugPrompt = `You are a knowledge extraction system. Analyze the following document and list all significant entities AND key concepts as a lightweight candidate set. Another pass will later attach concrete supporting chunks to each item, so you do NOT need to write exhaustive per-item facts here.
 
-<document>
-<content>
-{{.Content}}
-</content>
-</document>
-
-<previous_slugs>
-{{.PreviousSlugs}}
-</previous_slugs>
-
 <instructions>
 Return a JSON object with two arrays: "entities" and "concepts".
 **IMPORTANT: Write ALL names, descriptions, and details in {{.Language}}**.
 
-If the <content> block above is empty, contains only image references with no extracted text, or otherwise carries no substantive information, return {"entities": [], "concepts": []}. Do NOT invent entities or concepts from any other source.
+If the <content> block below is empty, contains only image references with no extracted text, or otherwise carries no substantive information, return {"entities": [], "concepts": []}. Do NOT invent entities or concepts from any other source.
 
 ### Extraction Scope (Granularity: {{.Granularity}})
 {{.GranularityGuidance}}
 
 ### Slug Continuity Rules
-If previous slugs are provided above, you MUST follow these rules:
+If previous slugs are provided below, you MUST follow these rules:
 - If an entity or concept from the previous extraction still exists in the current document, **reuse its exact slug** from the previous list. Do NOT generate a new slug for the same thing.
 - If an entity or concept no longer appears in the document, **do NOT include it** in the output.
 - Only generate new slugs for entities/concepts that are genuinely new (not present in the previous list).
@@ -246,7 +237,19 @@ Output ONLY valid JSON. Example:
       "details": "Retrieves documents, then feeds them as context to an LLM."
     }
   ]
-}`
+}
+
+<previous_slugs>
+{{.PreviousSlugs}}
+</previous_slugs>
+
+<document>
+<content>
+{{.Content}}
+</content>
+</document>
+
+Now apply the instructions above to the document and output ONLY the JSON candidate set.`
 
 // WikiChunkCitationPrompt (Pass 1..N of the chunk-cited pipeline) asks the LLM
 // to read a batch of chunks and, for each candidate entity/concept, list the

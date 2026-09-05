@@ -2479,12 +2479,9 @@ func (s *wikiIngestService) generateWithTemplate(ctx context.Context, chatModel 
 	}
 	thinking := false
 	opts := &chat.ChatOptions{Temperature: 0.3, Thinking: &thinking, MaxTokens: wikiLLMMaxTokens}
-	prefixFingerprint := chat.PromptPrefixFingerprint(messages, opts)
+	prefixFingerprint := wikiPromptPrefixFingerprint(promptTpl, maskedData, messages, opts)
 	warmupKey := ""
 	if promptTpl == agent.WikiPageModifyUserPrompt {
-		prefixFingerprint = chat.FingerprintPromptPrefix(
-			messages[0].Content, maskedData["SharedSourceContexts"],
-		)
 		if tenantID, ok := types.TenantIDFromContext(ctx); ok {
 			warmupKey = chat.BuildPromptCacheKey(
 				tenantID, chatModel.GetModelID(), purpose, prefixFingerprint,
@@ -2569,6 +2566,37 @@ func (s *wikiIngestService) generateWithTemplate(ctx context.Context, chatModel 
 		content, _ := result.Val.(string)
 		return unmaskImageURLs(content, urlMap), nil
 	}
+}
+
+// wikiPromptPrefixFingerprint identifies the stable prompt cohort used by
+// provider-cache observability. Generic chat fingerprinting only considers
+// leading system messages; most Wiki templates are user-only messages, so it
+// would otherwise collapse every Wiki operation into one misleading cohort.
+// Dynamic document, chunk and page bodies are deliberately excluded.
+func wikiPromptPrefixFingerprint(promptTpl string, data map[string]string, messages []chat.Message, opts *chat.ChatOptions) string {
+	purpose := wikiPromptPurpose(promptTpl)
+	stable := []string{"wiki-prompt-v2", purpose, data["Language"], data["CustomInstructions"], data["InstructionScope"]}
+	switch promptTpl {
+	case agent.WikiPageModifyUserPrompt:
+		if len(messages) > 0 {
+			stable = append(stable, messages[0].Content)
+		}
+		stable = append(stable, data["SharedSourceContexts"])
+	case agent.WikiChunkCitationPrompt:
+		stable = append(stable, data["CandidateSlugs"])
+	case agent.WikiCandidateSlugPrompt:
+		stable = append(stable, data["Granularity"], data["GranularityGuidance"], data["PreviousSlugs"])
+	case agent.WikiSummaryPrompt:
+		stable = append(stable, data["ExtractedSlugs"])
+	case agent.WikiTaxonomyPlanPrompt:
+		stable = append(stable, data["ExistingTaxonomy"])
+	case agent.WikiIndexIntroPrompt, agent.WikiIndexIntroUpdatePrompt:
+		stable = append(stable, data["ChangeDescription"])
+	}
+	if opts != nil {
+		stable = append(stable, fmt.Sprintf("temperature=%v;max_tokens=%d", opts.Temperature, opts.MaxTokens))
+	}
+	return chat.FingerprintPromptPrefix(stable...)
 }
 
 func wikiPromptPurpose(promptTpl string) string {

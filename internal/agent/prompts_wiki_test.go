@@ -124,6 +124,72 @@ func TestWikiChunkCitationPrompt_PreservesPlaceholders(t *testing.T) {
 	}
 }
 
+func renderWikiPrompt(t *testing.T, name, prompt string, data map[string]string) string {
+	t.Helper()
+	tmpl, err := template.New(name).Parse(prompt)
+	if err != nil {
+		t.Fatalf("parse %s prompt: %v", name, err)
+	}
+	var b strings.Builder
+	if err := tmpl.Execute(&b, data); err != nil {
+		t.Fatalf("execute %s prompt: %v", name, err)
+	}
+	return b.String()
+}
+
+func TestWikiCandidateAndSummaryPromptsKeepRulesBeforeDynamicContent(t *testing.T) {
+	candidateData := map[string]string{
+		"Language":            "English",
+		"Granularity":         "standard",
+		"GranularityGuidance": "balanced guidance",
+		"PreviousSlugs":       "concept/existing = Existing",
+	}
+	candidateA := renderWikiPrompt(t, "candidate", WikiCandidateSlugPrompt, mergePromptData(candidateData, map[string]string{"Content": "document A"}))
+	candidateB := renderWikiPrompt(t, "candidate", WikiCandidateSlugPrompt, mergePromptData(candidateData, map[string]string{"Content": "document B"}))
+	assertStableWikiPrefix(t, candidateA, candidateB, "candidate")
+	assertBefore(t, candidateA, "<previous_slugs>", "<document>", "candidate previous slugs")
+
+	summaryData := map[string]string{"Language": "English", "ExtractedSlugs": "entity/acme = Acme"}
+	summaryA := renderWikiPrompt(t, "summary", WikiSummaryPrompt, mergePromptData(summaryData, map[string]string{"Content": "document A"}))
+	summaryB := renderWikiPrompt(t, "summary", WikiSummaryPrompt, mergePromptData(summaryData, map[string]string{"Content": "document B"}))
+	assertStableWikiPrefix(t, summaryA, summaryB, "summary")
+	assertBefore(t, summaryA, "<available_wiki_pages>", "<document>", "summary available pages")
+}
+
+func assertBefore(t *testing.T, prompt, first, second, name string) {
+	t.Helper()
+	firstIndex, secondIndex := strings.Index(prompt, first), strings.Index(prompt, second)
+	if firstIndex < 0 || secondIndex < 0 || firstIndex > secondIndex {
+		t.Fatalf("%s must appear before %s", name, second)
+	}
+}
+
+func assertStableWikiPrefix(t *testing.T, first, second, name string) {
+	t.Helper()
+	marker := "\n<document>\n"
+	firstIndex, secondIndex := strings.Index(first, marker), strings.Index(second, marker)
+	if firstIndex < 0 || secondIndex < 0 {
+		t.Fatalf("%s prompt missing document marker", name)
+	}
+	if first[:firstIndex] != second[:secondIndex] {
+		t.Fatalf("%s prompt prefix changed with document content", name)
+	}
+	if !strings.Contains(first[:firstIndex], "<instructions>") || !strings.Contains(first[:firstIndex], "Output") {
+		t.Fatalf("%s prompt rules/schema are not before dynamic document content", name)
+	}
+}
+
+func mergePromptData(base, extra map[string]string) map[string]string {
+	merged := make(map[string]string, len(base)+len(extra))
+	for key, value := range base {
+		merged[key] = value
+	}
+	for key, value := range extra {
+		merged[key] = value
+	}
+	return merged
+}
+
 func TestWikiPageModifyUserPrompt_HidesInternalChunkHandles(t *testing.T) {
 	combined := WikiPageModifySystemPrompt + "\n" + WikiPageModifyUserPrompt
 	for _, guidance := range []string{

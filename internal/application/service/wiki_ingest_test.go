@@ -403,6 +403,42 @@ func TestGenerateWikiPageModifyUsesCacheableMessageLayout(t *testing.T) {
 	}
 }
 
+func TestWikiPromptPrefixFingerprintSeparatesOperations(t *testing.T) {
+	data := map[string]string{
+		"Language":       "English",
+		"CandidateSlugs": "entity/acme = Acme",
+		"Granularity":    "standard",
+	}
+	opts := &chat.ChatOptions{Temperature: 0.3, MaxTokens: 32768}
+	messages := []chat.Message{{Role: "user", Content: "dynamic document"}}
+	citation := wikiPromptPrefixFingerprint(agent.WikiChunkCitationPrompt, data, messages, opts)
+	candidate := wikiPromptPrefixFingerprint(agent.WikiCandidateSlugPrompt, data, messages, opts)
+	if citation == "" || candidate == "" {
+		t.Fatal("wiki prompt prefix fingerprint must not be empty")
+	}
+	if citation == candidate {
+		t.Fatalf("different Wiki operations must not share one fingerprint: %q", citation)
+	}
+	changedContent := cloneStringMap(data)
+	changedContent["Content"] = "a different document body"
+	if wikiPromptPrefixFingerprint(agent.WikiChunkCitationPrompt, changedContent, messages, opts) != citation {
+		t.Fatal("dynamic chunk/document content must not change the citation cohort")
+	}
+	changed := cloneStringMap(data)
+	changed["CandidateSlugs"] = "entity/other = Other"
+	if wikiPromptPrefixFingerprint(agent.WikiChunkCitationPrompt, changed, messages, opts) == citation {
+		t.Fatal("candidate slug changes must produce a different citation cohort")
+	}
+}
+
+func cloneStringMap(input map[string]string) map[string]string {
+	output := make(map[string]string, len(input))
+	for key, value := range input {
+		output[key] = value
+	}
+	return output
+}
+
 func TestAwaitWikiPromptWarmupBlocksFollowersUntilLeaderCompletes(t *testing.T) {
 	service := &wikiIngestService{}
 	release, err := service.awaitWikiPromptWarmup(context.Background(), "same-prefix")

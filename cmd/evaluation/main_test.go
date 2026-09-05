@@ -228,3 +228,42 @@ func TestLoadCommandConfigRequiresKeyAndValidDurations(t *testing.T) {
 		t.Fatal("missing API key was accepted")
 	}
 }
+
+func TestRunEvaluationComparisonWritesReportAndPreservesRunOrder(t *testing.T) {
+	const apiKey = "compare-secret"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-API-Key") != apiKey || r.Header.Get("X-Tenant-ID") != "10000" {
+			t.Fatalf("comparison request lost auth headers")
+		}
+		if r.URL.Path != "/api/v1/evaluation/comparison" {
+			t.Fatalf("comparison path = %q", r.URL.Path)
+		}
+		if r.URL.Query().Get("baseline_id") != "run-a" || strings.Join(r.URL.Query()["run_ids"], ",") != "run-a,run-b" {
+			t.Fatalf("comparison query = %#v", r.URL.Query())
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"success":true,"data":{"baseline_id":"run-a","runs":[{"run_id":"run-a"},{"run_id":"run-b"}]}}`))
+	}))
+	defer server.Close()
+
+	reportPath := filepath.Join(t.TempDir(), "comparison.json")
+	config := commandConfig{BaseURL: server.URL, APIKey: apiKey, TenantID: "10000", BaselineRunID: "run-a", ComparisonRunIDs: "run-a,run-b", ComparisonReportPath: reportPath}
+	var output bytes.Buffer
+	if err := runEvaluationComparison(context.Background(), server.Client(), config, &output); err != nil {
+		t.Fatalf("run comparison: %v", err)
+	}
+	if strings.Contains(output.String(), apiKey) {
+		t.Fatal("comparison output contains API key")
+	}
+	report, err := os.ReadFile(reportPath)
+	if err != nil || !strings.Contains(string(report), `"baseline_id": "run-a"`) {
+		t.Fatalf("comparison report = %s, err=%v", report, err)
+	}
+}
+
+func TestSplitRunIDsDeduplicatesAndTrims(t *testing.T) {
+	got := splitRunIDs(" run-a,run-b,run-a,, run-c ")
+	if strings.Join(got, ",") != "run-a,run-b,run-c" {
+		t.Fatalf("splitRunIDs = %#v", got)
+	}
+}

@@ -23,16 +23,19 @@ const (
 )
 
 type commandConfig struct {
-	BaseURL         string
-	APIKey          string
-	TenantID        string
-	DatasetID       string
-	KnowledgeBaseID string
-	ChatModelID     string
-	RerankModelID   string
-	PollInterval    time.Duration
-	Timeout         time.Duration
-	ReportPath      string
+	BaseURL              string
+	APIKey               string
+	TenantID             string
+	DatasetID            string
+	KnowledgeBaseID      string
+	ChatModelID          string
+	RerankModelID        string
+	PollInterval         time.Duration
+	Timeout              time.Duration
+	ReportPath           string
+	BaselineRunID        string
+	ComparisonRunIDs     string
+	ComparisonReportPath string
 }
 
 type evaluationRequest struct {
@@ -45,6 +48,11 @@ type evaluationRequest struct {
 type evaluationResponse struct {
 	Success bool             `json:"success"`
 	Data    evaluationDetail `json:"data"`
+}
+
+type evaluationComparisonResponse struct {
+	Success bool            `json:"success"`
+	Data    json.RawMessage `json:"data"`
 }
 
 type evaluationDetail struct {
@@ -85,22 +93,31 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), config.Timeout)
 	defer cancel()
-	if err := runEvaluation(ctx, http.DefaultClient, config, os.Stdout); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	var runErr error
+	if len(os.Args) > 1 && strings.EqualFold(strings.TrimSpace(os.Args[1]), "compare") {
+		runErr = runEvaluationComparison(ctx, http.DefaultClient, config, os.Stdout)
+	} else {
+		runErr = runEvaluation(ctx, http.DefaultClient, config, os.Stdout)
+	}
+	if runErr != nil {
+		fmt.Fprintln(os.Stderr, runErr)
 		os.Exit(1)
 	}
 }
 
 func loadCommandConfig(getenv func(string) string) (commandConfig, error) {
 	config := commandConfig{
-		BaseURL:         envOrDefault(getenv, "WEKNORA_BASE_URL", "http://localhost:8080"),
-		APIKey:          strings.TrimSpace(getenv("WEKNORA_API_KEY")),
-		TenantID:        strings.TrimSpace(getenv("WEKNORA_TENANT_ID")),
-		DatasetID:       envOrDefault(getenv, "EVALUATION_DATASET_ID", "default"),
-		KnowledgeBaseID: strings.TrimSpace(getenv("EVALUATION_KNOWLEDGE_BASE_ID")),
-		ChatModelID:     strings.TrimSpace(getenv("EVALUATION_CHAT_MODEL_ID")),
-		RerankModelID:   strings.TrimSpace(getenv("EVALUATION_RERANK_MODEL_ID")),
-		ReportPath:      envOrDefault(getenv, "EVALUATION_REPORT_PATH", "tmp/evaluation-report.json"),
+		BaseURL:              envOrDefault(getenv, "WEKNORA_BASE_URL", "http://localhost:8080"),
+		APIKey:               strings.TrimSpace(getenv("WEKNORA_API_KEY")),
+		TenantID:             strings.TrimSpace(getenv("WEKNORA_TENANT_ID")),
+		DatasetID:            envOrDefault(getenv, "EVALUATION_DATASET_ID", "default"),
+		KnowledgeBaseID:      strings.TrimSpace(getenv("EVALUATION_KNOWLEDGE_BASE_ID")),
+		ChatModelID:          strings.TrimSpace(getenv("EVALUATION_CHAT_MODEL_ID")),
+		RerankModelID:        strings.TrimSpace(getenv("EVALUATION_RERANK_MODEL_ID")),
+		ReportPath:           envOrDefault(getenv, "EVALUATION_REPORT_PATH", "tmp/evaluation-report.json"),
+		BaselineRunID:        strings.TrimSpace(getenv("EVALUATION_BASELINE_RUN_ID")),
+		ComparisonRunIDs:     strings.TrimSpace(getenv("EVALUATION_COMPARISON_RUN_IDS")),
+		ComparisonReportPath: envOrDefault(getenv, "EVALUATION_COMPARISON_REPORT_PATH", "tmp/evaluation-comparison.json"),
 	}
 	if config.APIKey == "" {
 		return commandConfig{}, errors.New("WEKNORA_API_KEY is required")
@@ -120,6 +137,97 @@ func loadCommandConfig(getenv func(string) string) (commandConfig, error) {
 		return commandConfig{}, fmt.Errorf("WEKNORA_BASE_URL must be an absolute HTTP(S) URL")
 	}
 	return config, nil
+}
+
+func runEvaluationComparison(ctx context.Context, httpClient *http.Client, config commandConfig, output io.Writer) error {
+	baselineID := strings.TrimSpace(config.BaselineRunID)
+	if baselineID == "" {
+		return errors.New("EVALUATION_BASELINE_RUN_ID is required for compare")
+	}
+	runIDs := splitRunIDs(config.ComparisonRunIDs)
+	if len(runIDs) < 2 {
+		return errors.New("EVALUATION_COMPARISON_RUN_IDS must contain at least two unique run IDs")
+	}
+	foundBaseline := false
+	for _, runID := range runIDs {
+		if runID == baselineID {
+			foundBaseline = true
+			break
+		}
+	}
+	if !foundBaseline {
+		return errors.New("EVALUATION_BASELINE_RUN_ID must be included in EVALUATION_COMPARISON_RUN_IDS")
+	}
+	query := url.Values{}
+	query.Set("baseline_id", baselineID)
+	for _, runID := range runIDs {
+		query.Add("run_ids", runID)
+	}
+	endpoint := config.BaseURL + "/api/v1/evaluation/comparison?" + query.Encode()
+	response, rawResponse, err := callEvaluationComparisonAPI(ctx, httpClient, config, endpoint)
+	if err != nil {
+		return fmt.Errorf("compare evaluation runs: %w", err)
+	}
+	if err := writeEvaluationReport(config.ComparisonReportPath, rawResponse); err != nil {
+		return err
+	}
+	if len(response.Data) == 0 || string(response.Data) == "null" {
+		return errors.New("comparison response does not contain data")
+	}
+	fingerprint := compactJSON(response.Data, "unavailable")
+	fmt.Fprintf(output, "evaluation comparison: baseline=%s runs=%d\n", baselineID, len(runIDs))
+	fmt.Fprintf(output, "evaluation comparison data: %s\n", fingerprint)
+	fmt.Fprintf(output, "evaluation comparison report: %s\n", config.ComparisonReportPath)
+	return nil
+}
+
+func splitRunIDs(raw string) []string {
+	seen := make(map[string]struct{})
+	ids := make([]string, 0)
+	for _, value := range strings.Split(raw, ",") {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		if _, exists := seen[value]; exists {
+			continue
+		}
+		seen[value] = struct{}{}
+		ids = append(ids, value)
+	}
+	return ids
+}
+
+func callEvaluationComparisonAPI(ctx context.Context, httpClient *http.Client, config commandConfig, endpoint string) (evaluationComparisonResponse, []byte, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return evaluationComparisonResponse{}, nil, err
+	}
+	request.Header.Set("Accept", "application/json")
+	request.Header.Set("X-API-Key", config.APIKey)
+	if config.TenantID != "" {
+		request.Header.Set("X-Tenant-ID", config.TenantID)
+	}
+	response, err := httpClient.Do(request)
+	if err != nil {
+		return evaluationComparisonResponse{}, nil, err
+	}
+	defer response.Body.Close()
+	rawResponse, err := io.ReadAll(io.LimitReader(response.Body, 32<<20))
+	if err != nil {
+		return evaluationComparisonResponse{}, nil, err
+	}
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return evaluationComparisonResponse{}, rawResponse, fmt.Errorf("API returned HTTP %d", response.StatusCode)
+	}
+	var decoded evaluationComparisonResponse
+	if err := json.Unmarshal(rawResponse, &decoded); err != nil {
+		return evaluationComparisonResponse{}, rawResponse, fmt.Errorf("decode comparison response: %w", err)
+	}
+	if !decoded.Success {
+		return evaluationComparisonResponse{}, rawResponse, errors.New("API reported an unsuccessful comparison response")
+	}
+	return decoded, rawResponse, nil
 }
 
 func envOrDefault(getenv func(string) string, name, fallback string) string {

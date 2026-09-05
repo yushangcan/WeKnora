@@ -1,6 +1,6 @@
 # WeKnora 质量评测与成本治理整体设计方案 v3
 
-> 这是后续开发的主计划和验收索引。审计基线为 C:\Users\25515\Desktop\WeKnora，分支 codex/evaluation-four-dimension-results，HEAD 34ca815d。需求来源为 C:\Users\25515\Desktop\weknora需求文档.txt；历史计划位于 C:\Users\25515\Desktop\优化方案\。附件中的规划是需求和历史记录，不能替代当前源码审计。
+> 这是后续开发的主计划和验收索引。审计基线为 C:\Users\25515\Desktop\WeKnora，分支 codex/evaluation-four-dimension-results，当前实现检查点为 `ff9b2fce`。需求来源为 C:\Users\25515\Desktop\weknora需求文档.txt；历史计划位于 C:\Users\25515\Desktop\优化方案\。附件中的规划是需求和历史记录，不能替代当前源码审计。
 
 ## 1. 目标与边界
 
@@ -39,11 +39,11 @@
 | Evaluation | Run/Case observer、四维结果、config snapshot、metric version 已有 | 需补 fresh/upgrade/down 和真实重启证据 |
 | Persistence | evaluation_runs、evaluation_run_cases、分页、comparison、租户条件已有 | migration 需同步上游后重验 |
 | Recovery | 启动会把所有 pending/running Run 关闭为失败/partial | 这是单实例假设，多实例需 owner/lease/heartbeat |
-| Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页已有 | Provider-specific Embed/Rerank usage、VLM/ASR 覆盖和费用仍缺 |
+| Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093 migration、PricingResolver 已有 | Provider-specific Embed/Rerank/VLM/ASR adapter 尚未完整接入；PricingResolver 尚未接入持久化金额回写；真实 Provider 费用仍缺 |
 | Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open 已有 | 冷/热/禁用和真实多实例对照仍待验证 |
-| Wiki Prompt | 部分模板固定前缀和 fingerprint 已有，wiki_* 已归 source=wiki | Provider 命中证据和其余模板收益未验证 |
-| CLI | cmd/evaluation 可 POST、轮询、保存报告 | 需认证后的真实 Provider 运行 |
-| CI/Parser | 尚未形成门禁；八解析器横评尚未开始 | 不得按已完成汇报 |
+| Wiki Prompt | 所有主要模板有解析/占位符/稳定前缀测试；Deduplication 已完成一次最小重排；有脱敏 Provider Cache 对比报告值 | Provider 命中证据、真实小样本质量和其余模板收益未验证 |
+| CLI | cmd/evaluation 可 POST、轮询、保存报告；`compare` 读取历史 Run；`gate` 按质量容差阻断 | 需认证后的真实 Provider 运行和 CI artifact 验证 |
+| CI/Parser | 已有定时复现 workflow、缺配置 skipped artifact 和质量 gate；八解析器横评尚未开始 | workflow 尚未在本项目真实凭据环境运行；Parser 仍是可选项目 |
 
 ### 2.1 目标架构
 
@@ -107,13 +107,13 @@ Run Snapshot 不复制完整 Cases；读取时先读 Run，再稳定排序组装
 2. catalog_calculated：版本化价格目录按明确计费单位计算；
 3. billing_reconciled：账单/Usage API 异步对账。
 
-调用 Scope 传递 ProviderUsage{Tokens, BillableUnits, Amount, RequestID, RawSource}，避免修改 Embedder/Reranker 公共接口。金额使用 Decimal 或 minor-unit 整数，不用 float64 累计。未知、缺币种、混币种或单位不完整时 amount=null，状态为 unavailable/partial/pending。自托管模型可为 not_applicable，但不等于业务成本为零。
+调用 Scope 传递 ProviderUsage{Tokens, BillableUnits, Amount, AmountMinor, RequestID, RawSource}，避免修改 Embedder/Reranker 公共接口。当前 Chat/Stream Wrapper 已复制 Scope，Provider Request ID 已持久化；Embedding/Rerank 的 Provider-specific Scope 适配仍待补齐。PricingResolver 已支持版本化目录、Provider minor amount 优先和精确 minor-unit 计算，但尚未把解析结果自动回写 ModelUsageEvent。金额使用 Decimal 或 minor-unit 整数，不用 float64 累计。未知、缺币种、混币种或单位不完整时 amount=null，状态为 unavailable/partial/pending。自托管模型可为 not_applicable，但不等于业务成本为零。
 
 ## 4. API、CLI、前端
 
 保留 POST /api/v1/evaluation 与 GET /api/v1/evaluation?task_id=...。历史接口为 /evaluation/runs、/evaluation/runs/{run_id}、/evaluation/runs/{run_id}/cases、/evaluation/comparison。列表支持 page/page_size、status、dataset_id、config_hash、模型和 RFC3339 时间过滤；排序固定，page_size 有上限。
 
-cmd/evaluation 从环境读取服务地址、API Key、Dataset/KB/模型参数，提交、轮询、保留最后完整响应并输出 Run ID/config hash/metric version/报告路径。凭据不写日志或报告。可复现表示输入身份可追溯，不表示 Provider 外部状态和非确定性输出可自动还原。
+cmd/evaluation 从环境读取服务地址、API Key、Dataset/KB/模型参数，提交、轮询、保留最后完整响应并输出 Run ID/config hash/metric version/报告路径；`compare` 调用历史 Run comparison；`gate` 读取 comparison artifact 做质量回归阻断。凭据不写日志或报告。可复现表示输入身份可追溯，不表示 Provider 外部状态和非确定性输出可自动还原。
 
 前端分为 Run 列表、Run 四维详情、Case 证据；模型页分汇总卡片、按模型聚合和调用明细。未知 Token、缓存、费用显示 —，不展示完整 endpoint、Header、密钥或 Prompt。
 
@@ -131,7 +131,7 @@ Redis 模式已经增加 Redis token-owned lock：Leader 调 Provider、校验�
 
 固定规则、输出 Schema、稳定语言/候选 slug/共享 source context 放前，动态 chunks、页面正文和批变量放后。按 call_purpose + 不可逆 prompt_prefix_fingerprint 建 cohort；不记录正文。一次只改一个模板：先字节级前缀测试和 Fake Provider，再做真实小样本；Provider 没有缓存字段时只能报告结构稳定。优先 Citation、Candidate、Summary，再处理 Taxonomy/Deduplication/Index。
 
-CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置、Secret/额度、baseline artifact、metric/result version、非确定性容差、失败重试。流程为固定提交 -> PostgreSQL/Redis/Stub Provider -> migration -> cmd/evaluation -> 保存 JSON artifact -> Case 对齐比较。默认只阻断 Recall/NDCG/MRR/MAP 超阈值退化；答案指标按版本和容差判断；成本/耗时先 warning；配置不兼容为 incompatible；失败运行不得覆盖 baseline。
+CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置、Secret/额度、baseline artifact、metric/result version、非确定性容差、失败重试。流程为固定提交 -> PostgreSQL/Redis/Stub Provider -> migration -> cmd/evaluation -> 保存 JSON artifact -> Case 对齐比较。当前 `gate` 默认检查全部已持久化 Retrieval/Answer 质量指标，也可用环境变量收窄指标集合和设置容差；成本/耗时不参与质量阻断；配置不兼容为 incompatible；失败运行不得覆盖 baseline。
 
 八解析引擎是独立可选项目：统一 Adapter、固定 20~50 份代表性语料、记录 parser 版本/耗时/失败率/输出大小/结构和文本质量/下游 Embedding token，保留原始输出和人工评分依据。
 
@@ -159,24 +159,33 @@ CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置
 
 ### Phase 5：CI
 
-先做 baseline comparison command，再做定时 workflow，最后做受保护 baseline 的质量阻断。
+baseline comparison command、定时 workflow 和质量阻断 CLI 已提交；定时 workflow 在缺少服务地址、租户、API Key 或数据集配置时只生成 skipped artifact。仍需在具备真实服务和 Provider 凭据的 CI 环境执行一次，核对 migration、Run/Case、报告 artifact 和 gate 的现场证据。
 
 ### Phase 6：Parser（可选）
 
 Adapter 合约、代表性语料 benchmark、质量基线报告。
 
-推荐候选 Commit：
+已完成的独立 Commit（按开发顺序）：
 
-- fix(evaluation): preserve passage ids through chunking
-- test(evaluation): cover fresh upgrade rollback migrations
-- test(evaluation): add authenticated end to end evidence
-- feat(model-usage): propagate provider usage scope
-- feat(model-usage): add versioned pricing resolver
-- feat(embedding-cache): add cache metrics
-- feat(embedding-cache): coordinate distributed misses
-- test(wiki): add provider cache comparison report
-- feat(evaluation): add baseline comparison command
-- ci(evaluation): block quality regression
+- `6cc79b73 feat(embedding-cache): add cache metrics`
+- `7bb5146e feat(embedding-cache): coordinate distributed misses`
+- `00eb0d61 test(wiki): cover all cacheable prompt prefixes`
+- `0f034129 perf(wiki): stabilize one measured prompt prefix`
+- `7b61bf00 test(wiki): add provider cache comparison report`
+- `7b4fa365 feat(model-usage): propagate provider usage scope`
+- `92929af6 feat(model-usage): add provider request identity`
+- `160fd843 feat(model-usage): add versioned pricing resolver`
+- `d299ce97 feat(evaluation): add baseline comparison command`
+- `8aa255a3 ci(evaluation): run scheduled reproducibility check`
+- `ff9b2fce ci(evaluation): block quality regression`
+
+尚未完成且不能按已完成汇报的证据项：
+
+- `fix(evaluation): preserve passage ids through chunking`：需先确认当前代码是否仍有缺口，再单独提交。
+- `test(evaluation): cover fresh upgrade rollback migrations` 与认证后的真实 E2E：本机 Windows CGO/Provider/数据库条件不足，需 Linux + CGO、PostgreSQL/Redis 或 CI。
+- Provider-specific Embedding/Rerank usage adapter、PricingResolver 到 ModelUsageEvent 的金额回写、异步账单对账。
+- Embedding 冷/热/禁用真实对照、Wiki Provider cache read/write 真实字段和质量对照。
+- 八解析引擎横评仍是可选 Phase 6。
 
 ## 8. 验收、风险与 Git 规程
 

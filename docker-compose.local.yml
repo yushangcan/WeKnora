@@ -1,0 +1,15 @@
+# 本地源码验收配置。
+#
+# 使用方式：
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
+#
+# 该文件只覆盖需要由当前工作区重新构建的服务，基础设施和数据卷仍沿用
+# docker-compose.yml，避免本地验收时误用仓库中的官方 latest 镜像。
+services:
+  app:
+    image: weknora-app:local
+    pull_policy: never
+
+  frontend:
+    image: weknora-ui:local
+    pull_policy: never

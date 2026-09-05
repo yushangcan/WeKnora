@@ -147,6 +147,7 @@ func TestWrapChatPropagatesProviderUsageScope(t *testing.T) {
 			Amount:        &amount,
 			Currency:      "USD",
 			BillableUnits: map[string]float64{"input": 120},
+			RequestID:     "provider-request-1",
 			RawSource:     "provider-response",
 		},
 	}
@@ -161,8 +162,11 @@ func TestWrapChatPropagatesProviderUsageScope(t *testing.T) {
 		t.Fatalf("provider usage scope = %#v", recorder.events)
 	}
 	got := recorder.events[0].ProviderUsage
-	if got.Currency != "USD" || got.RawSource != "provider-response" || got.Amount == nil || *got.Amount != amount || got.BillableUnits["input"] != 120 {
+	if got.Currency != "USD" || got.RequestID != "provider-request-1" || got.RawSource != "provider-response" || got.Amount == nil || *got.Amount != amount || got.BillableUnits["input"] != 120 {
 		t.Fatalf("provider usage scope = %#v", got)
+	}
+	if recorder.events[0].ProviderRequestID != "provider-request-1" {
+		t.Fatalf("provider request ID = %q", recorder.events[0].ProviderRequestID)
 	}
 	response.ProviderUsage.BillableUnits["input"] = 999
 	if got.BillableUnits["input"] != 120 {

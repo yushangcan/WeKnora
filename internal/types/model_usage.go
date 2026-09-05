@@ -72,6 +72,7 @@ type ModelUsageEvent struct {
 	EvaluationRunID   string                `json:"evaluation_run_id,omitempty" gorm:"column:evaluation_run_id;type:varchar(255);not null;index"`
 	EvaluationCaseID  string                `json:"evaluation_case_id,omitempty" gorm:"column:evaluation_case_id;type:varchar(128);not null;default:''"`
 	TraceID           string                `json:"trace_id,omitempty" gorm:"column:trace_id;type:varchar(255);not null;default:''"`
+	ProviderRequestID string                `json:"provider_request_id,omitempty" gorm:"column:provider_request_id;type:varchar(255);not null;default:''"`
 	CreatedAt         time.Time             `json:"created_at" gorm:"column:created_at;not null"`
 	// ProviderUsage is transient until request identity and pricing persistence
 	// are introduced by later usage-governance commits.

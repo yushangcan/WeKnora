@@ -30,6 +30,7 @@ func modelUsageTestEvent(tenant uint64, callID string, started time.Time) *types
 		PromptTokens: &prompt, CompletionTokens: &completion, TotalTokens: &total,
 		CacheReported: true, CacheStatus: types.ModelUsageCacheStatusHit,
 		UsageSource: "provider", CostStatus: types.ModelUsageCostStatusUnavailable,
+		ProviderRequestID: "provider-call-" + callID,
 	}
 }
 
@@ -46,6 +47,7 @@ func TestModelUsageEventsRepositoryListIsTenantScopedAndStable(t *testing.T) {
 	require.Equal(t, int64(2), page.Total)
 	require.Len(t, page.Items, 1)
 	require.Equal(t, "call-2", page.Items[0].CallID)
+	require.Equal(t, "provider-call-call-2", page.Items[0].ProviderRequestID)
 
 	_, err = repo.List(context.Background(), 0, types.ModelUsageFilter{})
 	require.Error(t, err)

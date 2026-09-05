@@ -199,5 +199,6 @@ func recordEvent(ctx context.Context, recorder interfaces.ModelUsageRecorder, ev
 func attachProviderUsage(event *types.ModelUsageEvent, scope *types.ProviderUsage) {
 	if event != nil && scope != nil {
 		event.ProviderUsage = scope.Clone()
+		event.ProviderRequestID = scope.RequestID
 	}
 }

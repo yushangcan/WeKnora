@@ -43,7 +43,7 @@
 | Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open、冷/热/禁用 benchmark、独立 Redis Client 协调测试、模型版本失效测试已有 | Linux CI 和代码级测试已补；真实 Provider 延迟/调用量、真实 Redis 多实例部署和故障报告仍待验证 |
 | Wiki Prompt | 所有主要模板有解析/占位符/稳定前缀测试；Deduplication 已完成一次最小重排；有脱敏 Provider Cache 对比报告值 | Provider 命中证据、真实小样本质量和其余模板收益未验证 |
 | CLI | cmd/evaluation 可 POST、轮询、保存报告；`compare` 读取历史 Run；`gate` 按质量容差阻断 | 需认证后的真实 Provider 运行和 CI artifact 验证 |
-| CI/Parser | 已有定时复现 workflow、缺配置 skipped artifact、质量 gate、Embedding Cache Linux 测试/benchmark workflow；八解析器横评尚未开始 | 评测 workflow 尚未在本项目真实凭据环境运行；Parser 仍是可选项目 |
+| CI/Parser | 已有定时复现 workflow、缺配置 skipped artifact、质量 gate、Embedding Cache Linux 测试/benchmark workflow、PostgreSQL migration lifecycle workflow；八解析器横评尚未开始 | 评测 workflow 尚未在本项目真实凭据环境运行；Parser 仍是可选项目 |
 
 ### 2.1 目标架构
 
@@ -159,7 +159,7 @@ CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置
 
 ### Phase 5：CI
 
-baseline comparison command、定时 workflow、质量阻断 CLI 和 Embedding Cache Linux 测试/benchmark workflow 已提交；评测定时 workflow 在缺少服务地址、租户、API Key 或数据集配置时只生成 skipped artifact。仍需在具备真实服务和 Provider 凭据的 CI 环境执行一次，核对 migration、Run/Case、报告 artifact 和 gate 的现场证据。
+baseline comparison command、定时 workflow、质量阻断 CLI、Embedding Cache Linux 测试/benchmark workflow 和 PostgreSQL migration lifecycle workflow 已提交；评测定时 workflow 在缺少服务地址、租户、API Key 或数据集配置时只生成 skipped artifact。仍需在具备真实服务和 Provider 凭据的 CI 环境执行一次，核对 migration、Run/Case、报告 artifact 和 gate 的现场证据。
 
 ### Phase 6：Parser（可选）
 
@@ -182,6 +182,7 @@ Adapter 合约、代表性语料 benchmark、质量基线报告。
 - `8adeb9db test(embedding-cache): verify independent redis clients`
 - `c51d7fa8 test(embedding-cache): verify model version invalidation`
 - `e2685d6e ci(embedding-cache): run linux validation`
+- `cd78022b ci(evaluation): verify postgres migration lifecycle`
 
 尚未完成且不能按已完成汇报的证据项：
 
@@ -189,6 +190,7 @@ Adapter 合约、代表性语料 benchmark、质量基线报告。
 - `test(evaluation): cover fresh upgrade rollback migrations` 与认证后的真实 E2E：本机 Windows CGO/Provider/数据库条件不足，需 Linux + CGO、PostgreSQL/Redis 或 CI。
 - Provider-specific Embedding/Rerank usage adapter、PricingResolver 到 ModelUsageEvent 的金额回写、异步账单对账。
 - Embedding 冷/热/禁用真实 Provider 对照、真实 Redis 多实例部署、Wiki Provider cache read/write 真实字段和质量对照。
+- GitHub Actions 中 PostgreSQL migration workflow 的现场运行 artifact；当前仅完成 workflow 定义和本地静态检查。
 - 八解析引擎横评仍是可选 Phase 6。
 
 ## 8. 验收、风险与 Git 规程

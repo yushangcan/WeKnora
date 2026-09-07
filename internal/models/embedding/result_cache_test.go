@@ -361,6 +361,29 @@ func TestEmbeddingCacheIdentityChangesWithModelVersion(t *testing.T) {
 	}
 }
 
+func TestResultCacheModelVersionChangeInvalidatesEntries(t *testing.T) {
+	inner := &cacheTestEmbedder{}
+	cache := newMemoryResultCache(8)
+	firstConfig := testCacheConfig()
+	secondConfig := firstConfig
+	secondConfig.ModelVersion = time.Unix(10, 0)
+	first := WrapResultCache(inner, cache, firstConfig, 42)
+	second := WrapResultCache(inner, cache, secondConfig, 42)
+
+	if _, err := first.Embed(context.Background(), "versioned"); err != nil {
+		t.Fatalf("first Embed: %v", err)
+	}
+	if _, err := second.Embed(context.Background(), "versioned"); err != nil {
+		t.Fatalf("second Embed: %v", err)
+	}
+	inner.mu.Lock()
+	calls := inner.embedCalls
+	inner.mu.Unlock()
+	if calls != 2 {
+		t.Fatalf("provider calls after model version change = %d, want 2", calls)
+	}
+}
+
 func TestEmbeddingCacheKeyIsTenantAndByteScoped(t *testing.T) {
 	model := EmbeddingCacheIdentity(testCacheConfig())
 	base := EmbeddingCacheKey(1, model, "text")

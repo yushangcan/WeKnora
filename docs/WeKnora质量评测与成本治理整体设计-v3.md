@@ -40,10 +40,10 @@
 | Persistence | evaluation_runs、evaluation_run_cases、分页、comparison、租户条件已有 | migration 需同步上游后重验 |
 | Recovery | 启动会把所有 pending/running Run 关闭为失败/partial | 这是单实例假设，多实例需 owner/lease/heartbeat |
 | Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093 migration、PricingResolver 已有 | Provider-specific Embed/Rerank/VLM/ASR adapter 尚未完整接入；PricingResolver 尚未接入持久化金额回写；真实 Provider 费用仍缺 |
-| Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open 已有 | 冷/热/禁用和真实多实例对照仍待验证 |
+| Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open、冷/热/禁用 benchmark、独立 Redis Client 协调测试、模型版本失效测试已有 | Linux CI 和代码级测试已补；真实 Provider 延迟/调用量、真实 Redis 多实例部署和故障报告仍待验证 |
 | Wiki Prompt | 所有主要模板有解析/占位符/稳定前缀测试；Deduplication 已完成一次最小重排；有脱敏 Provider Cache 对比报告值 | Provider 命中证据、真实小样本质量和其余模板收益未验证 |
 | CLI | cmd/evaluation 可 POST、轮询、保存报告；`compare` 读取历史 Run；`gate` 按质量容差阻断 | 需认证后的真实 Provider 运行和 CI artifact 验证 |
-| CI/Parser | 已有定时复现 workflow、缺配置 skipped artifact 和质量 gate；八解析器横评尚未开始 | workflow 尚未在本项目真实凭据环境运行；Parser 仍是可选项目 |
+| CI/Parser | 已有定时复现 workflow、缺配置 skipped artifact、质量 gate、Embedding Cache Linux 测试/benchmark workflow；八解析器横评尚未开始 | 评测 workflow 尚未在本项目真实凭据环境运行；Parser 仍是可选项目 |
 
 ### 2.1 目标架构
 
@@ -151,7 +151,7 @@ CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置
 
 ### Phase 3：Cache
 
-先补命中指标，再补 Redis 多实例锁，完成 Redis/Lite/No-op 与冷/热/禁用真实对照，验证模型更新失效、故障降级和 Provider Event 口径。
+命中指标、Redis 多实例锁、Redis/Lite/No-op 代码路径、冷/热/禁用 benchmark、独立 Redis Client 协调测试、模型版本失效测试已完成。下一步是在 Linux CI 之外补真实 Redis 多实例、Provider 调用量/延迟和故障降级报告，验证 Provider Event 口径。
 
 ### Phase 4：Wiki
 
@@ -159,7 +159,7 @@ CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置
 
 ### Phase 5：CI
 
-baseline comparison command、定时 workflow 和质量阻断 CLI 已提交；定时 workflow 在缺少服务地址、租户、API Key 或数据集配置时只生成 skipped artifact。仍需在具备真实服务和 Provider 凭据的 CI 环境执行一次，核对 migration、Run/Case、报告 artifact 和 gate 的现场证据。
+baseline comparison command、定时 workflow、质量阻断 CLI 和 Embedding Cache Linux 测试/benchmark workflow 已提交；评测定时 workflow 在缺少服务地址、租户、API Key 或数据集配置时只生成 skipped artifact。仍需在具备真实服务和 Provider 凭据的 CI 环境执行一次，核对 migration、Run/Case、报告 artifact 和 gate 的现场证据。
 
 ### Phase 6：Parser（可选）
 
@@ -178,13 +178,17 @@ Adapter 合约、代表性语料 benchmark、质量基线报告。
 - `d299ce97 feat(evaluation): add baseline comparison command`
 - `8aa255a3 ci(evaluation): run scheduled reproducibility check`
 - `ff9b2fce ci(evaluation): block quality regression`
+- `a9b8e76f test(embedding-cache): add cold warm disabled benchmark`
+- `8adeb9db test(embedding-cache): verify independent redis clients`
+- `c51d7fa8 test(embedding-cache): verify model version invalidation`
+- `e2685d6e ci(embedding-cache): run linux validation`
 
 尚未完成且不能按已完成汇报的证据项：
 
 - `fix(evaluation): preserve passage ids through chunking`：需先确认当前代码是否仍有缺口，再单独提交。
 - `test(evaluation): cover fresh upgrade rollback migrations` 与认证后的真实 E2E：本机 Windows CGO/Provider/数据库条件不足，需 Linux + CGO、PostgreSQL/Redis 或 CI。
 - Provider-specific Embedding/Rerank usage adapter、PricingResolver 到 ModelUsageEvent 的金额回写、异步账单对账。
-- Embedding 冷/热/禁用真实对照、Wiki Provider cache read/write 真实字段和质量对照。
+- Embedding 冷/热/禁用真实 Provider 对照、真实 Redis 多实例部署、Wiki Provider cache read/write 真实字段和质量对照。
 - 八解析引擎横评仍是可选 Phase 6。
 
 ## 8. 验收、风险与 Git 规程

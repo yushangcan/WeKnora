@@ -45,6 +45,16 @@ Key 绑定缓存版本、租户、模型 ID、模型更新时间/配置指纹、
 
 这些字段是 WeKnora 应用缓存指标，不能与 Provider Prompt Cache 的 `cache_read_tokens`、`cache_hit_calls` 或 `cache_hit_rate` 混合。当前快照尚未接入独立 HTTP 仪表盘，后续应按租户、模型、缓存后端和缓存版本聚合后再展示。
 
+## 冷/热/禁用对照
+
+代码仓库提供了可重复的 Go benchmark，用同一个 Fake Provider 对比禁用缓存、每次使用新文本的冷缓存和重复同一文本的热缓存：
+
+```bash
+go test ./internal/models/embedding -run '^$' -bench BenchmarkResultCacheModes -benchmem
+```
+
+重点观察 `provider_calls/op` 和 `hit_items/request`。禁用缓存和冷缓存用于 Provider 调用基线，热缓存用于确认重复请求是否被应用缓存吸收。该 benchmark 只验证本地缓存行为，不能替代真实 Provider、Redis 多实例、网络故障或生产延迟实验；Embedding 包在 Windows 上如果遇到 `pg_query.Parse/Deparse` 的 CGO 工具链错误，应在 Linux + CGO、WSL 或 CI 中运行。
+
 ## 正确性和降级
 
 - 只缓存成功且通过维度、空值、NaN/Inf 检查的向量；错误、取消、超时和数量不匹配结果不缓存。

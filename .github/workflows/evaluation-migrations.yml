@@ -1,0 +1,94 @@
+name: Evaluation Migrations
+
+on:
+  pull_request:
+    paths:
+      - "migrations/versioned/**"
+      - ".github/workflows/evaluation-migrations.yml"
+  push:
+    branches: [main]
+    paths:
+      - "migrations/versioned/**"
+      - ".github/workflows/evaluation-migrations.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.26"
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/weknora_ci?sslmode=disable
+
+jobs:
+  lifecycle:
+    name: Fresh, upgrade, rollback, and fresh migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: weknora_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d weknora_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install migration CLI
+        run: go install -tags postgres github.com/golang-migrate/migrate/v4/cmd/migrate@v4.19.1
+
+      - name: Run fresh migrations
+        run: |
+          migrate -path migrations/versioned -database "$DATABASE_URL" up
+          migrate -path migrations/versioned -database "$DATABASE_URL" version | tee migration-status.txt
+
+      - name: Verify evaluation and usage tables
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc \
+            "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_name IN ('evaluation_runs','evaluation_run_cases','model_usage_events') ORDER BY table_name;" \
+            | tee migration-tables.txt
+          test "$(wc -l < migration-tables.txt)" -eq 3
+
+      - name: Repeat up as upgrade no-op
+        run: |
+          migrate -path migrations/versioned -database "$DATABASE_URL" up
+          migrate -path migrations/versioned -database "$DATABASE_URL" version | tee migration-upgrade-status.txt
+
+      - name: Roll back one migration and restore it
+        run: |
+          migrate -path migrations/versioned -database "$DATABASE_URL" down 1
+          migrate -path migrations/versioned -database "$DATABASE_URL" version | tee migration-down-status.txt
+          migrate -path migrations/versioned -database "$DATABASE_URL" up
+
+      - name: Verify restored schema
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc \
+            "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='model_usage_events' AND column_name='provider_request_id';" \
+            | tee migration-restored-columns.txt
+          test "$(cat migration-restored-columns.txt)" = "provider_request_id"
+
+      - name: Upload migration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-migrations-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: |
+            migration-status.txt
+            migration-upgrade-status.txt
+            migration-down-status.txt
+            migration-tables.txt
+            migration-restored-columns.txt

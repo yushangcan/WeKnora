@@ -213,6 +213,60 @@ func TestResultCacheDistributedMissesShareProviderCall(t *testing.T) {
 	}
 }
 
+func TestResultCacheDistributedMissesUseIndependentRedisClients(t *testing.T) {
+	server := miniredis.RunT(t)
+	firstClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
+	secondClient := redis.NewClient(&redis.Options{Addr: server.Addr()})
+	firstCache := &redisResultCache{client: firstClient, metrics: &cacheMetrics{}}
+	secondCache := &redisResultCache{client: secondClient, metrics: &cacheMetrics{}}
+	firstInner := &cacheTestEmbedder{embedDelay: 80 * time.Millisecond}
+	secondInner := &cacheTestEmbedder{embedDelay: 80 * time.Millisecond}
+	first := WrapResultCache(firstInner, firstCache, testCacheConfig(), 42)
+	second := WrapResultCache(secondInner, secondCache, testCacheConfig(), 42)
+
+	start := make(chan struct{})
+	results := make(chan []float32, 2)
+	errorsCh := make(chan error, 2)
+	var wg sync.WaitGroup
+	for _, model := range []Embedder{first, second} {
+		wg.Add(1)
+		go func(model Embedder) {
+			defer wg.Done()
+			<-start
+			vector, err := model.Embed(context.Background(), "independent-clients")
+			if err != nil {
+				errorsCh <- err
+				return
+			}
+			results <- vector
+		}(model)
+	}
+	close(start)
+	wg.Wait()
+	close(results)
+	close(errorsCh)
+	for err := range errorsCh {
+		t.Fatalf("distributed Embed: %v", err)
+	}
+
+	firstInner.mu.Lock()
+	firstCalls := firstInner.embedCalls
+	firstInner.mu.Unlock()
+	secondInner.mu.Lock()
+	secondCalls := secondInner.embedCalls
+	secondInner.mu.Unlock()
+	if firstCalls+secondCalls != 1 {
+		t.Fatalf("independent-client provider calls = %d, want 1", firstCalls+secondCalls)
+	}
+	var vectors [][]float32
+	for vector := range results {
+		vectors = append(vectors, vector)
+	}
+	if len(vectors) != 2 || len(vectors[0]) != len(vectors[1]) || vectors[0][0] != vectors[1][0] || vectors[0][1] != vectors[1][1] {
+		t.Fatalf("distributed results differ: %#v", vectors)
+	}
+}
+
 func TestResultCacheDistributedLockFailsOpenAfterBoundedWait(t *testing.T) {
 	t.Setenv("WEKNORA_EMBEDDING_CACHE_LOCK_WAIT", "10ms")
 	server := miniredis.RunT(t)

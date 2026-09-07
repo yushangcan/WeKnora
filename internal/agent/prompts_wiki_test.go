@@ -1,10 +1,97 @@
 package agent
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 	"text/template"
 )
+
+type wikiCandidateFixture struct {
+	Entities []struct {
+		Slug        string   `json:"slug"`
+		Description string   `json:"description"`
+		Aliases     []string `json:"aliases"`
+	} `json:"entities"`
+	Concepts []struct {
+		Slug        string `json:"slug"`
+		Description string `json:"description"`
+	} `json:"concepts"`
+}
+
+type wikiCitationFixture struct {
+	Citations map[string][]string `json:"citations"`
+	NewSlugs  []struct {
+		Type         string   `json:"type"`
+		Slug         string   `json:"slug"`
+		SourceChunks []string `json:"source_chunks"`
+	} `json:"new_slugs"`
+}
+
+func TestWikiProviderFixture_CandidateOutputKeepsStructuredFields(t *testing.T) {
+	const output = `{
+  "entities": [{"slug":"entity/acme","description":"A company discussed in the document.","aliases":["Acme"]}],
+  "concepts": [{"slug":"concept/rag","description":"A retrieval and generation method."}]
+}`
+	var got wikiCandidateFixture
+	if err := json.Unmarshal([]byte(output), &got); err != nil {
+		t.Fatalf("candidate fixture is not valid JSON: %v", err)
+	}
+	if len(got.Entities) != 1 || len(got.Concepts) != 1 {
+		t.Fatalf("candidate fixture counts = entities:%d concepts:%d", len(got.Entities), len(got.Concepts))
+	}
+	if !strings.HasPrefix(got.Entities[0].Slug, "entity/") || !strings.HasPrefix(got.Concepts[0].Slug, "concept/") {
+		t.Fatalf("candidate slug namespaces were lost: %#v", got)
+	}
+	if got.Entities[0].Description == "" || got.Concepts[0].Description == "" || len(got.Entities[0].Aliases) != 1 {
+		t.Fatalf("candidate descriptive fields were lost: %#v", got)
+	}
+}
+
+func TestWikiProviderFixture_CitationOutputReferencesOnlyBatchChunks(t *testing.T) {
+	const output = `{
+  "citations":{"entity/acme":["c001"],"concept/rag":["c001","c002"]},
+  "new_slugs":[{"type":"concept","slug":"concept/retrieval","source_chunks":["c002"]}]
+}`
+	var got wikiCitationFixture
+	if err := json.Unmarshal([]byte(output), &got); err != nil {
+		t.Fatalf("citation fixture is not valid JSON: %v", err)
+	}
+	allowed := map[string]bool{"c001": true, "c002": true}
+	if len(got.Citations) != 2 || len(got.NewSlugs) != 1 {
+		t.Fatalf("citation fixture shape = %#v", got)
+	}
+	for slug, chunks := range got.Citations {
+		if !strings.HasPrefix(slug, "entity/") && !strings.HasPrefix(slug, "concept/") {
+			t.Fatalf("citation key has invalid slug namespace: %q", slug)
+		}
+		if len(chunks) == 0 {
+			t.Fatalf("citation key %q has no chunks", slug)
+		}
+		for _, chunkID := range chunks {
+			if !allowed[chunkID] {
+				t.Fatalf("citation references chunk outside batch: %q", chunkID)
+			}
+		}
+	}
+	if got.NewSlugs[0].Type != "concept" || len(got.NewSlugs[0].SourceChunks) != 1 || !allowed[got.NewSlugs[0].SourceChunks[0]] {
+		t.Fatalf("new slug source evidence is invalid: %#v", got.NewSlugs[0])
+	}
+}
+
+func TestWikiProviderFixture_SummaryOutputKeepsMarkdownContract(t *testing.T) {
+	const output = "SUMMARY: Acme documents a retrieval workflow for the wiki.\n\n## Overview\n\nAcme uses [[concept/rag|RAG]] to answer questions.\n\n## Key Takeaways\n\n- The workflow cites source material."
+	lines := strings.Split(output, "\n")
+	if len(lines) < 2 || !strings.HasPrefix(lines[0], "SUMMARY: ") {
+		t.Fatalf("summary fixture lost SUMMARY first line: %q", output)
+	}
+	if !strings.Contains(output, "## Key Takeaways") || !strings.Contains(output, "- ") {
+		t.Fatalf("summary fixture lost key-takeaway Markdown structure: %q", output)
+	}
+	if !strings.Contains(output, "[[concept/rag|RAG]]") {
+		t.Fatalf("summary fixture lost exact wiki link: %q", output)
+	}
+}
 
 func TestWikiGranularityGuidance_RoutesByKey(t *testing.T) {
 	cases := map[string]string{

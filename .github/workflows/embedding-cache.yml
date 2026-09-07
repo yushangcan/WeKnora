@@ -1,0 +1,64 @@
+name: Embedding Cache
+
+on:
+  pull_request:
+    paths:
+      - "internal/models/embedding/**"
+      - "internal/common/redislock/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/embedding-cache.yml"
+  push:
+    branches: [main]
+    paths:
+      - "internal/models/embedding/**"
+      - "internal/common/redislock/**"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/embedding-cache.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.26"
+  CGO_ENABLED: "1"
+  LOG_FORMAT: ""
+
+jobs:
+  verify:
+    name: Embedding cache tests and benchmark
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Download modules
+        run: go mod download
+
+      - name: Run embedding cache tests
+        run: go test ./internal/models/embedding -count=1
+
+      - name: Run disabled cold warm benchmark
+        run: |
+          mkdir -p tmp
+          go test ./internal/models/embedding \
+            -run '^$' \
+            -bench '^BenchmarkResultCacheModes$' \
+            -benchmem \
+            -count=1 | tee tmp/embedding-cache-benchmark.txt
+
+      - name: Upload cache evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: embedding-cache-${{ github.run_id }}
+          if-no-files-found: ignore
+          retention-days: 14
+          path: tmp/embedding-cache-benchmark.txt

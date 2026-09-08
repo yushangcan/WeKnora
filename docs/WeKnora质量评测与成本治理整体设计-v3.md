@@ -42,7 +42,7 @@
 | Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093 migration、PricingResolver 已有 | Provider-specific Embed/Rerank/VLM/ASR adapter 尚未完整接入；PricingResolver 尚未接入持久化金额回写；真实 Provider 费用仍缺 |
 | Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open、冷/热/禁用 benchmark、独立 Redis Client 协调测试、模型版本失效测试已有 | Linux CI 和代码级测试已补；真实 Provider 延迟/调用量、真实 Redis 多实例部署和故障报告仍待验证 |
 | Wiki Prompt | 所有主要模板有解析/占位符/稳定前缀测试；Deduplication 已完成一次最小重排；有脱敏 Provider Cache 对比报告值 | Provider 命中证据、真实小样本质量和其余模板收益未验证 |
-| CLI | cmd/evaluation 可 POST、轮询、保存报告；`compare` 读取历史 Run；`gate` 按质量容差阻断 | 需认证后的真实 Provider 运行和 CI artifact 验证 |
+| CLI | cmd/evaluation 可 POST、轮询、保存报告；`compare` 读取历史 Run；`gate` 按质量容差阻断，并拒绝缺失/重复 Run ID、缺失或非 success baseline | 需认证后的真实 Provider 运行和 CI artifact 验证 |
 | CI/Parser | 已有定时复现 workflow、缺配置 skipped artifact、质量 gate、Embedding Cache Linux 测试/benchmark workflow、PostgreSQL migration lifecycle workflow；八解析器横评尚未开始 | 评测 workflow 尚未在本项目真实凭据环境运行；Parser 仍是可选项目 |
 
 ### 2.1 目标架构
@@ -183,6 +183,8 @@ Adapter 合约、代表性语料 benchmark、质量基线报告。
 - `c51d7fa8 test(embedding-cache): verify model version invalidation`
 - `e2685d6e ci(embedding-cache): run linux validation`
 - `cd78022b ci(evaluation): verify postgres migration lifecycle`
+- `a1603550 ci(evaluation): protect quality gate baseline`
+- `d07fcab2 ci(evaluation): reject malformed comparison runs`
 
 尚未完成且不能按已完成汇报的证据项：
 

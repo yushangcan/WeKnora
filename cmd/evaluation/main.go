@@ -307,8 +307,12 @@ func runQualityGate(ctx context.Context, config qualityGateConfig, output io.Wri
 	metricReaders := qualityMetricReaders()
 	var failures []string
 	checked := 0
+	baselineFound := false
+	baselineStatus := ""
 	for _, candidate := range comparison.Runs {
 		if candidate.Run.RunID == comparison.BaselineID {
+			baselineFound = true
+			baselineStatus = candidate.Run.Status
 			continue
 		}
 		checked++
@@ -334,6 +338,12 @@ func runQualityGate(ctx context.Context, config qualityGateConfig, output io.Wri
 				failures = append(failures, fmt.Sprintf("%s: %s delta %.6f is below tolerance -%.6f", candidate.Run.RunID, metric, *delta.Absolute, config.Tolerance))
 			}
 		}
+	}
+	if !baselineFound {
+		return fmt.Errorf("comparison report does not contain configured baseline run %q", comparison.BaselineID)
+	}
+	if baselineStatus != "success" {
+		return fmt.Errorf("configured baseline run %q is not successful (status=%s)", comparison.BaselineID, baselineStatus)
 	}
 	if checked == 0 {
 		return errors.New("comparison report contains no candidate run")

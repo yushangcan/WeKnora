@@ -309,7 +309,15 @@ func runQualityGate(ctx context.Context, config qualityGateConfig, output io.Wri
 	checked := 0
 	baselineFound := false
 	baselineStatus := ""
+	seenRunIDs := make(map[string]struct{}, len(comparison.Runs))
 	for _, candidate := range comparison.Runs {
+		if candidate.Run.RunID == "" {
+			return errors.New("comparison report contains a run without run_id")
+		}
+		if _, duplicate := seenRunIDs[candidate.Run.RunID]; duplicate {
+			return fmt.Errorf("comparison report contains duplicate run %q", candidate.Run.RunID)
+		}
+		seenRunIDs[candidate.Run.RunID] = struct{}{}
 		if candidate.Run.RunID == comparison.BaselineID {
 			baselineFound = true
 			baselineStatus = candidate.Run.Status

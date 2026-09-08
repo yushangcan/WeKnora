@@ -331,6 +331,34 @@ func TestRunQualityGateRejectsUnsuccessfulBaseline(t *testing.T) {
 	}
 }
 
+func TestRunQualityGateRejectsDuplicateRunIDs(t *testing.T) {
+	reportPath := filepath.Join(t.TempDir(), "comparison.json")
+	report := `{"baseline_id":"run-a","runs":[{"run":{"run_id":"run-a","status":"success"}},{"run":{"run_id":"run-b","status":"success"},"quality_compatibility":{"comparable":true},"quality":{"precision":{"absolute":0.02}}},{"run":{"run_id":"run-b","status":"success"},"quality_compatibility":{"comparable":true},"quality":{"precision":{"absolute":0.01}}}]}`
+	if err := os.WriteFile(reportPath, []byte(report), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	config := qualityGateConfig{ReportPath: reportPath, Tolerance: 0.01, Metrics: []string{"precision"}}
+	var output bytes.Buffer
+	err := runQualityGate(context.Background(), config, &output)
+	if err == nil || !strings.Contains(err.Error(), "duplicate run") {
+		t.Fatalf("duplicate run error = %v", err)
+	}
+}
+
+func TestRunQualityGateRejectsRunWithoutID(t *testing.T) {
+	reportPath := filepath.Join(t.TempDir(), "comparison.json")
+	report := `{"baseline_id":"run-a","runs":[{"run":{"run_id":"run-a","status":"success"}},{"run":{"status":"success"},"quality_compatibility":{"comparable":true},"quality":{"precision":{"absolute":0.02}}}]}`
+	if err := os.WriteFile(reportPath, []byte(report), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	config := qualityGateConfig{ReportPath: reportPath, Tolerance: 0.01, Metrics: []string{"precision"}}
+	var output bytes.Buffer
+	err := runQualityGate(context.Background(), config, &output)
+	if err == nil || !strings.Contains(err.Error(), "without run_id") {
+		t.Fatalf("missing run id error = %v", err)
+	}
+}
+
 func TestLoadQualityGateConfigValidatesTolerance(t *testing.T) {
 	values := map[string]string{"EVALUATION_QUALITY_TOLERANCE": "-0.1"}
 	if _, err := loadQualityGateConfig(func(name string) string { return values[name] }); err == nil {

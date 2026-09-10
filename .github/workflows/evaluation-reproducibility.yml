@@ -64,6 +64,11 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
             printf 'status=skipped\nreason=missing configuration: %s\n' "${missing[*]}" > evaluation-ci-status.txt
             echo "::notice::Evaluation reproducibility skipped; configure the required repository variables and WEKNORA_API_KEY secret."
+          elif [[ "${{ github.event_name }}" == "pull_request" && -z "${EVALUATION_BASELINE_RUN_ID:-}" ]]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            printf 'status=blocked\nreason=EVALUATION_BASELINE_RUN_ID is required for pull_request quality gating\n' > evaluation-ci-status.txt
+            echo "::error::Evaluation pull request gating requires EVALUATION_BASELINE_RUN_ID."
+            exit 1
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
             printf 'status=ready\ncommit=%s\n' "$GITHUB_SHA" > evaluation-ci-status.txt
@@ -98,6 +103,22 @@ jobs:
             echo "EVALUATION_COMPARISON_RUN_IDS=$comparison_ids" >> "$GITHUB_ENV"
           fi
 
+      - name: Verify evaluation ran the current commit
+        if: steps.preflight.outputs.ready == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          reported_commit="$(jq -r '.data.config.runtime.commit_sha // empty' tmp/evaluation-report.json)"
+          if [[ -z "$reported_commit" ]]; then
+            echo "evaluation report does not contain config.runtime.commit_sha; reproducibility is partial" >&2
+            exit 1
+          fi
+          if [[ "$reported_commit" != "$GITHUB_SHA" ]]; then
+            echo "evaluation service ran commit $reported_commit, expected $GITHUB_SHA" >&2
+            exit 1
+          fi
+          echo "evaluated_commit=$reported_commit" >> evaluation-ci-status.txt
+
       - name: Compare against configured baseline
         if: >-
           steps.preflight.outputs.ready == 'true' &&
@@ -117,6 +138,7 @@ jobs:
           {
             echo "status=completed"
             echo "commit=$GITHUB_SHA"
+            echo "evaluated_commit=$GITHUB_SHA"
             echo "candidate_run_id=${{ steps.current_run.outputs.candidate_run_id }}"
             echo "report=tmp/evaluation-report.json"
             if [[ -f tmp/evaluation-comparison.json ]]; then

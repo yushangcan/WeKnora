@@ -24,6 +24,8 @@
           <option value="KnowledgeQA">Chat</option>
           <option value="Embedding">Embedding</option>
           <option value="Rerank">Rerank</option>
+          <option value="VLLM">VLM</option>
+          <option value="ASR">ASR</option>
         </select>
       </label>
       <label>调用操作
@@ -34,6 +36,8 @@
           <option value="embed">Embed</option>
           <option value="batch_embed">Batch Embed</option>
           <option value="rerank">Rerank</option>
+          <option value="vlm_predict">VLM</option>
+          <option value="asr_transcribe">ASR</option>
         </select>
       </label>
       <label>调用来源
@@ -104,7 +108,7 @@
               <td>{{ item.source || '—' }}</td>
               <td>{{ tokenValue(item.prompt_tokens) }} / {{ tokenValue(item.completion_tokens) }} / {{ tokenValue(item.total_tokens) }}</td>
               <td>{{ tokenValue(item.cache_read_tokens) }} / {{ tokenValue(item.cache_write_tokens) }} / {{ tokenValue(item.cache_miss_tokens) }}</td>
-              <td>{{ formatCost(item.cost_amount, item.cost_currency) }}</td>
+              <td>{{ formatCost(item.cost_amount, item.cost_currency) }}<small v-if="item.cost_source">{{ item.cost_source }}</small></td>
               <td>{{ formatDuration(item.duration_ms) }}</td>
               <td><span :class="['status-chip', item.success ? 'status-chip--success' : 'status-chip--failed']">{{ item.success ? '成功' : '失败' }}</span></td>
             </tr>

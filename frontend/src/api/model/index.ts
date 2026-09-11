@@ -189,6 +189,7 @@ export interface ModelUsageEvent {
   cost_amount?: number
   cost_currency?: string
   pricing_version?: string
+  cost_source?: string
   cost_status: string
   usage_source?: string
   session_id?: string
@@ -218,6 +219,7 @@ export interface ModelUsageByModel {
   cache_hit_rate?: number
   cost_amount?: number
   cost_currency?: string
+  cost_source?: string
   cost_status: string
   average_duration_ms?: number
 }

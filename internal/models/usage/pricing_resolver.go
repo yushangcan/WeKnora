@@ -1,14 +1,18 @@
 package usage
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/Tencent/WeKnora/internal/types"
 )
+
+const pricingCatalogEnv = "WEKNORA_PRICING_CATALOG"
 
 // CostSource identifies the evidence used to resolve a cost.
 type CostSource string
@@ -21,12 +25,12 @@ const (
 // PricingRule prices one billable unit in integer minor units. Keeping the
 // catalog in minor units avoids float accumulation in the resolver.
 type PricingRule struct {
-	Provider          string
-	Model             string
-	Unit              string
-	Currency          string
-	PriceMinorPerUnit int64
-	PricingVersion    string
+	Provider          string `json:"provider"`
+	Model             string `json:"model"`
+	Unit              string `json:"unit"`
+	Currency          string `json:"currency"`
+	PriceMinorPerUnit int64  `json:"price_minor_per_unit"`
+	PricingVersion    string `json:"pricing_version"`
 }
 
 type pricingRuleKey struct {
@@ -96,6 +100,26 @@ func NewPricingResolver(rules []PricingRule) (*PricingResolver, error) {
 			return nil, fmt.Errorf("duplicate pricing rule %s/%s/%s", rule.Provider, rule.Model, rule.Unit)
 		}
 		resolver.rules[key] = rule
+	}
+	return resolver, nil
+}
+
+// NewConfiguredPricingResolver loads an optional versioned catalog from
+// WEKNORA_PRICING_CATALOG. The value is a JSON array of PricingRule objects.
+// An unset or blank variable deliberately creates an empty resolver so unknown
+// costs remain NULL instead of being treated as zero.
+func NewConfiguredPricingResolver() (*PricingResolver, error) {
+	raw := strings.TrimSpace(os.Getenv(pricingCatalogEnv))
+	if raw == "" {
+		return NewPricingResolver(nil)
+	}
+	var rules []PricingRule
+	if err := json.Unmarshal([]byte(raw), &rules); err != nil {
+		return nil, fmt.Errorf("decode %s: %w", pricingCatalogEnv, err)
+	}
+	resolver, err := NewPricingResolver(rules)
+	if err != nil {
+		return nil, fmt.Errorf("validate %s: %w", pricingCatalogEnv, err)
 	}
 	return resolver, nil
 }

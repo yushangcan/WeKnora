@@ -249,6 +249,8 @@ services:
       - OSS_TEMP_BUCKET_NAME=${OSS_TEMP_BUCKET_NAME:-}
       - OSS_TEMP_REGION=${OSS_TEMP_REGION:-}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      # Optional JSON pricing catalog; unset keeps unknown costs as NULL.
+      - WEKNORA_PRICING_CATALOG=${WEKNORA_PRICING_CATALOG:-}
       # Ollama 不可用时仅告警不阻断（true 时生效）
       - OLLAMA_OPTIONAL=${OLLAMA_OPTIONAL:-true}
       # 批量 embedding 大小

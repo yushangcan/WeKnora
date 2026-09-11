@@ -50,6 +50,15 @@ func NewDatabaseRecorder(repo interfaces.ModelUsageRepository, resolvers ...*Pri
 	return &DatabaseRecorder{repo: repo, pricing: pricing}
 }
 
+// NewDatabaseRecorderWithPricing is the composition-root constructor used by
+// production. The one-argument constructor remains for legacy tests/callers.
+func NewDatabaseRecorderWithPricing(repo interfaces.ModelUsageRepository, pricing *PricingResolver) interfaces.ModelUsageRecorder {
+	if pricing == nil {
+		pricing, _ = NewPricingResolver(nil)
+	}
+	return &DatabaseRecorder{repo: repo, pricing: pricing}
+}
+
 func (r *DatabaseRecorder) Record(ctx context.Context, event *types.ModelUsageEvent) error {
 	if event == nil {
 		return errors.New("model usage event is required")

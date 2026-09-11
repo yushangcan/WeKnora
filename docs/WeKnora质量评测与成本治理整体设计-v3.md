@@ -147,7 +147,7 @@ CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置
 
 ### Phase 2：Usage/Cost
 
-Aliyun/Volcengine Embedding、Aliyun/Jina/Zhipu Rerank 和 OpenAI-compatible VLM 的已解析 usage 已通过 call-scoped sink 传递，ASR 已纳入调用事实记录；Provider request ID、版本化 PricingResolver、金额精度和 cost_source 已落库。下一步是为真实 Provider 配置价格目录并执行现场费用验收。
+Aliyun/Volcengine Embedding、Aliyun/Jina/Zhipu Rerank 和 OpenAI-compatible VLM 的已解析 usage 已通过 call-scoped sink 传递，ASR 已纳入调用事实记录；Provider request ID、版本化 PricingResolver、金额精度和 cost_source 已落库。生产可通过 `WEKNORA_PRICING_CATALOG` 注入 JSON 价格目录；未配置或单位不完整时仍保存 NULL 费用并标记 unavailable/partial。下一步是为真实 Provider 配置价格目录并执行现场费用验收。
 
 ### Phase 3：Cache
 

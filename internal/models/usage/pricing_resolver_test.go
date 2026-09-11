@@ -6,6 +6,25 @@ import (
 	"github.com/Tencent/WeKnora/internal/types"
 )
 
+func TestNewConfiguredPricingResolverReadsCatalog(t *testing.T) {
+	t.Setenv(pricingCatalogEnv, `[{"provider":"openai","model":"gpt","unit":"input_tokens","currency":"USD","price_minor_per_unit":2,"pricing_version":"env-v1"}]`)
+	resolver, err := NewConfiguredPricingResolver()
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := resolver.Resolve("openai", "gpt", &types.ProviderUsage{Currency: "USD", BillableUnits: map[string]float64{"input_tokens": 5}})
+	if result.AmountMinor == nil || *result.AmountMinor != 10 || result.PricingVersion != "env-v1" {
+		t.Fatalf("configured resolution = %#v", result)
+	}
+}
+
+func TestNewConfiguredPricingResolverRejectsMalformedCatalog(t *testing.T) {
+	t.Setenv(pricingCatalogEnv, "{")
+	if _, err := NewConfiguredPricingResolver(); err == nil {
+		t.Fatal("malformed catalog was accepted")
+	}
+}
+
 func TestPricingResolverPrefersProviderMinorAmount(t *testing.T) {
 	resolver, err := NewPricingResolver(nil)
 	if err != nil {

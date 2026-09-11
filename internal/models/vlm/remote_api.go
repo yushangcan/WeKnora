@@ -12,6 +12,7 @@ import (
 
 	"github.com/Tencent/WeKnora/internal/logger"
 	"github.com/Tencent/WeKnora/internal/models/provider"
+	"github.com/Tencent/WeKnora/internal/types"
 	secutils "github.com/Tencent/WeKnora/internal/utils"
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -158,6 +159,22 @@ func (v *RemoteAPIVLM) Predict(ctx context.Context, imgBytesList [][]byte, promp
 	}
 	if len(resp.Choices) == 0 {
 		return "", fmt.Errorf("OpenAI VLM returned no choices")
+	}
+	if resp.Usage.TotalTokens > 0 || resp.Usage.PromptTokens > 0 || resp.Usage.CompletionTokens > 0 {
+		usage := types.TokenUsage{
+			PromptTokens:     int(resp.Usage.PromptTokens),
+			CompletionTokens: int(resp.Usage.CompletionTokens),
+			TotalTokens:      int(resp.Usage.TotalTokens),
+		}
+		types.RecordProviderUsage(ctx, &types.ProviderUsage{
+			Tokens: &usage,
+			BillableUnits: map[string]float64{
+				"input_tokens":  float64(usage.PromptTokens),
+				"output_tokens": float64(usage.CompletionTokens),
+			},
+			RequestID: resp.ID,
+			RawSource: "vlm-response",
+		})
 	}
 
 	choice := resp.Choices[0]

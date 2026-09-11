@@ -661,7 +661,10 @@ func (s *modelService) GetVLMModel(ctx context.Context, modelId string) (vlm.VLM
 		return nil, err
 	}
 
-	return vlmModel, nil
+	return modelusage.WrapVLM(vlmModel, s.usageRecorder, modelusage.ModelMetadata{
+		ModelID: model.ID, ModelName: model.Name, ModelType: types.ModelTypeVLLM,
+		Provider: model.Parameters.Provider, TenantID: tenantID,
+	}), nil
 }
 
 // Note: default model selection logic has been removed; models no longer
@@ -699,7 +702,10 @@ func (s *modelService) GetASRModel(ctx context.Context, modelId string) (asr.ASR
 		return nil, err
 	}
 
-	return sttModel, nil
+	return modelusage.WrapASR(sttModel, s.usageRecorder, modelusage.ModelMetadata{
+		ModelID: model.ID, ModelName: model.Name, ModelType: types.ModelTypeASR,
+		Provider: model.Parameters.Provider, TenantID: tenantID,
+	}), nil
 }
 
 func formatModelInUseMessage(kbCount, agentCount int64, memory bool) string {

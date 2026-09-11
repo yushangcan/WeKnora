@@ -31,12 +31,23 @@ type ModelMetadata struct {
 // repository. Persistence errors are returned to the decorator, which logs
 // them without changing the original model result.
 type DatabaseRecorder struct {
-	repo interfaces.ModelUsageRepository
+	repo    interfaces.ModelUsageRepository
+	pricing *PricingResolver
 }
 
 // NewDatabaseRecorder creates a recorder backed by the model usage repository.
-func NewDatabaseRecorder(repo interfaces.ModelUsageRepository) interfaces.ModelUsageRecorder {
-	return &DatabaseRecorder{repo: repo}
+func NewDatabaseRecorder(repo interfaces.ModelUsageRepository, resolvers ...*PricingResolver) interfaces.ModelUsageRecorder {
+	var pricing *PricingResolver
+	if len(resolvers) > 0 {
+		pricing = resolvers[0]
+	}
+	if pricing == nil {
+		// An empty resolver still persists provider-reported exact amounts. A
+		// catalog can be supplied by the composition root without changing the
+		// recorder contract.
+		pricing, _ = NewPricingResolver(nil)
+	}
+	return &DatabaseRecorder{repo: repo, pricing: pricing}
 }
 
 func (r *DatabaseRecorder) Record(ctx context.Context, event *types.ModelUsageEvent) error {
@@ -64,7 +75,27 @@ func (r *DatabaseRecorder) Record(ctx context.Context, event *types.ModelUsageEv
 	if event.CreatedAt.IsZero() {
 		event.CreatedAt = time.Now()
 	}
+	r.resolveCost(event)
 	return r.repo.Create(ctx, event)
+}
+
+func (r *DatabaseRecorder) resolveCost(event *types.ModelUsageEvent) {
+	if r == nil || event == nil || event.ProviderUsage == nil || r.pricing == nil {
+		return
+	}
+	resolution := r.pricing.Resolve(event.Provider, event.ModelNameSnapshot, event.ProviderUsage)
+	if resolution.Currency != "" {
+		event.CostCurrency = resolution.Currency
+	}
+	event.PricingVersion = resolution.PricingVersion
+	event.CostSource = string(resolution.Source)
+	event.CostStatus = resolution.Status
+	if amount, ok := r.pricing.AmountMajor(resolution); ok {
+		event.CostAmount = &amount
+	}
+	if event.ProviderUsage != nil && event.UsageSource == "unavailable" {
+		event.UsageSource = "provider"
+	}
 }
 
 func buildEvent(ctx context.Context, metadata ModelMetadata, operation string, startedAt time.Time, itemCount int, success bool, callErr error, tokenUsage *types.TokenUsage) *types.ModelUsageEvent {

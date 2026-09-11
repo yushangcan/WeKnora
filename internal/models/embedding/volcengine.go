@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Tencent/WeKnora/internal/logger"
+	"github.com/Tencent/WeKnora/internal/types"
 	secutils "github.com/Tencent/WeKnora/internal/utils"
 )
 
@@ -193,6 +194,7 @@ func (e *VolcengineEmbedder) doRequestWithRetry(ctx context.Context, jsonData []
 
 func (e *VolcengineEmbedder) BatchEmbed(ctx context.Context, texts []string) ([][]float32, error) {
 	embeddings := make([][]float32, len(texts))
+	var totalTokens int
 
 	// Volcengine multimodal API returns a single combined embedding for all inputs,
 	// so we need to call the API once per text for proper batch embedding
@@ -248,6 +250,11 @@ func (e *VolcengineEmbedder) BatchEmbed(ctx context.Context, texts []string) ([]
 		}
 
 		embeddings[i] = response.Data.Embedding
+		totalTokens += response.Usage.TotalTokens
+	}
+	if totalTokens > 0 {
+		tokens := types.TokenUsage{PromptTokens: totalTokens, TotalTokens: totalTokens}
+		types.RecordProviderUsage(ctx, &types.ProviderUsage{Tokens: &tokens, BillableUnits: map[string]float64{"input_tokens": float64(totalTokens)}, RawSource: "volcengine-embedding-response"})
 	}
 
 	return embeddings, nil

@@ -1,9 +1,38 @@
 package types
 
+import "context"
+
+// ProviderUsageSink lets a provider adapter publish response metadata without
+// changing the public Embedder/Reranker method signatures.
+type ProviderUsageSink interface {
+	SetProviderUsage(*ProviderUsage)
+}
+
+type providerUsageSinkContextKey struct{}
+
+// WithProviderUsageSink attaches a call-scoped sink used by provider adapters.
+func WithProviderUsageSink(ctx context.Context, sink ProviderUsageSink) context.Context {
+	if sink == nil {
+		return ctx
+	}
+	return context.WithValue(ctx, providerUsageSinkContextKey{}, sink)
+}
+
+// RecordProviderUsage publishes provider metadata when the caller installed a
+// sink. It is intentionally a no-op for unwrapped direct adapter calls.
+func RecordProviderUsage(ctx context.Context, usage *ProviderUsage) {
+	if usage == nil {
+		return
+	}
+	if sink, ok := ctx.Value(providerUsageSinkContextKey{}).(ProviderUsageSink); ok && sink != nil {
+		sink.SetProviderUsage(usage)
+	}
+}
+
 // ProviderUsage carries provider-specific billable usage alongside a model
 // response without changing Chat, Embedder, or Reranker method signatures.
 // It is intentionally an observational scope: pricing and persistence are
-// handled by later usage-governance layers.
+// handled by the model usage recorder.
 type ProviderUsage struct {
 	Tokens        *TokenUsage        `json:"tokens,omitempty"`
 	BillableUnits map[string]float64 `json:"billable_units,omitempty"`

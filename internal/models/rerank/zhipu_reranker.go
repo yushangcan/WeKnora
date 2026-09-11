@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/WeKnora/internal/logger"
+	"github.com/Tencent/WeKnora/internal/types"
 	secutils "github.com/Tencent/WeKnora/internal/utils"
 )
 
@@ -125,6 +126,10 @@ func (r *ZhipuReranker) Rerank(ctx context.Context, query string, documents []st
 	var response ZhipuRerankResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+	if response.Usage.TotalTokens > 0 || response.RequestID != "" {
+		tokens := types.TokenUsage{PromptTokens: response.Usage.PromptTokens, TotalTokens: response.Usage.TotalTokens}
+		types.RecordProviderUsage(ctx, &types.ProviderUsage{Tokens: &tokens, BillableUnits: map[string]float64{"input_tokens": float64(response.Usage.PromptTokens)}, RequestID: response.RequestID, RawSource: "zhipu-rerank-response"})
 	}
 
 	// Convert Zhipu results to standard RankResult format

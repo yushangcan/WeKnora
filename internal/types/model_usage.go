@@ -67,6 +67,7 @@ type ModelUsageEvent struct {
 	CostAmount        *float64              `json:"cost_amount,omitempty" gorm:"column:cost_amount"`
 	CostCurrency      string                `json:"cost_currency,omitempty" gorm:"column:cost_currency;type:varchar(8);not null;default:''"`
 	PricingVersion    string                `json:"pricing_version,omitempty" gorm:"column:pricing_version;type:varchar(64);not null;default:''"`
+	CostSource        string                `json:"cost_source,omitempty" gorm:"column:cost_source;type:varchar(32);not null;default:''"`
 	CostStatus        ModelUsageCostStatus  `json:"cost_status" gorm:"column:cost_status;type:varchar(16);not null;default:'unavailable'"`
 	SessionID         string                `json:"session_id,omitempty" gorm:"column:session_id;type:varchar(255);not null;default:''"`
 	EvaluationRunID   string                `json:"evaluation_run_id,omitempty" gorm:"column:evaluation_run_id;type:varchar(255);not null;index"`
@@ -74,8 +75,8 @@ type ModelUsageEvent struct {
 	TraceID           string                `json:"trace_id,omitempty" gorm:"column:trace_id;type:varchar(255);not null;default:''"`
 	ProviderRequestID string                `json:"provider_request_id,omitempty" gorm:"column:provider_request_id;type:varchar(255);not null;default:''"`
 	CreatedAt         time.Time             `json:"created_at" gorm:"column:created_at;not null"`
-	// ProviderUsage is transient until request identity and pricing persistence
-	// are introduced by later usage-governance commits.
+	// ProviderUsage is transient adapter metadata; durable cost fields are
+	// resolved by the usage recorder before persistence.
 	ProviderUsage *ProviderUsage `json:"-" gorm:"-"`
 }
 

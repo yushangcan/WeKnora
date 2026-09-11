@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Tencent/WeKnora/internal/logger"
+	"github.com/Tencent/WeKnora/internal/types"
 	secutils "github.com/Tencent/WeKnora/internal/utils"
 )
 
@@ -240,6 +241,10 @@ func (e *AliyunEmbedder) BatchEmbed(ctx context.Context, texts []string) ([][]fl
 	if err := json.Unmarshal(body, &response); err != nil {
 		logger.GetLogger(ctx).Errorf("AliyunEmbedder BatchEmbed unmarshal response error: %v", err)
 		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+	if response.Usage.TotalTokens > 0 || response.RequestID != "" {
+		tokens := types.TokenUsage{PromptTokens: response.Usage.TotalTokens, TotalTokens: response.Usage.TotalTokens}
+		types.RecordProviderUsage(ctx, &types.ProviderUsage{Tokens: &tokens, BillableUnits: map[string]float64{"input_tokens": float64(response.Usage.TotalTokens)}, RequestID: response.RequestID, RawSource: "aliyun-embedding-response"})
 	}
 
 	// Extract embedding vectors, preserving order by text_index

@@ -1,0 +1,2 @@
+ALTER TABLE model_usage_events
+    ADD COLUMN IF NOT EXISTS cost_source VARCHAR(32) NOT NULL DEFAULT '';

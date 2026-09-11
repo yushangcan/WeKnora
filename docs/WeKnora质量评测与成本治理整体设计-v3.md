@@ -1,6 +1,6 @@
 # WeKnora 质量评测与成本治理整体设计方案 v3
 
-> 这是后续开发的主计划和验收索引。审计基线为 C:\Users\25515\Desktop\WeKnora，分支 codex/evaluation-four-dimension-results，当前实现检查点为 `0346acff`。需求来源为 C:\Users\25515\Desktop\weknora需求文档.txt；历史计划位于 C:\Users\25515\Desktop\优化方案\。附件中的规划是需求和历史记录，不能替代当前源码审计。
+> 这是后续开发的主计划和验收索引。审计基线为 C:\Users\25515\Desktop\WeKnora，分支 codex/evaluation-four-dimension-results，当前实现检查点为 `d1ec9d94`。需求来源为 C:\Users\25515\Desktop\weknora需求文档.txt；历史计划位于 C:\Users\25515\Desktop\优化方案\。附件中的规划是需求和历史记录，不能替代当前源码审计。
 
 ## 1. 目标与边界
 
@@ -39,7 +39,7 @@
 | Evaluation | Run/Case observer、四维结果、config snapshot、metric version 已有 | 需补 fresh/upgrade/down 和真实重启证据 |
 | Persistence | evaluation_runs、evaluation_run_cases、分页、comparison、租户条件已有 | migration 需同步上游后重验 |
 | Recovery | 启动会把所有 pending/running Run 关闭为失败/partial | 这是单实例假设，多实例需 owner/lease/heartbeat |
-| Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093 migration、PricingResolver 已有 | Provider-specific Embed/Rerank/VLM/ASR adapter 尚未完整接入；PricingResolver 尚未接入持久化金额回写；真实 Provider 费用仍缺 |
+| Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093/000094 migration、Provider-specific Embed/Rerank usage、PricingResolver 金额回写 | VLM/ASR adapter 尚未接入；真实 Provider 费用仍缺 |
 | Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open、冷/热/禁用 benchmark、独立 Redis Client 协调测试、模型版本失效测试已有 | Linux CI 和代码级测试已补；真实 Provider 延迟/调用量、真实 Redis 多实例部署和故障报告仍待验证 |
 | Wiki Prompt | 所有主要模板有解析/占位符/稳定前缀测试；Deduplication 已完成一次最小重排；有脱敏 Provider Cache 对比报告值 | Provider 命中证据、真实小样本质量和其余模板收益未验证 |
 | CLI | cmd/evaluation 可 POST、轮询、保存报告；`compare` 读取历史 Run；`gate` 按质量容差阻断，并拒绝缺失/重复 Run ID、缺失或非 success baseline | 需认证后的真实 Provider 运行和 CI artifact 验证 |
@@ -107,7 +107,7 @@ Run Snapshot 不复制完整 Cases；读取时先读 Run，再稳定排序组装
 2. catalog_calculated：版本化价格目录按明确计费单位计算；
 3. billing_reconciled：账单/Usage API 异步对账。
 
-调用 Scope 传递 ProviderUsage{Tokens, BillableUnits, Amount, AmountMinor, RequestID, RawSource}，避免修改 Embedder/Reranker 公共接口。当前 Chat/Stream Wrapper 已复制 Scope，Provider Request ID 已持久化；Embedding/Rerank 的 Provider-specific Scope 适配仍待补齐。PricingResolver 已支持版本化目录、Provider minor amount 优先和精确 minor-unit 计算，但尚未把解析结果自动回写 ModelUsageEvent。金额使用 Decimal 或 minor-unit 整数，不用 float64 累计。未知、缺币种、混币种或单位不完整时 amount=null，状态为 unavailable/partial/pending。自托管模型可为 not_applicable，但不等于业务成本为零。
+调用 Scope 传递 ProviderUsage{Tokens, BillableUnits, Amount, AmountMinor, RequestID, RawSource}，避免修改 Embedder/Reranker 公共接口。Chat/Stream、Aliyun/Volcengine Embedding 和 Aliyun/Jina/Zhipu Rerank 已通过 call-scoped sink 复制 ProviderUsage，Provider Request ID 和 CostSource 已持久化。PricingResolver 已支持版本化目录、Provider minor amount 优先和精确 minor-unit 计算，并在 DatabaseRecorder 中回写 ModelUsageEvent。金额使用 Decimal 或 minor-unit 整数，不用 float64 累计。未知、缺币种、混币种或单位不完整时 amount=null，状态为 unavailable/partial/pending。自托管模型可为 not_applicable，但不等于业务成本为零。
 
 ## 4. API、CLI、前端
 

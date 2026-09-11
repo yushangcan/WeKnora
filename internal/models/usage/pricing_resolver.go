@@ -54,6 +54,24 @@ type CostResolution struct {
 	Reason         string
 }
 
+// AmountMajor converts the exact minor-unit amount to the decimal amount used
+// by the existing model_usage_events schema. It returns false when the
+// resolution has no exact amount or the currency precision is unknown.
+func (r *PricingResolver) AmountMajor(resolution CostResolution) (float64, bool) {
+	if r == nil || resolution.AmountMinor == nil || resolution.Currency == "" {
+		return 0, false
+	}
+	digits, ok := r.minorDigits[resolution.Currency]
+	if !ok {
+		return 0, false
+	}
+	divisor := 1.0
+	for i := 0; i < digits; i++ {
+		divisor *= 10
+	}
+	return float64(*resolution.AmountMinor) / divisor, true
+}
+
 // NewPricingResolver validates and freezes a catalog. Duplicate keys or
 // missing identity fields are rejected rather than silently selecting a price.
 func NewPricingResolver(rules []PricingRule) (*PricingResolver, error) {

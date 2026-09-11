@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/WeKnora/internal/logger"
+	"github.com/Tencent/WeKnora/internal/types"
 	secutils "github.com/Tencent/WeKnora/internal/utils"
 )
 
@@ -144,6 +145,10 @@ func (r *AliyunReranker) Rerank(ctx context.Context, query string, documents []s
 	var response AliyunRerankResponse
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+	if response.Usage.TotalTokens > 0 {
+		tokens := types.TokenUsage{PromptTokens: response.Usage.TotalTokens, TotalTokens: response.Usage.TotalTokens}
+		types.RecordProviderUsage(ctx, &types.ProviderUsage{Tokens: &tokens, BillableUnits: map[string]float64{"input_tokens": float64(response.Usage.TotalTokens)}, RawSource: "aliyun-rerank-response"})
 	}
 
 	// Convert Aliyun results to standard RankResult format

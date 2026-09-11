@@ -3,6 +3,7 @@ package usage
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/Tencent/WeKnora/internal/models/chat"
@@ -11,6 +12,26 @@ import (
 	"github.com/Tencent/WeKnora/internal/types"
 	"github.com/Tencent/WeKnora/internal/types/interfaces"
 )
+
+type providerUsageCapture struct {
+	mu    sync.Mutex
+	usage *types.ProviderUsage
+}
+
+func (c *providerUsageCapture) SetProviderUsage(usage *types.ProviderUsage) {
+	if usage == nil {
+		return
+	}
+	c.mu.Lock()
+	c.usage = usage.Clone()
+	c.mu.Unlock()
+}
+
+func (c *providerUsageCapture) Usage() *types.ProviderUsage {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.usage.Clone()
+}
 
 type chatRecorder struct {
 	inner    chat.Chat
@@ -130,18 +151,24 @@ func WrapEmbedding(inner embedding.Embedder, recorder interfaces.ModelUsageRecor
 
 func (w *embeddingRecorder) Embed(ctx context.Context, text string) ([]float32, error) {
 	startedAt := time.Now()
-	result, err := w.inner.Embed(ctx, text)
+	capture := &providerUsageCapture{}
+	result, err := w.inner.Embed(types.WithProviderUsageSink(ctx, capture), text)
 	if !embedding.IsEmbeddingPoolSubcall(ctx) {
-		recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "embed", startedAt, 1, err == nil, err, nil))
+		event := buildEvent(ctx, w.metadata, "embed", startedAt, 1, err == nil, err, nil)
+		attachProviderUsage(event, capture.Usage())
+		recordEvent(ctx, w.recorder, event)
 	}
 	return result, err
 }
 
 func (w *embeddingRecorder) BatchEmbed(ctx context.Context, texts []string) ([][]float32, error) {
 	startedAt := time.Now()
-	result, err := w.inner.BatchEmbed(ctx, texts)
+	capture := &providerUsageCapture{}
+	result, err := w.inner.BatchEmbed(types.WithProviderUsageSink(ctx, capture), texts)
 	if !embedding.IsEmbeddingPoolSubcall(ctx) {
-		recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "batch_embed", startedAt, len(texts), err == nil, err, nil))
+		event := buildEvent(ctx, w.metadata, "batch_embed", startedAt, len(texts), err == nil, err, nil)
+		attachProviderUsage(event, capture.Usage())
+		recordEvent(ctx, w.recorder, event)
 	}
 	return result, err
 }
@@ -152,8 +179,11 @@ func (w *embeddingRecorder) BatchEmbedWithPool(ctx context.Context, model embedd
 	if poolModel == nil || poolModel == w {
 		poolModel = w.inner
 	}
-	result, err := w.inner.BatchEmbedWithPool(ctx, poolModel, texts)
-	recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "batch_embed", startedAt, len(texts), err == nil, err, nil))
+	capture := &providerUsageCapture{}
+	result, err := w.inner.BatchEmbedWithPool(types.WithProviderUsageSink(ctx, capture), poolModel, texts)
+	event := buildEvent(ctx, w.metadata, "batch_embed", startedAt, len(texts), err == nil, err, nil)
+	attachProviderUsage(event, capture.Usage())
+	recordEvent(ctx, w.recorder, event)
 	return result, err
 }
 
@@ -178,8 +208,11 @@ func WrapRerank(inner rerank.Reranker, recorder interfaces.ModelUsageRecorder, m
 
 func (w *rerankRecorder) Rerank(ctx context.Context, query string, documents []string) ([]rerank.RankResult, error) {
 	startedAt := time.Now()
-	result, err := w.inner.Rerank(ctx, query, documents)
-	recordEvent(ctx, w.recorder, buildEvent(ctx, w.metadata, "rerank", startedAt, len(documents), err == nil, err, nil))
+	capture := &providerUsageCapture{}
+	result, err := w.inner.Rerank(types.WithProviderUsageSink(ctx, capture), query, documents)
+	event := buildEvent(ctx, w.metadata, "rerank", startedAt, len(documents), err == nil, err, nil)
+	attachProviderUsage(event, capture.Usage())
+	recordEvent(ctx, w.recorder, event)
 	return result, err
 }
 

@@ -39,7 +39,7 @@
 | Evaluation | Run/Case observer、四维结果、config snapshot、metric version 已有 | 需补 fresh/upgrade/down 和真实重启证据 |
 | Persistence | evaluation_runs、evaluation_run_cases、分页、comparison、租户条件已有 | migration 需同步上游后重验 |
 | Recovery | 启动会把所有 pending/running Run 关闭为失败/partial | 这是单实例假设，多实例需 owner/lease/heartbeat |
-| Model Usage | Chat/Stream/Embedding/Rerank wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093/000094 migration、Provider-specific Embed/Rerank usage、PricingResolver 金额回写 | VLM/ASR adapter 尚未接入；真实 Provider 费用仍缺 |
+| Model Usage | Chat/Stream/Embedding/Rerank/VLM/ASR wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093/000094 migration、Provider-specific Embed/Rerank usage、PricingResolver 金额回写 | 真实 Provider 费用仍缺 |
 | Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open、冷/热/禁用 benchmark、独立 Redis Client 协调测试、模型版本失效测试已有 | Linux CI 和代码级测试已补；真实 Provider 延迟/调用量、真实 Redis 多实例部署和故障报告仍待验证 |
 | Wiki Prompt | 所有主要模板有解析/占位符/稳定前缀测试；Deduplication 已完成一次最小重排；有脱敏 Provider Cache 对比报告值 | Provider 命中证据、真实小样本质量和其余模板收益未验证 |
 | CLI | cmd/evaluation 可 POST、轮询、保存报告；`compare` 读取历史 Run；`gate` 按质量容差阻断，并拒绝缺失/重复 Run ID、缺失或非 success baseline | 需认证后的真实 Provider 运行和 CI artifact 验证 |
@@ -147,7 +147,7 @@ CI 前置条件：固定 Dataset fingerprint、模型/分块/检索/生成配置
 
 ### Phase 2：Usage/Cost
 
-先传递 Aliyun/Volcengine Embedding、Aliyun/Jina/Zhipu Rerank 的已解析 usage，再加 Provider request ID，最后实现版本化 PricingResolver 和金额精度；可选补 VLM/ASR。
+Aliyun/Volcengine Embedding、Aliyun/Jina/Zhipu Rerank 和 OpenAI-compatible VLM 的已解析 usage 已通过 call-scoped sink 传递，ASR 已纳入调用事实记录；Provider request ID、版本化 PricingResolver、金额精度和 cost_source 已落库。下一步是为真实 Provider 配置价格目录并执行现场费用验收。
 
 ### Phase 3：Cache
 

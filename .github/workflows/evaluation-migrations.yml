@@ -75,9 +75,9 @@ jobs:
       - name: Verify restored schema
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -Atc \
-            "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='model_usage_events' AND column_name='provider_request_id';" \
+            "SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='model_usage_events' AND column_name IN ('provider_request_id', 'cost_source') ORDER BY column_name;" \
             | tee migration-restored-columns.txt
-          test "$(cat migration-restored-columns.txt)" = "provider_request_id"
+          test "$(cat migration-restored-columns.txt)" = $'cost_source\nprovider_request_id'
 
       - name: Upload migration evidence
         if: always()

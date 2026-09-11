@@ -12,6 +12,7 @@ on:
       - "migrations/versioned/000091*"
       - "migrations/versioned/000092*"
       - "migrations/versioned/000093*"
+      - "migrations/versioned/000094*"
       - ".github/workflows/evaluation-reproducibility.yml"
   schedule:
     - cron: "17 2 * * 1"

@@ -15,7 +15,7 @@ import (
 // create to stay in sync with the versioned (PostgreSQL) migrations:
 // 000041 task queue, 000053 system settings, 000055 processing spans,
 // 000063 knowledge multi-tags, 000091 evaluation persistence, 000092 model
-// usage events, 000093 provider request identity.
+// usage events, 000093 provider request identity, and 000094 cost source.
 var versionedSQLiteTables = []string{
 	"task_pending_ops",
 	"task_dead_letters",
@@ -39,7 +39,7 @@ var versionedSQLiteColumns = map[string][]string{
 	"mcp_oauth_tokens":   {"principal_type", "principal_id"}, // 000064
 }
 
-const expectedSQLiteMigrationVersion = 15
+const expectedSQLiteMigrationVersion = 16
 
 func TestSQLiteMigrationsCreateVersionedSchema(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
@@ -176,6 +176,16 @@ func TestPostgresModelUsageProviderRequestMigrationContract(t *testing.T) {
 	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000093_model_usage_provider_request_id.down.sql"))
 	require.NoError(t, err)
 	require.Contains(t, string(downSQL), "DROP COLUMN IF EXISTS provider_request_id")
+}
+
+func TestPostgresModelUsageCostSourceMigrationContract(t *testing.T) {
+	repoRoot := sqliteRepoRoot(t)
+	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000094_model_usage_cost_source.up.sql"))
+	require.NoError(t, err)
+	require.Contains(t, string(upSQL), "ADD COLUMN IF NOT EXISTS cost_source VARCHAR(32)")
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000094_model_usage_cost_source.down.sql"))
+	require.NoError(t, err)
+	require.Contains(t, string(downSQL), "DROP COLUMN IF EXISTS cost_source")
 }
 
 func TestSQLiteMigrationsUpgradeV4PreservesData(t *testing.T) {
@@ -366,7 +376,7 @@ func assertSQLiteModelUsageSchemaWorks(t *testing.T, db *sql.DB) {
 	for _, column := range []string{
 		"call_id", "tenant_id", "model_id", "model_name_snapshot", "model_type",
 		"operation", "started_at", "success", "total_tokens", "cache_status",
-		"cost_amount", "cost_status", "evaluation_run_id", "provider_request_id",
+		"cost_amount", "cost_source", "cost_status", "evaluation_run_id", "provider_request_id",
 	} {
 		require.Truef(t, sqliteColumnExists(t, db, "model_usage_events", column), "SQLite model usage migration must add column %s", column)
 	}

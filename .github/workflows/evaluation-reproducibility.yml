@@ -13,6 +13,10 @@ on:
       - "migrations/versioned/000092*"
       - "migrations/versioned/000093*"
       - "migrations/versioned/000094*"
+      - "migrations/versioned/000095*"
+      - "internal/application/service/evaluation_lease*.go"
+      - "internal/container/evaluation_recovery*.go"
+      - "internal/types/interfaces/evaluation_repository.go"
       - ".github/workflows/evaluation-reproducibility.yml"
   schedule:
     - cron: "17 2 * * 1"

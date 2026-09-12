@@ -161,6 +161,8 @@ Aliyun/Volcengine Embedding、Aliyun/Jina/Zhipu Rerank 和 OpenAI-compatible VLM
 
 baseline comparison command、定时/PR 评测 workflow、质量阻断 CLI、当前 Run 自动纳入 comparison、当前 Commit 和 baseline 校验、Embedding Cache Linux 测试/benchmark workflow 和 PostgreSQL migration lifecycle workflow 已提交；评测 workflow 在缺少服务地址、租户、API Key 或数据集配置时只生成 skipped artifact，PR 已配置服务但缺 baseline 时直接阻断。仍需在具备真实服务和 Provider 凭据的 CI 环境执行一次，核对 migration、Run/Case、报告 artifact 和 gate 的现场证据。PR 触发目前仍依赖外部 WeKnora 服务，不等同于自包含 CI。
 
+执行租约检查点为 `a4bab041`。Migration workflow 现增加 Linux + CGO 的 Evaluation/SQLite 回归测试和 JSONL artifact，触发路径覆盖租约相关服务、Repository、Container、类型和两类迁移；恢复 schema 时验证三个租约字段。全量 PostgreSQL migration 需要 `vector`、`pg_search` 与 BM25，故 CI 服务镜像采用与 Compose 一致的 `paradedb/paradedb:v0.22.2-pg17`，不能使用缺少这些扩展的普通 PostgreSQL 镜像。下一项开发仍是固定 Dataset + Stub Provider + App + PostgreSQL/Redis 的自包含评测 CI，再串联 CLI、comparison、gate 和完整 artifact。
+
 ### Phase 6：Parser（可选）
 
 Adapter 合约、代表性语料 benchmark、质量基线报告。
@@ -221,7 +223,7 @@ Adapter 合约、代表性语料 benchmark、质量基线报告。
 - 该版本只关闭中断运行并保留已持久化证据，不自动重新执行剩余 Case。旧版本没有执行租约，升级前应先停止旧版本评测任务，再应用迁移和部署新实例；多实例主机需要可靠的时钟同步。迁移回退前也应停止正在执行的评测。
 - 测试覆盖初始租约、租户与执行者隔离、过期后拒绝续租/写入、Case 事务回滚、心跳与恢复竞争、重复恢复、启动保护其他实例，以及 SQLite migration 回退/恢复保留 Run。Linux + CGO 单元测试与真实多实例故障演练按不同证据项记录。
 
-2026-09-12 本地验证记录：前端 `npm run type-check` 通过；以下定向 Go 测试在 Docker Linux + CGO 环境全部通过：
+2026-09-12 本地验证记录：前端 `npm run type-check`、CLI `go test ./cmd/evaluation -count=1` 和 workflow YAML 解析通过；以下定向 Go 测试在 Docker Linux + CGO 环境全部通过：
 
 ```bash
 go test ./internal/application/repository ./internal/application/service \

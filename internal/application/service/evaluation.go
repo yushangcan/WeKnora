@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/WeKnora/internal/types"
 	"github.com/Tencent/WeKnora/internal/types/interfaces"
 	"github.com/Tencent/WeKnora/internal/utils"
+	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,6 +34,7 @@ arels: qid -> aid
 const (
 	terminalEvaluationSaveAttempts = 3
 	terminalEvaluationRetryDelay   = 100 * time.Millisecond
+	evaluationHeartbeatInterval    = 30 * time.Second
 )
 
 // EvaluationService handles evaluation tasks for knowledge base and chat models
@@ -70,6 +72,10 @@ func (e *EvaluationService) saveTerminalEvaluationRun(
 	ctx context.Context,
 	detail *types.EvaluationDetail,
 ) error {
+	// Cancellation stops model calls, but a still-owned run must retain its
+	// failure state. The repository checks ownership and lease validity.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
+	defer cancel()
 	var saveErr error
 	for attempt := 1; attempt <= terminalEvaluationSaveAttempts; attempt++ {
 		saveErr = e.evaluationRepository.SaveTerminalRun(ctx, detail)
@@ -238,6 +244,7 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 
 	caseConcurrency := max(runtime.GOMAXPROCS(0)-1, 1)
 	detail := &types.EvaluationDetail{
+		LeaseOwnerID: uuid.NewString(),
 		Task: &types.EvaluationTask{
 			ID:        taskID,
 			TenantID:  tenantID,
@@ -305,8 +312,20 @@ func (e *EvaluationService) Evaluation(ctx context.Context,
 	logger.Info(ctx, "Starting evaluation in background")
 	go func() {
 		// Create new context with logger for background task
-		newCtx := evaluationobs.WithEvaluationRun(logger.CloneContext(ctx), observer)
+		newCtx, cancel := context.WithCancel(evaluationobs.WithEvaluationRun(logger.CloneContext(ctx), observer))
+		defer cancel()
 		logger.Infof(newCtx, "Background evaluation started for task ID: %s", taskID)
+		if leaseRepo, ok := e.evaluationRepository.(interfaces.EvaluationLeaseRepository); ok {
+			stopHeartbeat := startEvaluationHeartbeat(newCtx, leaseRepo, tenantID, taskID, backgroundDetail.LeaseOwnerID, evaluationHeartbeatInterval, cancel)
+			defer func() {
+				stopHeartbeat()
+				releaseCtx, releaseCancel := context.WithTimeout(context.Background(), 10*time.Second)
+				defer releaseCancel()
+				if err := leaseRepo.ReleaseEvaluationRunLease(releaseCtx, tenantID, taskID, backgroundDetail.LeaseOwnerID); err != nil {
+					logger.Warnf(newCtx, "Failed to release evaluation lease: %v", err)
+				}
+			}()
+		}
 
 		// Update task status to running
 		backgroundDetail.Task.Status = types.EvaluationStatueRunning
@@ -454,6 +473,10 @@ func (e *EvaluationService) cleanupEvaluationResources(
 	knowledgeID string,
 	knowledgeBaseID string,
 ) {
+	// Cleanup remains bounded and can run after model work is cancelled by
+	// lease loss; there is no takeover/replay of this temporary knowledge base.
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+	defer cancel()
 	cleanupCtx := ctx
 	finishCleanup := func() {}
 	if observer != nil {
@@ -586,6 +609,9 @@ func (e *EvaluationService) EvalDataset(
 		qaPair := qaPair
 		i := i
 		g.Go(func() error {
+			if err := evaluationCtx.Err(); err != nil {
+				return err
+			}
 			caseCtx := evaluationCtx
 			finishCase := func(error) {}
 			caseID := strconv.Itoa(qaPair.QID)

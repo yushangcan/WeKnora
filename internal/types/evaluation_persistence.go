@@ -2,6 +2,8 @@ package types
 
 import "time"
 
+const EvaluationRunLeaseDuration = 2 * time.Minute
+
 // EvaluationRunRecord stores the durable state and immutable snapshots for one run.
 type EvaluationRunRecord struct {
 	RunID                    string              `gorm:"column:run_id;type:varchar(255);primaryKey"`
@@ -28,6 +30,11 @@ type EvaluationRunRecord struct {
 	CreatedAt                time.Time           `gorm:"column:created_at;not null;index:idx_evaluation_runs_tenant_created,priority:2,sort:desc;index:idx_evaluation_runs_tenant_config_created,priority:3,sort:desc"`
 	UpdatedAt                time.Time           `gorm:"column:updated_at;not null;index:idx_evaluation_runs_tenant_status_updated,priority:3,sort:desc"`
 	Revision                 uint64              `gorm:"column:revision;not null;default:1"`
+	// Lease fields make recovery safe when more than one app instance is running.
+	// A non-expired lease belongs to the instance that is actively evaluating the run.
+	OwnerID     string     `gorm:"column:owner_id;type:varchar(128);not null;default:''"`
+	LeaseUntil  *time.Time `gorm:"column:lease_until"`
+	HeartbeatAt *time.Time `gorm:"column:heartbeat_at"`
 }
 
 // TableName pins the table used by the evaluation repository.

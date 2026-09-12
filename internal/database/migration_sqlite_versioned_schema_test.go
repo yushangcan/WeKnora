@@ -15,7 +15,8 @@ import (
 // create to stay in sync with the versioned (PostgreSQL) migrations:
 // 000041 task queue, 000053 system settings, 000055 processing spans,
 // 000063 knowledge multi-tags, 000091 evaluation persistence, 000092 model
-// usage events, 000093 provider request identity, and 000094 cost source.
+// usage events, 000093 provider request identity, 000094 cost source, and
+// 000095 evaluation run leases.
 var versionedSQLiteTables = []string{
 	"task_pending_ops",
 	"task_dead_letters",
@@ -39,7 +40,7 @@ var versionedSQLiteColumns = map[string][]string{
 	"mcp_oauth_tokens":   {"principal_type", "principal_id"}, // 000064
 }
 
-const expectedSQLiteMigrationVersion = 16
+const expectedSQLiteMigrationVersion = 17
 
 func TestSQLiteMigrationsCreateVersionedSchema(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
@@ -188,6 +189,55 @@ func TestPostgresModelUsageCostSourceMigrationContract(t *testing.T) {
 	require.Contains(t, string(downSQL), "DROP COLUMN IF EXISTS cost_source")
 }
 
+func TestPostgresEvaluationLeaseMigrationContract(t *testing.T) {
+	repoRoot := sqliteRepoRoot(t)
+	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000095_evaluation_run_leases.up.sql"))
+	require.NoError(t, err)
+	for _, fragment := range []string{
+		"owner_id VARCHAR(128) NOT NULL DEFAULT ''",
+		"lease_until TIMESTAMP WITH TIME ZONE",
+		"heartbeat_at TIMESTAMP WITH TIME ZONE",
+		"idx_evaluation_runs_lease",
+	} {
+		require.Contains(t, string(upSQL), fragment)
+	}
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "versioned", "000095_evaluation_run_leases.down.sql"))
+	require.NoError(t, err)
+	for _, column := range []string{"owner_id", "lease_until", "heartbeat_at"} {
+		require.Contains(t, string(downSQL), "DROP COLUMN IF EXISTS "+column)
+	}
+}
+
+func TestSQLiteEvaluationLeaseMigrationRollbackPreservesRun(t *testing.T) {
+	repoRoot := sqliteRepoRoot(t)
+	chdirAndRestore(t, repoRoot)
+	dbPath := filepath.Join(t.TempDir(), "leases.db")
+	require.NoError(t, RunMigrationsWithOptions("sqlite3://unused", MigrationOptions{SQLiteDBPath: dbPath}))
+	db := openSQLiteDB(t, dbPath)
+	_, err := db.Exec(`INSERT INTO evaluation_runs (
+		run_id, tenant_id, dataset_id, dataset_version, dataset_fingerprint, config_hash,
+		embedding_model_id, chat_model_id, status, config_snapshot, params_snapshot,
+		result_snapshot, started_at, owner_id
+	) VALUES ('lease-sentinel', 7, 'dataset', '1', 'fingerprint', 'config', 'embedding', 'chat',
+		'running', '{}', '{}', '{}', CURRENT_TIMESTAMP, 'owner')`)
+	require.NoError(t, err)
+	downSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "sqlite", "000017_evaluation_run_leases.down.sql"))
+	require.NoError(t, err)
+	_, err = db.Exec(string(downSQL))
+	require.NoError(t, err)
+	require.False(t, sqliteColumnExists(t, db, "evaluation_runs", "owner_id"))
+	require.False(t, sqliteIndexExists(t, db, "idx_evaluation_runs_lease"))
+	upSQL, err := os.ReadFile(filepath.Join(repoRoot, "migrations", "sqlite", "000017_evaluation_run_leases.up.sql"))
+	require.NoError(t, err)
+	_, err = db.Exec(string(upSQL))
+	require.NoError(t, err)
+	var owner, status string
+	require.NoError(t, db.QueryRow("SELECT owner_id, status FROM evaluation_runs WHERE run_id='lease-sentinel'").Scan(&owner, &status))
+	require.Empty(t, owner)
+	require.Equal(t, "running", status)
+	assertSQLiteEvaluationSchemaWorks(t, db)
+}
+
 func TestSQLiteMigrationsUpgradeV4PreservesData(t *testing.T) {
 	repoRoot := sqliteRepoRoot(t)
 
@@ -314,6 +364,10 @@ func sqliteIndexExists(t *testing.T, db *sql.DB, index string) bool {
 
 func assertSQLiteEvaluationSchemaWorks(t *testing.T, db *sql.DB) {
 	t.Helper()
+	for _, column := range []string{"owner_id", "lease_until", "heartbeat_at"} {
+		require.Truef(t, sqliteColumnExists(t, db, "evaluation_runs", column), "SQLite evaluation migration must add column %s", column)
+	}
+	require.True(t, sqliteIndexExists(t, db, "idx_evaluation_runs_lease"))
 	for _, table := range []string{"evaluation_runs", "evaluation_run_cases"} {
 		require.Truef(t, sqliteTableExists(t, db, table), "SQLite migrations must create table %s", table)
 	}

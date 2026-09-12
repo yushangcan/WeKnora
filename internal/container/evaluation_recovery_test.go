@@ -84,3 +84,25 @@ func TestRecoverInterruptedEvaluationRunsOnStartup(t *testing.T) {
 	assert.NotNil(t, recovered.CompletedAt)
 	assert.Equal(t, uint64(2), recovered.Revision)
 }
+
+func TestRecoverInterruptedEvaluationRunsPreservesOtherInstance(t *testing.T) {
+	db := setupResetPendingDB(t)
+	require.NoError(t, db.AutoMigrate(&types.EvaluationRunRecord{}, &types.EvaluationRunCaseRecord{}))
+	now := time.Now()
+	leaseUntil := now.Add(time.Minute)
+	run := &types.EvaluationRunRecord{
+		RunID: "other-instance", TenantID: 7, Status: types.EvaluationRunStatusRunning,
+		ConfigSnapshot: types.JSON(`{}`), ParamsSnapshot: types.JSON(`{}`), ResultSnapshot: types.JSON(`{}`),
+		StartedAt: now, OwnerID: "other-owner", LeaseUntil: &leaseUntil, HeartbeatAt: &now,
+	}
+	require.NoError(t, db.Create(run).Error)
+	recoverInterruptedEvaluationRuns(db)
+	require.NoError(t, db.First(run).Error)
+	assert.Equal(t, types.EvaluationRunStatusRunning, run.Status)
+	assert.Equal(t, "other-owner", run.OwnerID)
+	// Later sweeps close the run once its lease actually expires.
+	require.NoError(t, db.Model(run).Update("lease_until", now.Add(-time.Minute)).Error)
+	recoverInterruptedEvaluationRuns(db)
+	require.NoError(t, db.First(run).Error)
+	assert.Equal(t, types.EvaluationRunStatusFailed, run.Status)
+}

@@ -353,6 +353,7 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	}
 	must(container.Provide(service.NewTemporaryDocumentService))
 	must(container.Invoke(startTemporaryDocumentCleanup))
+	must(container.Invoke(startEvaluationRecovery))
 
 	// Chat pipeline components for processing chat requests
 	logger.Debugf(ctx, "[Container] Registering chat pipeline plugins...")
@@ -776,10 +777,8 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 		logger.Infof(context.Background(), "Auto-migration is disabled (AUTO_MIGRATE=false)")
 	}
 
-	// Evaluation runs execute in process-local goroutines, so non-terminal rows
-	// cannot be resumed by another worker after an application restart. This
-	// recovery is independent of the migration toggle because production
-	// deployments may manage schema changes separately.
+	// Close only expired/unowned runs. Other instances may still be running
+	// evaluations with live leases; periodic recovery handles later expiry.
 	recoverInterruptedEvaluationRuns(db)
 
 	// Get underlying SQL DB object

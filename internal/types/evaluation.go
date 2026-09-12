@@ -53,10 +53,12 @@ type EvaluationTask struct {
 
 // EvaluationDetail contains detailed evaluation information
 type EvaluationDetail struct {
-	Task   *EvaluationTask      `json:"task"`             // Evaluation task info
-	Params *ChatManage          `json:"params"`           // Evaluation parameters
-	Config *EvaluationRunConfig `json:"config,omitempty"` // Effective reproducibility configuration
-	Metric *MetricResult        `json:"metric,omitempty"` // Evaluation metrics
+	// LeaseOwnerID is an internal execution token, never accepted from or returned to API clients.
+	LeaseOwnerID string               `json:"-"`
+	Task         *EvaluationTask      `json:"task"`             // Evaluation task info
+	Params       *ChatManage          `json:"params"`           // Evaluation parameters
+	Config       *EvaluationRunConfig `json:"config,omitempty"` // Effective reproducibility configuration
+	Metric       *MetricResult        `json:"metric,omitempty"` // Evaluation metrics
 	// Result is the stage-one, in-memory four-dimension observation result.
 	// Metric remains available for backwards compatibility.
 	Result *EvaluationRunResult `json:"result,omitempty"`

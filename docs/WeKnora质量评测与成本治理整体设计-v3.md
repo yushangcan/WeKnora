@@ -1,6 +1,6 @@
 # WeKnora 质量评测与成本治理整体设计方案 v3
 
-> 这是后续开发的主计划和验收索引。审计基线为 C:\Users\25515\Desktop\WeKnora，分支 codex/evaluation-four-dimension-results，当前实现检查点为 `d1ec9d94`。需求来源为 C:\Users\25515\Desktop\weknora需求文档.txt；历史计划位于 C:\Users\25515\Desktop\优化方案\。附件中的规划是需求和历史记录，不能替代当前源码审计。
+> 这是后续开发的主计划和验收索引。审计基线为 C:\Users\25515\Desktop\WeKnora，分支 codex/evaluation-four-dimension-results。模型调用前端检查点为 `3843480c`，随后补齐本文所述 Evaluation 执行租约。需求来源为 C:\Users\25515\Desktop\weknora需求文档.txt；历史计划位于 C:\Users\25515\Desktop\优化方案\。附件中的规划是需求和历史记录，不能替代当前源码审计。
 
 ## 1. 目标与边界
 
@@ -36,9 +36,9 @@
 | 领域 | 当前实际状态 | 未完成边界 |
 |---|---|---|
 | Dataset | dataset.go 校验五个 Parquet 文件并生成 manifest/fingerprint | 需要真实端到端报告 |
-| Evaluation | Run/Case observer、四维结果、config snapshot、metric version 已有 | 需补 fresh/upgrade/down 和真实重启证据 |
+| Evaluation | Run/Case observer、四维结果、config snapshot、metric version 已有；SQLite migration fresh/upgrade/down 已在 Linux 测试通过 | 需认证后的真实评测及进程故障证据 |
 | Persistence | evaluation_runs、evaluation_run_cases、分页、comparison、租户条件已有 | migration 需同步上游后重验 |
-| Recovery | 启动会把所有 pending/running Run 关闭为失败/partial | 这是单实例假设，多实例需 owner/lease/heartbeat |
+| Recovery | 创建 Run 时原子写入执行 token 与 2 分钟租约；30 秒心跳续租；启动及每 30 秒扫描仅关闭过期/无租约 Run；进度及终态写入校验执行者与有效期 | 实现的是中断收敛，不包含断点续跑/接管；真实多实例进程故障仍需部署验收 |
 | Model Usage | Chat/Stream/Embedding/Rerank/VLM/ASR wrapper、model_usage_events、汇总 API、模型页、ProviderUsage Scope、Provider Request ID、000093/000094 migration、Provider-specific Embed/Rerank usage、PricingResolver 金额回写 | 真实 Provider 费用仍缺 |
 | Embedding Cache | Redis/Lite LRU、TTL、租户/模型隔离、批内去重、顺序恢复、singleflight、指标、Redis token lock、Fail Open、冷/热/禁用 benchmark、独立 Redis Client 协调测试、模型版本失效测试已有 | Linux CI 和代码级测试已补；真实 Provider 延迟/调用量、真实 Redis 多实例部署和故障报告仍待验证 |
 | Wiki Prompt | 所有主要模板有解析/占位符/稳定前缀测试；Deduplication 已完成一次最小重排；有脱敏 Provider Cache 对比报告值 | Provider 命中证据、真实小样本质量和其余模板收益未验证 |
@@ -190,11 +190,11 @@ Adapter 合约、代表性语料 benchmark、质量基线报告。
 
 尚未完成且不能按已完成汇报的证据项：
 
-- `fix(evaluation): preserve passage ids through chunking`：需先确认当前代码是否仍有缺口，再单独提交。
-- `test(evaluation): cover fresh upgrade rollback migrations` 与认证后的真实 E2E：本机 Windows CGO/Provider/数据库条件不足，需 Linux + CGO、PostgreSQL/Redis 或 CI。
-- Provider-specific Embedding/Rerank usage adapter、PricingResolver 到 ModelUsageEvent 的金额回写、异步账单对账。
+- Passage ID 已通过分块 metadata 保留，并有相关测试；仍需在真实检索链路中核对 Case 的 PID 与数据集 qrels 一致。
+- 认证后的真实 E2E：SQLite migration 生命周期已在 Linux + CGO 通过，PostgreSQL 全量 SQL 迁移链及本次租约 migration 回退/恢复已在独立测试库通过；真实 Provider 评测和多实例进程故障验收仍待执行。
+- Provider-specific Embedding/Rerank usage adapter、PricingResolver 到 ModelUsageEvent 的金额回写已有代码；真实 Provider 费用验收及异步账单对账仍未完成。
 - Embedding 冷/热/禁用真实 Provider 对照、真实 Redis 多实例部署、Wiki Provider cache read/write 真实字段和质量对照。
-- GitHub Actions 中 PostgreSQL migration workflow 的现场运行 artifact；当前仅完成 workflow 定义和本地静态检查。
+- GitHub Actions 中 PostgreSQL migration workflow 的现场运行 artifact；本地 Linux 与 PostgreSQL 验证不替代远端 Actions 运行。
 - 八解析引擎横评仍是可选 Phase 6。
 
 ## 8. 验收、风险与 Git 规程
@@ -209,6 +209,26 @@ Adapter 合约、代表性语料 benchmark、质量基线报告。
 | E2E | 同配置重复、只改一个参数、重启后查询 | 报告 + DB 查询 |
 | CI | baseline、容差、artifact、阻断 | workflow run |
 
-主要风险：当前启动恢复是全局关闭非终态 Run 的单实例实现，多实例需 owner/lease/heartbeat；Cache Key 漏配置必须 schema/version 化；Redis 故障必须 Fail Open；Batch 顺序和 Pool 重复事件用表驱动测试；Provider 无 cost 保持 amount=null；混币种按币种分组；Prompt 单模板单 Commit；migration 先同步上游再取号；无真实凭据时明确 E2E blocked，不造指标。
+主要风险：执行租约已替代全局关闭非终态 Run 的恢复方式，但断点续跑/接管尚未实现；Cache Key 漏配置必须 schema/version 化；Redis 故障必须 Fail Open；Batch 顺序和 Pool 重复事件用表驱动测试；Provider 无 cost 保持 amount=null；混币种按币种分组；Prompt 单模板单 Commit；migration 先同步上游再取号；无真实凭据时明确 E2E blocked，不造指标。
+
+### Evaluation 执行租约补充设计
+
+- `evaluation_runs` 新增 `owner_id`、`lease_until`、`heartbeat_at`，PostgreSQL migration 为 `000095`，SQLite 为 `000017`，索引覆盖 `(status, lease_until)`。`owner_id` 是每次执行新生成的 UUID token，不进入公共 JSON 和可复现配置哈希。
+- 初始 Run 与租约一次写入，避免创建 pending 行后、单独抢占前被其他实例恢复的时间窗口。心跳间隔 30 秒，租约 2 分钟；数据库请求设置 10 秒超时。
+- 续租仅允许相同租户、Run、token、未终止状态且租约仍有效的执行者。进度、Case 事务和终态事务均检查 token 与有效期；过期执行者不能写入迟到的 Case 或覆盖已恢复的终态。
+- 心跳失去归属或写库失败时取消模型调用上下文；停止心跳会等待正在执行的续租退出，再释放归属，防止退出时重新续租。清理临时资源和保存终态各有独立超时，保存仍受归属校验约束。
+- 恢复扫描重新检查租约和 `revision` 后再更新，避免扫描期间心跳续期或 Case 进度变化造成误关闭。启动后每 30 秒重复扫描，因此重启时尚未过期的遗留 Run 无需再次重启即可收敛。已保存成功进度的 Run 标为 partial，其余为 failed。
+- 该版本只关闭中断运行并保留已持久化证据，不自动重新执行剩余 Case。旧版本没有执行租约，升级前应先停止旧版本评测任务，再应用迁移和部署新实例；多实例主机需要可靠的时钟同步。迁移回退前也应停止正在执行的评测。
+- 测试覆盖初始租约、租户与执行者隔离、过期后拒绝续租/写入、Case 事务回滚、心跳与恢复竞争、重复恢复、启动保护其他实例，以及 SQLite migration 回退/恢复保留 Run。Linux + CGO 单元测试与真实多实例故障演练按不同证据项记录。
+
+2026-09-12 本地验证记录：前端 `npm run type-check` 通过；以下定向 Go 测试在 Docker Linux + CGO 环境全部通过：
+
+```bash
+go test ./internal/application/repository ./internal/application/service \
+  ./internal/container ./internal/database \
+  -run 'Evaluation|SQLiteMigrations|Postgres.*Migration' -count=1 -timeout=180s
+```
+
+独立 `paradedb/paradedb:v0.22.2-pg17` 测试库逐文件执行全部 PostgreSQL up SQL 成功；`000095` down/up 后三个租约字段与索引恢复；另以 `000091 -> 插入历史 Run -> 000095 -> down -> up` 验证历史行保留、owner 默认值为空。本次未执行 GitHub Actions 或真实 Provider 评测，也未将单元测试等同于真实多实例故障演练。
 
 每个 Commit：确认 status/HEAD -> 单目标修改 -> gofmt/前端检查 -> 目标测试 -> 回归测试 -> diff --check -> 敏感信息审查 -> 记录真实/模拟/未验证边界 -> 按流程提交。

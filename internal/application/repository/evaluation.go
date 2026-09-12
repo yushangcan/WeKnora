@@ -20,6 +20,49 @@ type evaluationRepository struct {
 	db *gorm.DB
 }
 
+func (r *evaluationRepository) RenewEvaluationRunLease(ctx context.Context, tenantID uint64, runID, ownerID string, leaseUntil time.Time) (bool, error) {
+	if tenantID == 0 || runID == "" || ownerID == "" {
+		return false, errors.New("tenant ID, run ID and owner ID are required to renew an evaluation lease")
+	}
+	now := time.Now()
+	if !leaseUntil.After(now) {
+		return false, errors.New("evaluation lease must expire in the future")
+	}
+	result := r.db.WithContext(ctx).Model(&types.EvaluationRunRecord{}).
+		Where("tenant_id = ? AND run_id = ? AND owner_id = ? AND status IN ?", tenantID, runID, ownerID, []types.EvaluationRunStatus{types.EvaluationRunStatusPending, types.EvaluationRunStatusRunning}).
+		Where("lease_until > ?", now).
+		Updates(map[string]interface{}{"lease_until": leaseUntil, "heartbeat_at": now, "updated_at": now})
+	return result.RowsAffected == 1, result.Error
+}
+
+func (r *evaluationRepository) ReleaseEvaluationRunLease(ctx context.Context, tenantID uint64, runID, ownerID string) error {
+	if tenantID == 0 || runID == "" || ownerID == "" {
+		return errors.New("tenant ID, run ID and owner ID are required to release an evaluation lease")
+	}
+	return r.db.WithContext(ctx).Model(&types.EvaluationRunRecord{}).
+		Where("tenant_id = ? AND run_id = ? AND owner_id = ?", tenantID, runID, ownerID).
+		Updates(map[string]interface{}{"owner_id": "", "lease_until": nil, "heartbeat_at": time.Now()}).Error
+}
+
+// RecoverExpiredEvaluationRuns only closes rows with no lease or an expired
+// lease. An actively heartbeating run owned by another instance is preserved.
+func (r *evaluationRepository) RecoverExpiredEvaluationRuns(ctx context.Context, now time.Time, errorMessage string) (int64, error) {
+	if now.IsZero() {
+		now = time.Now()
+	}
+	query := r.db.WithContext(ctx).Model(&types.EvaluationRunRecord{}).
+		Where("status IN ?", []types.EvaluationRunStatus{types.EvaluationRunStatusPending, types.EvaluationRunStatusRunning}).
+		Where("lease_until IS NULL OR lease_until <= ?", now)
+	var records []types.EvaluationRunRecord
+	if err := query.Find(&records).Error; err != nil {
+		return 0, err
+	}
+	if len(records) == 0 {
+		return 0, nil
+	}
+	return r.markInterruptedRecords(ctx, records, now, errorMessage)
+}
+
 // NewEvaluationRepository creates a GORM-backed evaluation repository.
 func NewEvaluationRepository(db *gorm.DB) interfaces.EvaluationRepository {
 	return &evaluationRepository{db: db}
@@ -129,9 +172,8 @@ func (r *evaluationRepository) MarkInterruptedRunsFailed(
 	return r.markInterruptedRunsFailed(ctx, &tenantID, completedAt, errorMessage)
 }
 
-// MarkAllInterruptedRunsFailed closes every non-terminal run left by an
-// application restart. The status becomes partial when progress was persisted,
-// otherwise it becomes failed.
+// MarkAllInterruptedRunsFailed closes expired or legacy unowned runs. Live
+// leases are preserved even through this backwards-compatible recovery entry.
 func (r *evaluationRepository) MarkAllInterruptedRunsFailed(
 	ctx context.Context,
 	completedAt time.Time,
@@ -170,6 +212,14 @@ func (r *evaluationRepository) markInterruptedRunsFailed(
 		return 0, nil
 	}
 
+	return r.markInterruptedRecords(ctx, records, completedAt, errorMessage)
+}
+
+func (r *evaluationRepository) markInterruptedRecords(ctx context.Context, records []types.EvaluationRunRecord, completedAt time.Time, errorMessage string) (int64, error) {
+	if errorMessage == "" {
+		errorMessage = "evaluation lease expired before completion"
+	}
+	errorMessage = evaluationobs.SafeErrorText(errorMessage)
 	var recovered int64
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for i := range records {
@@ -181,19 +231,22 @@ func (r *evaluationRepository) markInterruptedRunsFailed(
 				"completed_at":  completedAt,
 				"updated_at":    completedAt,
 				"revision":      gorm.Expr("revision + 1"),
+				"owner_id":      "",
+				"lease_until":   nil,
 			}
 			if snapshot := interruptedEvaluationResultSnapshot(record.ResultSnapshot, status, completedAt); snapshot != nil {
 				updates["result_snapshot"] = snapshot
 			}
 
 			rowQuery := tx.Model(&types.EvaluationRunRecord{}).
-				Where("run_id = ? AND status IN ?", record.RunID, []types.EvaluationRunStatus{
+				Where("tenant_id = ? AND run_id = ? AND status IN ?", record.TenantID, record.RunID, []types.EvaluationRunStatus{
 					types.EvaluationRunStatusPending,
 					types.EvaluationRunStatusRunning,
 				})
-			if tenantID != nil {
-				rowQuery = rowQuery.Where("tenant_id = ?", *tenantID)
-			}
+			// Recheck the lease and revision inside the UPDATE. A heartbeat or
+			// progress write may have occurred after the initial scan.
+			rowQuery = rowQuery.Where("revision = ?", record.Revision).
+				Where("lease_until IS NULL OR lease_until <= ?", completedAt)
 			result := rowQuery.Updates(updates)
 			if result.Error != nil {
 				return result.Error
@@ -265,6 +318,13 @@ func newEvaluationRunRecord(
 		rerankModelID = detail.Config.Models.Rerank.ID
 	}
 	now := time.Now()
+	var leaseUntil *time.Time
+	var heartbeatAt *time.Time
+	if detail.LeaseOwnerID != "" {
+		deadline := now.Add(types.EvaluationRunLeaseDuration)
+		leaseUntil = &deadline
+		heartbeatAt = &now
+	}
 	return &types.EvaluationRunRecord{
 		RunID:                    detail.Task.ID,
 		TenantID:                 detail.Task.TenantID,
@@ -290,6 +350,9 @@ func newEvaluationRunRecord(
 		CreatedAt:                now,
 		UpdatedAt:                now,
 		Revision:                 1,
+		OwnerID:                  detail.LeaseOwnerID,
+		LeaseUntil:               leaseUntil,
+		HeartbeatAt:              heartbeatAt,
 	}, nil
 }
 
@@ -306,19 +369,26 @@ func updateEvaluationRun(tx *gorm.DB, detail *types.EvaluationDetail) error {
 		return fmt.Errorf("marshal evaluation result: %w", err)
 	}
 
-	result := tx.Model(&types.EvaluationRunRecord{}).
-		Where("tenant_id = ? AND run_id = ?", detail.Task.TenantID, detail.Task.ID).
-		Updates(map[string]interface{}{
-			"status":          persistentEvaluationStatus(detail),
-			"total":           detail.Task.Total,
-			"finished":        detail.Task.Finished,
-			"error_message":   evaluationobs.SafeErrorText(detail.Task.ErrMsg),
-			"metric_snapshot": metricSnapshot,
-			"result_snapshot": resultSnapshot,
-			"completed_at":    evaluationCompletedAt(detail),
-			"updated_at":      time.Now(),
-			"revision":        gorm.Expr("revision + 1"),
-		})
+	query := tx.Model(&types.EvaluationRunRecord{}).
+		Where("tenant_id = ? AND run_id = ?", detail.Task.TenantID, detail.Task.ID)
+	if detail.LeaseOwnerID != "" {
+		query = query.Where("owner_id = ? AND lease_until > ?", detail.LeaseOwnerID, time.Now())
+	} else {
+		// Legacy callers can update only unowned rows; they cannot bypass
+		// the execution token of a run created by another instance.
+		query = query.Where("owner_id = ''")
+	}
+	result := query.Updates(map[string]interface{}{
+		"status":          persistentEvaluationStatus(detail),
+		"total":           detail.Task.Total,
+		"finished":        detail.Task.Finished,
+		"error_message":   evaluationobs.SafeErrorText(detail.Task.ErrMsg),
+		"metric_snapshot": metricSnapshot,
+		"result_snapshot": resultSnapshot,
+		"completed_at":    evaluationCompletedAt(detail),
+		"updated_at":      time.Now(),
+		"revision":        gorm.Expr("revision + 1"),
+	})
 	if result.Error != nil {
 		return result.Error
 	}

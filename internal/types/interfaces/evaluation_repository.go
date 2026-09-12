@@ -47,11 +47,21 @@ type EvaluationRepository interface {
 		completedAt time.Time,
 		errorMessage string,
 	) (int64, error)
-	// MarkAllInterruptedRunsFailed closes non-terminal rows left by an
-	// application restart across all tenants.
+	// MarkAllInterruptedRunsFailed closes expired/unowned non-terminal rows
+	// across all tenants. Active execution leases must be preserved.
 	MarkAllInterruptedRunsFailed(
 		ctx context.Context,
 		completedAt time.Time,
 		errorMessage string,
 	) (int64, error)
+}
+
+// EvaluationLeaseRepository is implemented by repositories that support
+// multi-instance ownership of an in-flight evaluation. It is intentionally a
+// separate optional interface so existing embedders and test doubles remain
+// source-compatible.
+type EvaluationLeaseRepository interface {
+	RenewEvaluationRunLease(ctx context.Context, tenantID uint64, runID, ownerID string, leaseUntil time.Time) (bool, error)
+	ReleaseEvaluationRunLease(ctx context.Context, tenantID uint64, runID, ownerID string) error
+	RecoverExpiredEvaluationRuns(ctx context.Context, now time.Time, errorMessage string) (int64, error)
 }

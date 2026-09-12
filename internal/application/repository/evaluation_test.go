@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Tencent/WeKnora/internal/types"
+	typesinterfaces "github.com/Tencent/WeKnora/internal/types/interfaces"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -99,6 +100,30 @@ func TestEvaluationRepositoryPersistsTenantScopedRun(t *testing.T) {
 	if string(record.ParamsSnapshot) == "" ||
 		containsEvaluationSnapshotText(record.ParamsSnapshot, "private evaluation prompt") {
 		t.Fatalf("params snapshot contains prompt text: %s", record.ParamsSnapshot)
+	}
+}
+
+func TestEvaluationRepositoryLeasesProtectActiveRun(t *testing.T) {
+	db := newEvaluationRepositoryTestDB(t)
+	repo := NewEvaluationRepository(db)
+	detail := newEvaluationRepositoryTestDetail("lease-run", 7)
+	detail.LeaseOwnerID = "instance-a"
+	if err := repo.CreateRun(context.Background(), detail, "temporary-kb"); err != nil {
+		t.Fatalf("create run: %v", err)
+	}
+	leaseRepo := repo.(typesinterfaces.EvaluationLeaseRepository)
+	now := time.Now()
+	claimed, err := leaseRepo.RenewEvaluationRunLease(context.Background(), 7, "lease-run", "instance-b", now.Add(time.Minute))
+	if err != nil || claimed {
+		t.Fatalf("active lease was stolen: claimed=%v err=%v", claimed, err)
+	}
+	count, err := leaseRepo.RecoverExpiredEvaluationRuns(context.Background(), now, "restart")
+	if err != nil || count != 0 {
+		t.Fatalf("active lease recovered: count=%d err=%v", count, err)
+	}
+	ok, err := leaseRepo.RenewEvaluationRunLease(context.Background(), 7, "lease-run", "instance-a", now.Add(2*time.Minute))
+	if err != nil || !ok {
+		t.Fatalf("renew lease: ok=%v err=%v", ok, err)
 	}
 }
 

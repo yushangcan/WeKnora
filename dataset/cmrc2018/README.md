@@ -32,6 +32,27 @@ It writes the five files required by WeKnora to
 The generated subset is intended for compact engineering regression tests.
 It is not a replacement for reporting results on the complete official split.
 
+On a fresh Windows checkout, download the pinned validation file from the
+tracked manifest and verify it before conversion (PowerShell, repository root):
+
+```powershell
+$cmrcManifest = Get-Content dataset/cmrc2018/manifest.json -Raw | ConvertFrom-Json
+$cmrcSource = $cmrcManifest.files | Where-Object split -eq 'validation'
+$cmrcPath = Join-Path 'dataset/cmrc2018' $cmrcSource.path
+if (-not (Test-Path -LiteralPath $cmrcPath)) {
+    New-Item -ItemType Directory -Force (Split-Path $cmrcPath) | Out-Null
+    Invoke-WebRequest -Uri $cmrcSource.source_url -OutFile $cmrcPath
+}
+if ((Get-FileHash -LiteralPath $cmrcPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $cmrcSource.sha256) {
+    throw 'CMRC2018 source SHA-256 mismatch; inspect the downloaded file before continuing.'
+}
+go run ./dataset/cmrc2018/convert
+```
+
+Raw and generated data are ignored by Git; the source manifest, dataset card,
+converter and tests are versioned. See `SOURCE_README.md` for the dataset's
+source, citation and license information.
+
 `go test ./dataset/cmrc2018/convert` always runs offline checks for source
 rejection, Unicode answer offsets, invalid annotations, corpus preservation and
 stable selection. The official 200-question conversion test additionally runs

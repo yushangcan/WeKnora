@@ -1,3 +1,5 @@
+> **Rhino 2026 Topic 3 submission — 徐博 (yushangcan):** [Submission and reproduction guide](docs/submission/README.md) · [Detailed design](docs/submission/详细设计方案.md) · [Submission metadata](submission.yaml). The optimization work is on `codex/evaluation-four-dimension-results`; measured evidence and remaining validation are documented in the guide.
+
 <p align="center">
   <picture>
     <img src="./docs/images/logo.png" alt="WeKnora Logo" height="120"/>

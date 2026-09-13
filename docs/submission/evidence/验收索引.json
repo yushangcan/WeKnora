@@ -1,0 +1,209 @@
+{
+  "version": 1,
+  "captured_at_utc": "2026-09-13T13:30:25Z",
+  "scope": "Selected original GitHub Actions artifact files; gate .log files are renamed .txt without changing bytes. Evaluation uses synthetic-ci-v1; cache benchmark uses a fake provider. No real-provider quality, billing or cache benefit claims.",
+  "evaluation_contract": {
+    "status": "passed",
+    "commit": "f0a96a013269e35c2b265181fa5c88af8f3fcdf2",
+    "runs": 4,
+    "cases": 8,
+    "positive_gate": "passed",
+    "negative_gate": "rejected",
+    "provider": "synthetic-ci-v1",
+    "retrieval_negative_gate": "rejected",
+    "degraded_recall": 0,
+    "vcs_modified": false
+  },
+  "records": [
+    {
+      "kind": "evaluation",
+      "actions_run_id": "34759714335",
+      "url": "https://github.com/yushangcan/WeKnora/actions/runs/34759714335",
+      "tested_commit": "f0a96a013269e35c2b265181fa5c88af8f3fcdf2",
+      "conclusion": "success",
+      "files": [
+        {
+          "path": "evaluation-34759714335/baseline.json",
+          "bytes": 22814,
+          "sha256": "24346c27a8b69f59a8ad0ecfd1a5365b9c7b365107481a843203b91137b59c11"
+        },
+        {
+          "path": "evaluation-34759714335/candidate.json",
+          "bytes": 22806,
+          "sha256": "2297b8f498b18415e33681d0d074b021f2d0f5ff7e8f4509074a403fab2f07a7"
+        },
+        {
+          "path": "evaluation-34759714335/comparison-gate.txt",
+          "bytes": 146,
+          "sha256": "e7265e2a8cbeeb6932997f2d62ab5e4c2379b76e1e18370959266f497d21f073",
+          "original_filename": "comparison-gate.log"
+        },
+        {
+          "path": "evaluation-34759714335/comparison.json",
+          "bytes": 42853,
+          "sha256": "51c6b2a0d2fc8a44947b23fbefded50af09c5b1239daafe66b6028fe61d2d9dd"
+        },
+        {
+          "path": "evaluation-34759714335/database-check.txt",
+          "bytes": 1887,
+          "sha256": "809ea8daf0da81c961a12689814b1f265150b2dd55392c805abd4324aefb0c1f"
+        },
+        {
+          "path": "evaluation-34759714335/degraded.json",
+          "bytes": 22866,
+          "sha256": "7c14be5b9db2dfb8dc6f50cd8577eef10ddcdee8719a06962c3031a7f763344d"
+        },
+        {
+          "path": "evaluation-34759714335/regression-gate.txt",
+          "bytes": 809,
+          "sha256": "1e6b70ff2b58d34261442ff753bca65d5bb0d1336437af10e8b4f1d39d576ded",
+          "original_filename": "regression-gate.log"
+        },
+        {
+          "path": "evaluation-34759714335/regression.json",
+          "bytes": 42971,
+          "sha256": "70a1243037a024a5f334da48ea5687dc083ef5573dc506b545c248564fd82102"
+        },
+        {
+          "path": "evaluation-34759714335/restart-retrieval-regression-gate.txt",
+          "bytes": 1598,
+          "sha256": "55d7e683ef5e2c0172dda45acd2f39ef0bbf86bd878102fbde1e6881e40141db",
+          "original_filename": "restart-retrieval-regression-gate.log"
+        },
+        {
+          "path": "evaluation-34759714335/restart-status.json",
+          "bytes": 52,
+          "sha256": "fa27bb570f8a6e1965abe2cfbb560d3dfa2ff421a39869212bbaf60b1da92cd4"
+        },
+        {
+          "path": "evaluation-34759714335/retrieval-degraded.json",
+          "bytes": 20605,
+          "sha256": "d3d8a067e2854a04e68066b480254e1cb5677feee50c0eddfed6ed848d7418ee"
+        },
+        {
+          "path": "evaluation-34759714335/retrieval-regression-gate.txt",
+          "bytes": 1598,
+          "sha256": "55d7e683ef5e2c0172dda45acd2f39ef0bbf86bd878102fbde1e6881e40141db",
+          "original_filename": "retrieval-regression-gate.log"
+        },
+        {
+          "path": "evaluation-34759714335/retrieval-regression.json",
+          "bytes": 42431,
+          "sha256": "4cdce06d48a255669ec9fef9f53cf8848bb97ecd604e3157e25d4ed6189b421a"
+        },
+        {
+          "path": "evaluation-34759714335/run-status.json",
+          "bytes": 291,
+          "sha256": "5483e7e38682c8968ace301cc038fb7b81fbdd3170942da5164d1a3a36f02268"
+        },
+        {
+          "path": "evaluation-34759714335/source-commit.txt",
+          "bytes": 41,
+          "sha256": "31470833e0a5f4456b59c4d678a671e73b492ffaa344309630e2cf8e682f096c"
+        },
+        {
+          "path": "evaluation-34759714335/status.txt",
+          "bytes": 85,
+          "sha256": "b45d5a97393b629cb58b775db79488e8e15bbe6468a94193f1b269261429a5e7"
+        }
+      ]
+    },
+    {
+      "kind": "migrations",
+      "actions_run_id": "34759294412",
+      "url": "https://github.com/yushangcan/WeKnora/actions/runs/34759294412",
+      "tested_commit": "8945b5b271dbffde2f010e132737bcbcdb633355",
+      "conclusion": "success",
+      "files": [
+        {
+          "path": "migrations-34759294412/evaluation-lease-tests.jsonl",
+          "bytes": 171293,
+          "sha256": "d2bff84f9f1f8a35f99b59059481bf2cf3f183d95bc08c86baef0d092a9d044b"
+        },
+        {
+          "path": "migrations-34759294412/migration-down-status.txt",
+          "bytes": 3,
+          "sha256": "6fc16b03d8c15b9885876848a301a01816cccaf7b48e74f2b51db99c007a3bd5"
+        },
+        {
+          "path": "migrations-34759294412/migration-lease-columns.txt",
+          "bytes": 34,
+          "sha256": "653d1fb4f3c3616ddb29d2936baeab7afb9339d91e38ff29edff5d280560aa24"
+        },
+        {
+          "path": "migrations-34759294412/migration-restored-columns.txt",
+          "bytes": 32,
+          "sha256": "ee05ae01207465b0183df632badfb329f3a3129e4d13ead613c6981873d8964d"
+        },
+        {
+          "path": "migrations-34759294412/migration-status.txt",
+          "bytes": 3,
+          "sha256": "d867d3f88fa20d7cb936ecd93651adeedf473a6177218cd0987f462ff5511cb6"
+        },
+        {
+          "path": "migrations-34759294412/migration-tables.txt",
+          "bytes": 56,
+          "sha256": "98bf4a61c4108e9bd76e9e460cc6d9ab9ad2911223c0ff59d247e3a8af454270"
+        },
+        {
+          "path": "migrations-34759294412/migration-upgrade-status.txt",
+          "bytes": 3,
+          "sha256": "d867d3f88fa20d7cb936ecd93651adeedf473a6177218cd0987f462ff5511cb6"
+        }
+      ]
+    },
+    {
+      "kind": "migrations",
+      "actions_run_id": "34757464367",
+      "url": "https://github.com/yushangcan/WeKnora/actions/runs/34757464367",
+      "tested_commit": "3afc01a510a1d5a6d24f1dae21ff45913096e89c",
+      "conclusion": "success",
+      "files": [
+        {
+          "path": "migrations-34757464367/migration-down-status.txt",
+          "bytes": 3,
+          "sha256": "6fc16b03d8c15b9885876848a301a01816cccaf7b48e74f2b51db99c007a3bd5"
+        },
+        {
+          "path": "migrations-34757464367/migration-lease-columns.txt",
+          "bytes": 34,
+          "sha256": "653d1fb4f3c3616ddb29d2936baeab7afb9339d91e38ff29edff5d280560aa24"
+        },
+        {
+          "path": "migrations-34757464367/migration-restored-columns.txt",
+          "bytes": 32,
+          "sha256": "ee05ae01207465b0183df632badfb329f3a3129e4d13ead613c6981873d8964d"
+        },
+        {
+          "path": "migrations-34757464367/migration-status.txt",
+          "bytes": 3,
+          "sha256": "d867d3f88fa20d7cb936ecd93651adeedf473a6177218cd0987f462ff5511cb6"
+        },
+        {
+          "path": "migrations-34757464367/migration-tables.txt",
+          "bytes": 56,
+          "sha256": "98bf4a61c4108e9bd76e9e460cc6d9ab9ad2911223c0ff59d247e3a8af454270"
+        },
+        {
+          "path": "migrations-34757464367/migration-upgrade-status.txt",
+          "bytes": 3,
+          "sha256": "d867d3f88fa20d7cb936ecd93651adeedf473a6177218cd0987f462ff5511cb6"
+        }
+      ]
+    },
+    {
+      "kind": "cache",
+      "actions_run_id": "34756888995",
+      "url": "https://github.com/yushangcan/WeKnora/actions/runs/34756888995",
+      "tested_commit": "5cad11091877e7b9f76eb8c2340de01ec9ca6066",
+      "conclusion": "success",
+      "files": [
+        {
+          "path": "cache-34756888995/embedding-cache-benchmark.txt",
+          "bytes": 691,
+          "sha256": "4a132c3bc4290df845ed0a83fdb91b395db9cf8310eb8169f4d683fbd29bebb0"
+        }
+      ]
+    }
+  ]
+}

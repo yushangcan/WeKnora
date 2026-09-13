@@ -1,3 +1,5 @@
+> **2026 犀牛鸟课题 3 提交入口 · 徐博（yushangcan）：** [成果与复现说明](docs/submission/README.md) · [详细设计方案](docs/submission/详细设计方案.md) · [提交元数据](submission.yaml)。优化位于 `codex/evaluation-four-dimension-results` 分支；实际证据与待完成验收均在提交说明中列出。
+
 <p align="center">
   <picture>
     <img src="./docs/images/logo.png" alt="WeKnora Logo" height="120"/>

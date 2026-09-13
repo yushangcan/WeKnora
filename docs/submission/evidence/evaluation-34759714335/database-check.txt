@@ -1,0 +1,21 @@
+DO
+                     run_id                      | status  | total | finished |                           dataset_fingerprint                           |                commit_sha                
+-------------------------------------------------+---------+-------+----------+-------------------------------------------------------------------------+------------------------------------------
+ evaluation_10000_1789306180063_c8c953c5_default | success |     2 |        2 | sha256:a6aaa2c4cfc2334ff5e3aeac399f875385aadf60f08417c04824bec24da355d5 | f0a96a013269e35c2b265181fa5c88af8f3fcdf2
+ evaluation_10000_1789306180636_e23dd2d5_default | success |     2 |        2 | sha256:a6aaa2c4cfc2334ff5e3aeac399f875385aadf60f08417c04824bec24da355d5 | f0a96a013269e35c2b265181fa5c88af8f3fcdf2
+ evaluation_10000_1789306180977_1eb74d65_default | success |     2 |        2 | sha256:a6aaa2c4cfc2334ff5e3aeac399f875385aadf60f08417c04824bec24da355d5 | f0a96a013269e35c2b265181fa5c88af8f3fcdf2
+ evaluation_10000_1789306181266_a65f2b20_default | success |     2 |        2 | sha256:a6aaa2c4cfc2334ff5e3aeac399f875385aadf60f08417c04824bec24da355d5 | f0a96a013269e35c2b265181fa5c88af8f3fcdf2
+(4 rows)
+
+                     run_id                      | case_id | status  
+-------------------------------------------------+---------+---------
+ evaluation_10000_1789306180063_c8c953c5_default | 1       | success
+ evaluation_10000_1789306180063_c8c953c5_default | 2       | success
+ evaluation_10000_1789306180636_e23dd2d5_default | 1       | success
+ evaluation_10000_1789306180636_e23dd2d5_default | 2       | success
+ evaluation_10000_1789306180977_1eb74d65_default | 1       | success
+ evaluation_10000_1789306180977_1eb74d65_default | 2       | success
+ evaluation_10000_1789306181266_a65f2b20_default | 1       | success
+ evaluation_10000_1789306181266_a65f2b20_default | 2       | success
+(8 rows)
+

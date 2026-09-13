@@ -1,0 +1,3 @@
+exit_code=0
+commit=f0a96a013269e35c2b265181fa5c88af8f3fcdf2
+provider=synthetic-ci-v1

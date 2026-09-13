@@ -1,0 +1,9 @@
+goos: linux
+goarch: amd64
+pkg: github.com/Tencent/WeKnora/internal/models/embedding
+cpu: AMD EPYC 7763 64-Core Processor                
+BenchmarkResultCacheModes/disabled-2         	10122302	       118.8 ns/op	         1.000 provider_calls/op	      32 B/op	       3 allocs/op
+BenchmarkResultCacheModes/cold-2             	  733842	      1566 ns/op	         0 hit_items/request	         1.000 provider_calls/op	     664 B/op	      15 allocs/op
+BenchmarkResultCacheModes/warm-2             	 1899202	       635.0 ns/op	         1.000 hit_items/request	         0.0000005 provider_calls/op	     320 B/op	       5 allocs/op
+PASS
+ok  	github.com/Tencent/WeKnora/internal/models/embedding	4.816s

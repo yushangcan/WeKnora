@@ -1,0 +1,733 @@
+{
+  "data": {
+    "task": {
+      "id": "evaluation_10000_1789306180977_1eb74d65_default",
+      "tenant_id": 10000,
+      "dataset_id": "default",
+      "start_time": "2026-09-13T13:29:40.97776Z",
+      "status": 2,
+      "total": 2,
+      "finished": 2
+    },
+    "params": {
+      "session_id": "",
+      "user_id": "",
+      "max_rounds": 5,
+      "knowledge_base_ids": [],
+      "vector_threshold": 0.2,
+      "keyword_threshold": 0.3,
+      "embedding_top_k": 30,
+      "vector_database": "",
+      "rerank_model_id": "ci-rerank",
+      "rerank_top_k": 30,
+      "rerank_threshold": 0.3,
+      "chat_model_id": "ci-chat",
+      "summary_config": {
+        "max_tokens": 0,
+        "repeat_penalty": 1,
+        "top_k": 0,
+        "top_p": 0,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "prompt": "",
+        "context_template": "",
+        "no_match_prefix": "",
+        "temperature": 0.3,
+        "seed": 0,
+        "max_completion_tokens": 2048,
+        "thinking": null
+      },
+      "fallback_strategy": "",
+      "fallback_response": "",
+      "fallback_prompt": "",
+      "enable_rewrite": false,
+      "enable_query_expansion": false,
+      "rewrite_prompt_system": "",
+      "rewrite_prompt_user": ""
+    },
+    "config": {
+      "schema_version": "evaluation-config/v2",
+      "dataset": {
+        "id": "default",
+        "version": "1",
+        "content_fingerprint": "sha256:a6aaa2c4cfc2334ff5e3aeac399f875385aadf60f08417c04824bec24da355d5",
+        "files": [
+          {
+            "name": "queries.parquet",
+            "fingerprint": "sha256:8511af4ae99547de21b8226e11f01ca3fbf81f84f4cc3aefa69a4a211a1d5875",
+            "size": 782
+          },
+          {
+            "name": "corpus.parquet",
+            "fingerprint": "sha256:a17c9081fd28e31c349b0db7b94412d54224f125471d6241ca5ec7d5e992c211",
+            "size": 775
+          },
+          {
+            "name": "qrels.parquet",
+            "fingerprint": "sha256:69e834eee6c2c2d1092ef15f89ee3c00f276a886648266f98c98d1d408628df5",
+            "size": 566
+          },
+          {
+            "name": "qas.parquet",
+            "fingerprint": "sha256:336ca78513e49e6484e894663096fbaaf6eef5c02f676181b84f477602c78011",
+            "size": 570
+          },
+          {
+            "name": "answers.parquet",
+            "fingerprint": "sha256:2685275232f7e0c964bf6f66b4675e2f9d78a62d46822c3e975e1f897f033430",
+            "size": 554
+          }
+        ],
+        "query_count": 2,
+        "corpus_count": 3,
+        "case_count": 2,
+        "ingestion_mode": "passage_chunking"
+      },
+      "models": {
+        "embedding": {
+          "id": "ci-embedding",
+          "name": "ci-embedding",
+          "type": "Embedding",
+          "source": "remote",
+          "provider": "generic",
+          "embedding_dimension": 8,
+          "endpoint_fingerprint": "sha256:da4a7f313e8768b13a205b39f66eb05300de37b8226019643194753459f844b5",
+          "parameters_fingerprint": "sha256:dc7100f0172184d26c6bf392668317bf731ea35bcbe27baead45739a9413d57a",
+          "updated_at": "2026-09-13T13:29:33.756186Z"
+        },
+        "chat": {
+          "id": "ci-chat",
+          "name": "ci-chat",
+          "type": "KnowledgeQA",
+          "source": "remote",
+          "provider": "generic",
+          "endpoint_fingerprint": "sha256:da4a7f313e8768b13a205b39f66eb05300de37b8226019643194753459f844b5",
+          "parameters_fingerprint": "sha256:48e724a72d67fa3041f21fd3866c683ab388287b7bea0cceba95d055fd0c804d",
+          "updated_at": "2026-09-13T13:29:33.75442Z"
+        },
+        "rerank": {
+          "id": "ci-rerank",
+          "name": "ci-rerank",
+          "type": "Rerank",
+          "source": "remote",
+          "provider": "generic",
+          "endpoint_fingerprint": "sha256:da4a7f313e8768b13a205b39f66eb05300de37b8226019643194753459f844b5",
+          "parameters_fingerprint": "sha256:48e724a72d67fa3041f21fd3866c683ab388287b7bea0cceba95d055fd0c804d",
+          "updated_at": "2026-09-13T13:29:33.75756Z"
+        }
+      },
+      "chunking": {
+        "applied": true,
+        "source_unit": "dataset_passage",
+        "config": {
+          "chunk_size": 0,
+          "chunk_overlap": 0,
+          "separators": null
+        }
+      },
+      "retrieval": {
+        "vector_threshold": 0.2,
+        "keyword_threshold": 0.3,
+        "embedding_top_k": 30,
+        "rerank_top_k": 30,
+        "rerank_threshold": 0.3
+      },
+      "generation": {
+        "max_tokens": 0,
+        "max_completion_tokens": 2048,
+        "temperature": 0.3,
+        "top_p": 0,
+        "top_k": 0,
+        "seed": 0,
+        "repeat_penalty": 1,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "prompt_fingerprint": "sha256:5e96d8354b71400c563b0239a5b59cca7e6aeafa3d0e238fca4241d7c14e1747",
+        "context_fingerprint": "sha256:cf89b153b1269831ba555bc5e666e59c82e96447cbc7bc0c662b9319d5948d7b",
+        "no_match_prefix_fingerprint": "sha256:3ad8be20e39632126c6087fc495a9731b42f0aea37bdaa3df939e267692914a3",
+        "fallback_response_fingerprint": "sha256:5ddb4edc42896bb24c01718379533028d5f15266dc2fd4f696ba4c04957fc0f3",
+        "fallback_prompt_fingerprint": ""
+      },
+      "indexing": {
+        "vector_enabled": true,
+        "keyword_enabled": true
+      },
+      "runtime": {
+        "case_concurrency": 1,
+        "metric_version": "retrieval-generation/v3",
+        "result_version": "evaluation-run/v1",
+        "application_version": "0.7.2",
+        "commit_sha": "f0a96a013269e35c2b265181fa5c88af8f3fcdf2",
+        "vcs_modified": false,
+        "commit_available": true
+      },
+      "reproducibility": {
+        "status": "partial",
+        "warnings": [
+          {
+            "code": "provider_config_partially_snapshotted",
+            "message": "One or more provider settings were excluded from the non-secret model snapshot."
+          }
+        ]
+      },
+      "config_hash": "sha256:d7791dd85eea4556a8192305e4d0ec769daaaae6f6d5018bee0848eacc0a14c8"
+    },
+    "metric": {
+      "retrieval_metrics": {
+        "precision": 1,
+        "recall": 1,
+        "ndcg3": 1,
+        "ndcg10": 1,
+        "mrr": 1,
+        "map": 1
+      },
+      "generation_metrics": {
+        "bleu1": 0.5,
+        "bleu2": 0.7071067811865476,
+        "bleu4": 0.8408964152537145,
+        "rouge1": 0,
+        "rouge2": 0,
+        "rougel": 0
+      }
+    },
+    "result": {
+      "schema_version": "evaluation-run/v1",
+      "run": {
+        "run_id": "evaluation_10000_1789306180977_1eb74d65_default",
+        "tenant_id": 10000,
+        "dataset_id": "default",
+        "started_at": "2026-09-13T13:29:40.97776Z",
+        "completed_at": "2026-09-13T13:29:41.046999Z",
+        "status": "success"
+      },
+      "retrieval": {
+        "precision": 1,
+        "recall": 1,
+        "ndcg3": 1,
+        "ndcg10": 1,
+        "mrr": 1,
+        "map": 1
+      },
+      "answer": {
+        "bleu1": 0.5,
+        "bleu2": 0.7071067811865476,
+        "bleu4": 0.8408964152537145,
+        "rouge1": 0,
+        "rouge2": 0,
+        "rougel": 0
+      },
+      "usage": {
+        "status": "partial",
+        "calls": {
+          "total": 7,
+          "succeeded": 7,
+          "failed": 0,
+          "items": 13
+        },
+        "tokens": {
+          "prompt_tokens": 32,
+          "completion_tokens": 8,
+          "total_tokens": 40,
+          "cached_tokens": 0,
+          "cache_read_tokens": 0,
+          "cache_write_tokens": 0,
+          "cache_miss_tokens": 0
+        },
+        "cache_status": "unsupported",
+        "reported_call_count": 2,
+        "unavailable_call_count": 5,
+        "by_model": [
+          {
+            "model_type": "chat",
+            "model_id": "ci-chat",
+            "model_name": "ci-chat",
+            "operation": "chat",
+            "usage_source": "provider_reported",
+            "calls": {
+              "total": 2,
+              "succeeded": 2,
+              "failed": 0,
+              "items": 2
+            },
+            "tokens": {
+              "prompt_tokens": 32,
+              "completion_tokens": 8,
+              "total_tokens": 40,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 2
+          },
+          {
+            "model_type": "embedding",
+            "model_id": "ci-embedding",
+            "model_name": "ci-embedding",
+            "operation": "batch_embed",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 1,
+              "succeeded": 1,
+              "failed": 0,
+              "items": 3
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 1
+          },
+          {
+            "model_type": "embedding",
+            "model_id": "ci-embedding",
+            "model_name": "ci-embedding",
+            "operation": "embed",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 2,
+              "succeeded": 2,
+              "failed": 0,
+              "items": 2
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 2
+          },
+          {
+            "model_type": "rerank",
+            "model_id": "ci-rerank",
+            "model_name": "ci-rerank",
+            "operation": "rerank",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 2,
+              "succeeded": 2,
+              "failed": 0,
+              "items": 6
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 2
+          }
+        ],
+        "by_phase": [
+          {
+            "phase": "evaluation",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 6,
+              "succeeded": 6,
+              "failed": 0,
+              "items": 10
+            },
+            "tokens": {
+              "prompt_tokens": 32,
+              "completion_tokens": 8,
+              "total_tokens": 40,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 6
+          },
+          {
+            "phase": "preparation",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 1,
+              "succeeded": 1,
+              "failed": 0,
+              "items": 3
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 1
+          }
+        ]
+      },
+      "cost": {
+        "status": "unavailable",
+        "source": "not_reported",
+        "amount": null,
+        "warnings": [
+          {
+            "code": "pricing_not_available",
+            "message": "Stage one does not calculate prices; token usage and call counts are reported when available."
+          }
+        ]
+      },
+      "timing": {
+        "total_wall_time_ms": 69,
+        "preparation_ms": 10,
+        "evaluation_ms": 32,
+        "cleanup_ms": 24,
+        "case_count": 2,
+        "case_avg_ms": 13,
+        "case_min_ms": 13,
+        "case_max_ms": 13,
+        "case_p50_ms": 13,
+        "case_p95_ms": 13,
+        "model_call_cumulative_ms": 7
+      },
+      "cases": [
+        {
+          "case_id": "1",
+          "status": "success",
+          "started_at": "2026-09-13T13:29:40.990051311Z",
+          "completed_at": "2026-09-13T13:29:41.003652066Z",
+          "duration_ms": 13,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 5
+            },
+            "tokens": {
+              "prompt_tokens": 16,
+              "completion_tokens": 4,
+              "total_tokens": 20,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "cache_status": "unsupported",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "ci-chat",
+                "model_name": "ci-chat",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 16,
+                  "completion_tokens": 4,
+                  "total_tokens": 20,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 1
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "ci-embedding",
+                "model_name": "ci-embedding",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 1
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "ci-rerank",
+                "model_name": "ci-rerank",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 3
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 1
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 5
+                },
+                "tokens": {
+                  "prompt_tokens": 16,
+                  "completion_tokens": 4,
+                  "total_tokens": 20,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 3
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 1,
+            "question_fingerprint": "sha256:115049a298532be2f181edb03f766770c0db84c22aff39003fec340deaec7545",
+            "reference_answer_fingerprint": "sha256:5dd272b4f316b776a7b8e3d0894b37e1e42be3d5d3b204b8a5836cc50597a6b1",
+            "generated_answer_fingerprint": "sha256:a8a57dbc076774bf9ccc791d7f0d74fada5e36e20004eb080d5de7773ba17de2",
+            "ground_truth_pids": [
+              10
+            ],
+            "search_pids": [
+              10,
+              20,
+              99
+            ],
+            "rerank_pids": [
+              10
+            ],
+            "metric_input_pids": [
+              10
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.5,
+                "bleu2": 0.7071067811865476,
+                "bleu4": 0.8408964152537145,
+                "rouge1": 0,
+                "rouge2": 0,
+                "rougel": 0
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "2",
+          "status": "success",
+          "started_at": "2026-09-13T13:29:41.00574778Z",
+          "completed_at": "2026-09-13T13:29:41.01972225Z",
+          "duration_ms": 13,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 5
+            },
+            "tokens": {
+              "prompt_tokens": 16,
+              "completion_tokens": 4,
+              "total_tokens": 20,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "cache_status": "unsupported",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "ci-chat",
+                "model_name": "ci-chat",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 16,
+                  "completion_tokens": 4,
+                  "total_tokens": 20,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 1
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "ci-embedding",
+                "model_name": "ci-embedding",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 1
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "ci-rerank",
+                "model_name": "ci-rerank",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 3
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 1
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 5
+                },
+                "tokens": {
+                  "prompt_tokens": 16,
+                  "completion_tokens": 4,
+                  "total_tokens": 20,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 3
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 2,
+            "question_fingerprint": "sha256:2227487b5826e487e301d5cbae2745a83934b65211f33360814fa1036c2deea4",
+            "reference_answer_fingerprint": "sha256:ec2d191680171ca9603105aa2be38a46228a8e1c75e3ef0383c7ebbd1287110a",
+            "generated_answer_fingerprint": "sha256:a8a57dbc076774bf9ccc791d7f0d74fada5e36e20004eb080d5de7773ba17de2",
+            "ground_truth_pids": [
+              20
+            ],
+            "search_pids": [
+              20,
+              10,
+              99
+            ],
+            "rerank_pids": [
+              20
+            ],
+            "metric_input_pids": [
+              20
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.5,
+                "bleu2": 0.7071067811865476,
+                "bleu4": 0.8408964152537145,
+                "rouge1": 0,
+                "rouge2": 0,
+                "rougel": 0
+              }
+            }
+          },
+          "warnings": []
+        }
+      ],
+      "warnings": [
+        {
+          "code": "usage_incomplete",
+          "message": "One or more model calls did not report token usage."
+        }
+      ]
+    }
+  },
+  "success": true
+}

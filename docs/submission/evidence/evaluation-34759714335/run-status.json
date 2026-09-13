@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "commit": "f0a96a013269e35c2b265181fa5c88af8f3fcdf2",
+  "runs": 4,
+  "cases": 8,
+  "positive_gate": "passed",
+  "negative_gate": "rejected",
+  "provider": "synthetic-ci-v1",
+  "retrieval_negative_gate": "rejected",
+  "degraded_recall": 0,
+  "vcs_modified": false
+}

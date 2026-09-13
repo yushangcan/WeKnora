@@ -4,6 +4,9 @@
 `6c892f58` 后的优化分支，范围是将真实 App 的评测 API、持久化、
 comparison 和质量 gate 接入一个可独立启动的自动验收环境。
 
+本文第 8 节保留首次本地检查快照。此后的线上运行、修复提交及最终状态见
+[优化闭环与线上交付记录](优化闭环与线上交付记录-2026-09-13.md)。
+
 这里的模型响应是合成测试响应。它验证软件链路的契约，不衡量真实模型质量、
 缓存收益、真实费用或生产环境延迟。八解析引擎横评继续暂缓。
 
@@ -32,13 +35,14 @@ flowchart TD
     CLI --> App
     App --> DB[Run / Case 落库]
     DB --> History[历史 API / Comparison]
-    History --> Gate[正常通过 / 故意答错必须拒绝]
+    History --> Gate[正常通过 / 答案及召回退化必须拒绝]
     Gate --> Restart[重启 App 后再次读回与比较]
     Restart --> Evidence[SQL 检查 / JSON / 日志 / 状态 artifact]
 ```
 
 - `docker-compose.evaluation.yml` 是独立配置，不能与生产 Compose 合并。
 - `build` 使用 Go 1.26 Debian 镜像，在 Linux + CGO 下执行定向测试和编译。
+  容器安装标准 App 编译所需的 `libsqlite3-dev`；首次安装需要 Debian 软件源。
   checkout 只读挂载，产物写入专用 volume；`GOMAXPROCS=2`、`-p=2`
   控制编译并行度。
 - App 执行真实 `cmd/server`，使用标准版容器依赖注入、PostgreSQL migration、
@@ -77,19 +81,21 @@ Stub 使用 Python 标准库，无 pip 依赖：
 - `/v1/rerank` 保持输入 index，相关段落得分 0.99，其他段落得分 0.01。
 - `/v1/chat/completions` 对固定问题返回 Paris/Tokyo，并支持 SSE 响应格式。
 - 仅测试服务内的 `/control` 可以开启错误回答模式，答案变为 Incorrect。
+- `degraded-retrieval` 模式将相关段落的重排分数降到 0.01，触发真实过滤和 Recall 退化。
 - `/stats` 只统计各操作请求数，不记录请求正文和凭据。
 
 这里的向量、分数和 Token 数量都是测试常量；不应被写入任何真实模型测评报告。
 Stub 不提供金额，结果中的 `cost.amount` 必须保持 NULL。Embedding 结果缓存在
 本用例中明确关闭，缓存专项检查仍由已有 `embedding-cache.yml` 承担。
 
-## 4. 为什么安排三次 Run
+## 4. 为什么安排四次 Run
 
 | Run | 模式 | 必须满足的断言 |
 |---|---|---|
 | baseline | 正常回答 | 两个 Case 成功；真实答案 fingerprint 匹配；相关 PID 正确 |
 | candidate | 正常回答 | 与 baseline 配置 hash 相同；comparison 和 gate 通过 |
 | degraded | 故意答错 | Pipeline 正常完成；答案质量退化；真实 CLI gate 返回非零 |
+| retrieval-degraded | 所有重排分数低于阈值 | 相关 PID 不进入最终指标输入；Recall 为 0；gate 明确指出 recall |
 
 baseline 是同一 checkout 内临时生成的对照 Run。它不是官方主线的历史模型测评结果。
 两次正常 Run 都必须达到固定用例的质量下限：Recall、MRR、MAP 为 1，
@@ -99,6 +105,11 @@ baseline 是同一 checkout 内临时生成的对照 Run。它不是官方主线
 第三次从 HTTP Provider 到 Run/Case 落库再到比较接口完整执行，
 用真实的错误答案验证 gate 拒绝；不是手工编辑 comparison JSON 来模拟失败。
 gate 比较全部 12 项现有质量指标，容差为 0。
+
+第四次运行补足课题要求的召回负向检查。该场景实际发现了“重排完成但为空时，
+指标误回退到原始 SearchResult”的问题，修复提交 `8945b5b2` 引入运行态
+`RerankCompleted` 判断；空重排必须保持空指标输入，只有未完成重排才允许回退。
+指标版本更新为 `retrieval-generation/v3`，以免与旧口径的历史 Run 直接比较。
 
 ## 5. 提交身份、持久化和错误语义
 
@@ -115,14 +126,14 @@ checkout 的 HEAD 等于 `GITHUB_SHA`。
 每次 Run 验证：
 
 1. 任务与结果都成功，total/finished 均为 2；
-2. 两个不同 Case ID 均存在，Ground Truth PID 与指标输入 PID 一致；
-3. 没有无法映射的 PID，Usage 有真实适配器收到的合成上报数据；
+2. 两个不同 Case ID 均存在；正常召回的 Ground Truth PID 与指标输入一致，召回退化时相关 PID 不在最终输入中；
+3. 没有无法映射的 PID，Usage 保留实际调用；正常生成时有合成 Token 上报，空上下文跳过 Chat 时允许未上报 Token；
 4. Run overview 与分页 Case API 均返回完整的已持久化结果；
 5. 模型三个操作都实际到达 Stub。
 
-完成三次 Run 后重启 App，重新登录签发评测 Key，通过历史 API 读回
-三份 Run/Case，并逐项比较重启前后的结果。正常 Run 的 comparison/gate 再执行一次。
-最后直接查询 PostgreSQL，要求三条成功 Run、六条成功 Case，且所有终态租约释放。
+完成四次 Run 后重启 App，重新登录签发评测 Key，通过历史 API 读回
+四份 Run/Case，并逐项比较重启前后的结果。正常及召回退化 comparison/gate 再执行一次。
+最后直接查询 PostgreSQL，要求四条成功 Run、八条成功 Case，且所有终态租约释放。
 这证明的是完成后的历史数据读取设计；运行中崩溃、租约过期和多实例接管
 仍由租约专项测试及后续故障演练覆盖。
 
@@ -162,9 +173,9 @@ go test ./cmd/evaluation -count=1
 
 | 文件 | 用途 |
 |---|---|
-| `baseline/candidate/degraded.json` | CLI 保存的完整评测响应 |
+| `baseline/candidate/degraded/retrieval-degraded.json` | CLI 保存的完整评测响应 |
 | `*-run.json`、`*-cases.json` | 历史 API 与 Case 证据 |
-| `comparison.json`、`regression.json` | 正常及退化比较结果 |
+| `comparison.json`、`regression.json`、`retrieval-regression.json` | 正常、答案及召回退化比较结果 |
 | `*-gate.log` | 正常 gate 通过、退化 gate 被拒绝 |
 | `restart-*.json` | 重启后的读回与比较证据 |
 | `provider-stats.json` | 三类 Stub 请求计数 |
@@ -178,7 +189,7 @@ go test ./cmd/evaluation -count=1
 若某阶段未执行，其产物缺失不能解读为通过；总状态以脚本退出码和 Actions
 job 结果为准。artifact 在 Actions 中保留 14 天。
 
-## 8. 2026-09-13 本阶段实际验证记录
+## 8. 2026-09-13 首次本地验证快照
 
 | 检查 | 当前证据 |
 |---|---|

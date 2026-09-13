@@ -1,0 +1,3 @@
+heartbeat_at
+lease_until
+owner_id

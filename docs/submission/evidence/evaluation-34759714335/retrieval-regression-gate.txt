@@ -1,0 +1,13 @@
+evaluation quality gate: baseline=evaluation_10000_1789306180063_c8c953c5_default candidates=1 tolerance=0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: precision delta -1.000000 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: recall delta -1.000000 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: ndcg3 delta -1.000000 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: ndcg10 delta -1.000000 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: mrr delta -1.000000 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: map delta -1.000000 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: bleu1 delta -0.888889 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: bleu2 delta -0.882149 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: bleu4 delta -0.865149 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: rouge1 delta -1.000000 is below tolerance -0.000000
+evaluation quality regression: evaluation_10000_1789306181266_a65f2b20_default: rougel delta -1.000000 is below tolerance -0.000000
+quality gate failed with 11 finding(s)

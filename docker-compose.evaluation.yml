@@ -106,6 +106,7 @@ services:
 
   runner:
     image: python:3.12-alpine
+    user: "${EVALUATION_RUNNER_UID:-0}:${EVALUATION_RUNNER_GID:-0}"
     networks: [evaluation]
     profiles: [tools]
     entrypoint: [python, /suite/run.py]

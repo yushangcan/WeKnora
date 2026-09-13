@@ -4,6 +4,10 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 export EVALUATION_EXPECTED_COMMIT
 EVALUATION_EXPECTED_COMMIT="$(git rev-parse HEAD)"
+# The CLI deliberately creates reports with mode 0600. Write them as the host
+# caller so the Actions artifact uploader can read them without relaxing modes.
+export EVALUATION_RUNNER_UID="$(id -u)"
+export EVALUATION_RUNNER_GID="$(id -g)"
 export EVALUATION_ARTIFACT_DIR="${EVALUATION_ARTIFACT_DIR:-./tmp/evaluation-ci/$(date -u +%Y%m%dT%H%M%SZ)-$$}"
 mkdir -p "$EVALUATION_ARTIFACT_DIR"
 # A unique project prevents both interference with production Compose and

@@ -44,8 +44,8 @@ func TestDatabaseRecorderPersistsResolvedProviderCost(t *testing.T) {
 	if repo.event.CostCurrency != "CNY" || repo.event.PricingVersion != "provider" || repo.event.CostStatus != types.ModelUsageCostStatusAvailable {
 		t.Fatalf("cost metadata = currency %q version %q status %q", repo.event.CostCurrency, repo.event.PricingVersion, repo.event.CostStatus)
 	}
-	if repo.event.UsageSource != string(CostSourceProviderReported) {
-		t.Fatalf("usage source = %q", repo.event.UsageSource)
+	if repo.event.UsageSource != "provider" || repo.event.CostSource != string(CostSourceProviderReported) {
+		t.Fatalf("usage source = %q, cost source = %q", repo.event.UsageSource, repo.event.CostSource)
 	}
 }
 
@@ -69,7 +69,9 @@ func TestDatabaseRecorderPersistsCatalogCost(t *testing.T) {
 	if repo.event == nil || repo.event.CostAmount == nil || *repo.event.CostAmount != 2 {
 		t.Fatalf("catalog event = %#v", repo.event)
 	}
-	if repo.event.PricingVersion != "catalog-test" || repo.event.UsageSource != string(CostSourceCatalogCalculated) {
-		t.Fatalf("catalog metadata = version %q source %q", repo.event.PricingVersion, repo.event.UsageSource)
+	if repo.event.PricingVersion != "catalog-test" || repo.event.UsageSource != "provider" ||
+		repo.event.CostSource != string(CostSourceCatalogCalculated) {
+		t.Fatalf("catalog metadata = version %q usage source %q cost source %q",
+			repo.event.PricingVersion, repo.event.UsageSource, repo.event.CostSource)
 	}
 }

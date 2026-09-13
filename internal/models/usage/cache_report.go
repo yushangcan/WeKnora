@@ -25,6 +25,8 @@ type WikiProviderCacheCohort struct {
 // WikiProviderCacheStats contains evidence that can be calculated from
 // provider-reported usage. Nullable totals preserve the difference between a
 // provider reporting zero and a provider omitting the field entirely.
+// PromptTokens sums all explicit prompt usage. CachedTokenRatio uses only
+// cache-reported calls with both prompt and cache-read token counts.
 type WikiProviderCacheStats struct {
 	TotalCalls         int64                 `json:"total_calls"`
 	CacheReportedCalls int64                 `json:"cache_reported_calls"`
@@ -77,8 +79,14 @@ func buildWikiProviderCacheCohortReport(cohort WikiProviderCacheCohort) WikiProv
 func summarizeWikiProviderCache(events []types.ModelUsageEvent) WikiProviderCacheStats {
 	stats := WikiProviderCacheStats{TotalCalls: int64(len(events))}
 	var promptTokens, cacheReadTokens int64
+	var pairedPromptTokens, pairedCacheReadTokens int64
 	var promptReported, cacheReadReported bool
 	for _, event := range events {
+		// Token usage remains useful even when the provider omits cache fields.
+		if event.PromptTokens != nil {
+			promptTokens += *event.PromptTokens
+			promptReported = true
+		}
 		if !event.CacheReported {
 			continue
 		}
@@ -89,13 +97,14 @@ func summarizeWikiProviderCache(events []types.ModelUsageEvent) WikiProviderCach
 		case types.ModelUsageCacheStatusMiss:
 			stats.CacheMissCalls++
 		}
-		if event.PromptTokens != nil {
-			promptTokens += *event.PromptTokens
-			promptReported = true
-		}
 		if event.CacheReadTokens != nil {
 			cacheReadTokens += *event.CacheReadTokens
 			cacheReadReported = true
+		}
+		// Numerator and denominator must describe the same observed calls.
+		if event.PromptTokens != nil && event.CacheReadTokens != nil {
+			pairedPromptTokens += *event.PromptTokens
+			pairedCacheReadTokens += *event.CacheReadTokens
 		}
 	}
 
@@ -117,8 +126,8 @@ func summarizeWikiProviderCache(events []types.ModelUsageEvent) WikiProviderCach
 	if cacheReadReported {
 		stats.CacheReadTokens = &cacheReadTokens
 	}
-	if promptReported && cacheReadReported && promptTokens > 0 {
-		ratio := float64(cacheReadTokens) / float64(promptTokens)
+	if pairedPromptTokens > 0 {
+		ratio := float64(pairedCacheReadTokens) / float64(pairedPromptTokens)
 		stats.CachedTokenRatio = &ratio
 	}
 	return stats

@@ -149,3 +149,28 @@ func TestCompareWikiProviderCacheMarksMixedEvidence(t *testing.T) {
 		t.Fatalf("reported subset should still have a rate: %#v", report.Baseline.Stats.CacheHitRate)
 	}
 }
+
+func TestWikiProviderCacheRatioUsesPairedReportedCalls(t *testing.T) {
+	prompt, read, unreportedPrompt := int64(100), int64(80), int64(1000)
+	stats := summarizeWikiProviderCache([]types.ModelUsageEvent{
+		{CacheReported: true, CacheStatus: types.ModelUsageCacheStatusHit, PromptTokens: &prompt, CacheReadTokens: &read},
+		{PromptTokens: &unreportedPrompt},
+	})
+	if stats.PromptTokens == nil || *stats.PromptTokens != 1100 {
+		t.Fatalf("all reported prompt tokens must be retained: %#v", stats)
+	}
+	if stats.CachedTokenRatio == nil || *stats.CachedTokenRatio != 0.8 {
+		t.Fatalf("ratio must use the cache-reported cohort, not all prompt tokens: %#v", stats)
+	}
+}
+
+func TestWikiProviderCacheRatioDoesNotJoinIncompleteCalls(t *testing.T) {
+	prompt, read := int64(100), int64(80)
+	stats := summarizeWikiProviderCache([]types.ModelUsageEvent{
+		{CacheReported: true, PromptTokens: &prompt},
+		{CacheReported: true, CacheReadTokens: &read},
+	})
+	if stats.PromptTokens == nil || stats.CacheReadTokens == nil || stats.CachedTokenRatio != nil {
+		t.Fatalf("separate incomplete observations cannot establish a token ratio: %#v", stats)
+	}
+}

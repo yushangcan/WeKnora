@@ -18,10 +18,12 @@ import (
 )
 
 const (
-	defaultInput  = "dataset/cmrc2018/raw/validation-00000-of-00001.parquet"
-	defaultOutput = "dataset/cmrc2018/weknora"
-	defaultCases  = 200
-	defaultSeed   = "cmrc2018-validation-v1"
+	defaultInput           = "dataset/cmrc2018/raw/validation-00000-of-00001.parquet"
+	defaultOutput          = "dataset/cmrc2018/weknora"
+	defaultCases           = 200
+	defaultSeed            = "cmrc2018-validation-v1"
+	sourceRevision         = "137f2c45a24275fb68f6961c4d357f46288886aa"
+	sourceValidationSHA256 = "c3d3116e5845b8d3c44a863c1e2f973817c9f10a52e503b079ac49d4366f78b2"
 )
 
 var evaluationFileNames = []string{
@@ -140,7 +142,17 @@ func convert(inputPath, outputDir string, caseCount int, seed string) error {
 		return fmt.Errorf("inspect output directory: %w", err)
 	}
 
-	rows, err := parquet.ReadFile[sourceRow](inputPath)
+	// Read once: the pinned digest and parsed rows must describe identical bytes.
+	sourceBytes, err := os.ReadFile(inputPath)
+	if err != nil {
+		return fmt.Errorf("read source parquet: %w", err)
+	}
+	sourceHash := fmt.Sprintf("%x", sha256.Sum256(sourceBytes))
+	if sourceHash != sourceValidationSHA256 {
+		return fmt.Errorf("source fingerprint mismatch: expected validation split %s from revision %s, got %s",
+			sourceValidationSHA256, sourceRevision, sourceHash)
+	}
+	rows, err := parquet.Read[sourceRow](bytes.NewReader(sourceBytes), int64(len(sourceBytes)))
 	if err != nil {
 		return fmt.Errorf("read source parquet: %w", err)
 	}
@@ -235,14 +247,10 @@ func convert(inputPath, outputDir string, caseCount int, seed string) error {
 	}
 	files[len(evaluationFileNames)].Rows = len(audit)
 	files[len(evaluationFileNames)+1].Rows = len(qualityIssues)
-	sourceHash, _, err := hashFile(inputPath)
-	if err != nil {
-		return err
-	}
 	manifest := outputManifest{
 		SchemaVersion:          "weknora-cmrc2018/v1",
 		SourceDataset:          "hfl/cmrc2018",
-		SourceRevision:         "137f2c45a24275fb68f6961c4d357f46288886aa",
+		SourceRevision:         sourceRevision,
 		SourceSplit:            "validation",
 		SourceFile:             filepath.ToSlash(inputPath),
 		SourceFileSHA256:       sourceHash,

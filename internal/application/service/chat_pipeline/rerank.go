@@ -222,6 +222,7 @@ func (p *PluginRerank) OnEvent(ctx context.Context,
 
 	final := applyMMR(ctx, reranked, chatManage, min(len(reranked), max(1, chatManage.RerankTopK)), 0.7)
 	chatManage.RerankResult = final
+	chatManage.RerankCompleted = true
 
 	// Log composite top scores and MMR selection summary
 	topN := min(3, len(reranked))

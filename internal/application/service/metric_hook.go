@@ -95,6 +95,7 @@ type qaPairMetric struct {
 	qaPair              *types.QAPair
 	searchResult        []*types.SearchResult
 	rerankResult        []*types.SearchResult
+	rerankCompleted     bool
 	chatResponse        *types.ChatResponse
 	retrievalIDs        []int
 	unmappedResultCount int
@@ -126,8 +127,9 @@ func (h *HookMetric) recordSearchResult(index int, searchResult []*types.SearchR
 }
 
 // recordRerankResult records reranked results
-func (h *HookMetric) recordRerankResult(index int, rerankResult []*types.SearchResult) {
+func (h *HookMetric) recordRerankResult(index int, rerankResult []*types.SearchResult, completed bool) {
 	h.qaPairMetricList[index].rerankResult = rerankResult
+	h.qaPairMetricList[index].rerankCompleted = completed
 }
 
 // recordChatResponse records the generated chat response
@@ -137,10 +139,11 @@ func (h *HookMetric) recordChatResponse(index int, chatResponse *types.ChatRespo
 
 // recordFinish finalizes metrics for a QA pair
 func (h *HookMetric) recordFinish(index int) {
-	// Prepare retrieval source: prefer rerank results, fall back to search results
+	// A completed rerank with no selected passages is an empty retrieval result.
+	// Only a skipped/failed rerank may fall back to the original search results.
 	caseMetric := h.qaPairMetricList[index]
 	retrievalSource := caseMetric.rerankResult
-	if len(retrievalSource) == 0 {
+	if !caseMetric.rerankCompleted && len(retrievalSource) == 0 {
 		retrievalSource = caseMetric.searchResult
 	}
 

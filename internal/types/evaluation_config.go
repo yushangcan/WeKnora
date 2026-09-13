@@ -7,7 +7,7 @@ import (
 
 const (
 	EvaluationConfigSchemaVersion = "evaluation-config/v2"
-	EvaluationMetricVersion       = "retrieval-generation/v2"
+	EvaluationMetricVersion       = "retrieval-generation/v3"
 
 	EvaluationDatasetModePassageChunking = "passage_chunking"
 	EvaluationPassageIDMetadataKey       = "evaluation_pid"

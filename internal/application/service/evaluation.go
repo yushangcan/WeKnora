@@ -674,7 +674,7 @@ func (e *EvaluationService) EvalDataset(
 			metricHook.recordInit(i)
 			metricHook.recordQaPair(i, qaPair)
 			metricHook.recordSearchResult(i, chatManage.SearchResult)
-			metricHook.recordRerankResult(i, chatManage.RerankResult)
+			metricHook.recordRerankResult(i, chatManage.RerankResult, chatManage.RerankCompleted)
 			metricHook.recordChatResponse(i, chatManage.ChatResponse)
 			metricHook.recordFinish(i)
 			caseMetricResult := metricHook.CaseMetricResult(i)
@@ -767,7 +767,7 @@ func evaluationCaseEvidence(
 	evidence.RerankPIDs = rerankPIDs
 	evidence.MetricInputPIDs = append([]int(nil), evidence.SearchPIDs...)
 	evidence.UnmappedResultCount = searchUnmappedCount
-	if len(chatManage.RerankResult) > 0 {
+	if chatManage.RerankCompleted || len(chatManage.RerankResult) > 0 {
 		evidence.MetricInputPIDs = append([]int(nil), evidence.RerankPIDs...)
 		evidence.UnmappedResultCount = rerankUnmappedCount
 	}

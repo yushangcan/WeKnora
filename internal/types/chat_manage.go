@@ -117,6 +117,7 @@ type PipelineState struct {
 
 	SearchResult         []*SearchResult   `json:"-"`
 	RerankResult         []*SearchResult   `json:"-"`
+	RerankCompleted      bool              `json:"-"` // A successful rerank may intentionally select no passages.
 	MergeResult          []*SearchResult   `json:"-"`
 	Entity               []string          `json:"-"`
 	EntityKBIDs          []string          `json:"-"`

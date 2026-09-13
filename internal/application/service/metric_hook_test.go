@@ -23,7 +23,7 @@ func TestHookMetricUsesRankedPassageIDs(t *testing.T) {
 	hook.recordRerankResult(0, []*types.SearchResult{
 		evaluationSearchResult(2),
 		evaluationSearchResult(1),
-	})
+	}, true)
 	hook.recordChatResponse(0, &types.ChatResponse{Content: "expected"})
 	hook.recordFinish(0)
 
@@ -49,4 +49,31 @@ func TestEvaluationRetrievalIDsDeduplicateAndRetainUnmappedResults(t *testing.T)
 
 	require.Equal(t, []int{1, -1, -2, 2}, ids)
 	require.Equal(t, 2, unmappedCount)
+}
+
+func TestEvaluationEmptyRerankDistinguishesCompletedFromSkipped(t *testing.T) {
+	for _, completed := range []bool{false, true} {
+		t.Run(strconv.FormatBool(completed), func(t *testing.T) {
+			qa := &types.QAPair{PIDs: []int{1}, Answer: "expected"}
+			search := []*types.SearchResult{evaluationSearchResult(1)}
+			hook := NewHookMetric(1)
+			hook.recordInit(0)
+			hook.recordQaPair(0, qa)
+			hook.recordSearchResult(0, search)
+			hook.recordRerankResult(0, nil, completed)
+			hook.recordFinish(0)
+			chatManage := &types.ChatManage{}
+			chatManage.SearchResult = search
+			chatManage.RerankCompleted = completed
+			evidence := evaluationCaseEvidence(qa, chatManage, hook.CaseMetricResult(0), "")
+			if completed {
+				require.Zero(t, hook.MetricResult().RetrievalMetrics.Recall)
+				require.Empty(t, evidence.MetricInputPIDs)
+			} else {
+				require.Equal(t, 1.0, hook.MetricResult().RetrievalMetrics.Recall)
+				require.Equal(t, []int{1}, evidence.MetricInputPIDs)
+			}
+			require.Equal(t, hook.MetricResult().RetrievalMetrics.Recall, evidence.Metrics.RetrievalMetrics.Recall)
+		})
+	}
 }

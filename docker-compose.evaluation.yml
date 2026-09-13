@@ -27,7 +27,9 @@ services:
       POSTGRES_PASSWORD: ephemeral_ci_database
       POSTGRES_DB: weknora_ci
     healthcheck:
-      test: [CMD-SHELL, "pg_isready -U weknora_ci -d weknora_ci"]
+      # The entrypoint's temporary initialization server only exposes a Unix
+      # socket. Wait for the TCP server that the App actually connects to.
+      test: [CMD-SHELL, "pg_isready -h 127.0.0.1 -U weknora_ci -d weknora_ci"]
       interval: 2s
       timeout: 3s
       retries: 30

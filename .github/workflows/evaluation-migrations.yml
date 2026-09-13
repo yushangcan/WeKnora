@@ -16,7 +16,7 @@ on:
       - "go.sum"
       - ".github/workflows/evaluation-migrations.yml"
   push:
-    branches: [main]
+    branches: [main, "codex/evaluation-**"]
     paths:
       - "migrations/versioned/**"
       - "migrations/sqlite/**"
@@ -37,6 +37,8 @@ permissions:
 
 env:
   GO_VERSION: "1.26"
+  GOMAXPROCS: "2"
+  GOFLAGS: "-p=2"
   DATABASE_URL: postgres://postgres:postgres@localhost:5432/weknora_ci?sslmode=disable
 
 jobs:
@@ -59,7 +61,7 @@ jobs:
           set -euo pipefail
           go test ./internal/application/repository ./internal/application/service \
             ./internal/container ./internal/database \
-            -run 'Evaluation|SQLiteMigrations|Postgres.*Migration' \
+            -run 'Evaluation|Dataset|ModelUsage|SQLiteMigrations|Postgres.*Migration' \
             -count=1 -timeout=180s -json | tee evaluation-lease-tests.jsonl
       - name: Upload lease test evidence
         if: always()

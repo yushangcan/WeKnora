@@ -3,6 +3,21 @@ name: Evaluation Reproducibility
 # Synthetic integration/contract check. Real-provider and cross-commit quality
 # measurements still use cmd/evaluation against an explicitly chosen baseline.
 on:
+  push:
+    branches: [main, "codex/evaluation-**"]
+    paths:
+      - "cmd/server/**"
+      - "cmd/evaluation/**"
+      - "internal/**"
+      - "config/**"
+      - "migrations/**"
+      - "dataset/cmrc2018/convert/**"
+      - "go.mod"
+      - "go.sum"
+      - "ci/evaluation/**"
+      - "docker-compose.evaluation.yml"
+      - "scripts/evaluation_ci.sh"
+      - ".github/workflows/evaluation-reproducibility.yml"
   pull_request:
     paths:
       - "cmd/server/**"
@@ -10,6 +25,7 @@ on:
       - "internal/**"
       - "config/**"
       - "migrations/**"
+      - "dataset/cmrc2018/convert/**"
       - "go.mod"
       - "go.sum"
       - "ci/evaluation/**"

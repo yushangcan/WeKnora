@@ -9,7 +9,7 @@ on:
       - "go.sum"
       - ".github/workflows/embedding-cache.yml"
   push:
-    branches: [main]
+    branches: [main, "codex/evaluation-**"]
     paths:
       - "internal/models/embedding/**"
       - "internal/common/redislock/**"
@@ -24,6 +24,8 @@ permissions:
 env:
   GO_VERSION: "1.26"
   CGO_ENABLED: "1"
+  GOMAXPROCS: "2"
+  GOFLAGS: "-p=2"
   LOG_FORMAT: ""
 
 jobs:

@@ -73,6 +73,18 @@ func TestLoadDatasetRejectsUnknownID(t *testing.T) {
 	}
 }
 
+func TestSupportedEvaluationDatasetDefinitions(t *testing.T) {
+	for _, datasetID := range []string{defaultDatasetID, cmrc2018DatasetID} {
+		definition, ok := evaluationDatasetDefinitions[datasetID]
+		if !ok {
+			t.Fatalf("dataset %q is not registered", datasetID)
+		}
+		if definition.ID != datasetID || definition.Version == "" || definition.Dir == "" {
+			t.Fatalf("invalid dataset definition for %q: %#v", datasetID, definition)
+		}
+	}
+}
+
 func TestDefaultDatasetFilesPassValidation(t *testing.T) {
 	datasetDir := filepath.Join("..", "..", "..", "dataset", "samples")
 	dataset, err := loadDefaultDataset(datasetDir)

@@ -21,10 +21,32 @@ import (
 type DatasetService struct{}
 
 const (
-	defaultDatasetID      = "default"
-	defaultDatasetVersion = "1"
-	defaultDatasetDir     = "./dataset/samples"
+	defaultDatasetID       = "default"
+	defaultDatasetVersion  = "1"
+	defaultDatasetDir      = "./dataset/samples"
+	cmrc2018DatasetID      = "cmrc2018"
+	cmrc2018DatasetVersion = "validation-200-v1"
+	cmrc2018DatasetDir     = "./dataset/cmrc2018/weknora"
 )
+
+type evaluationDatasetDefinition struct {
+	ID      string
+	Version string
+	Dir     string
+}
+
+var evaluationDatasetDefinitions = map[string]evaluationDatasetDefinition{
+	defaultDatasetID: {
+		ID:      defaultDatasetID,
+		Version: defaultDatasetVersion,
+		Dir:     defaultDatasetDir,
+	},
+	cmrc2018DatasetID: {
+		ID:      cmrc2018DatasetID,
+		Version: cmrc2018DatasetVersion,
+		Dir:     cmrc2018DatasetDir,
+	},
+}
 
 var defaultDatasetFiles = []string{
 	"queries.parquet",
@@ -71,17 +93,18 @@ func (d *DatasetService) LoadDataset(ctx context.Context, datasetID string) (*ty
 	logger.Info(ctx, "Start getting dataset by ID")
 	logger.Infof(ctx, "Getting dataset with ID: %s", datasetID)
 
-	if datasetID != defaultDatasetID {
+	definition, ok := evaluationDatasetDefinitions[datasetID]
+	if !ok {
 		return nil, fmt.Errorf("unsupported evaluation dataset: %s", datasetID)
 	}
-	dataset, err := loadDefaultDataset(defaultDatasetDir)
+	dataset, err := loadDefaultDataset(definition.Dir)
 	if err != nil {
 		return nil, err
 	}
 	dataset.PrintStats(ctx)
 	qaPairs := dataset.Iterate()
 	corpus := dataset.EvaluationCorpus()
-	fingerprint, manifest, err := fingerprintDataset(defaultDatasetDir, defaultDatasetFiles)
+	fingerprint, manifest, err := fingerprintDataset(definition.Dir, defaultDatasetFiles)
 	if err != nil {
 		return nil, err
 	}
@@ -89,8 +112,8 @@ func (d *DatasetService) LoadDataset(ctx context.Context, datasetID string) (*ty
 	logger.Infof(ctx, "Retrieved %d QA pairs from dataset", len(qaPairs))
 	return &types.EvaluationDataset{
 		Descriptor: types.EvaluationDatasetDescriptor{
-			ID:                 defaultDatasetID,
-			Version:            defaultDatasetVersion,
+			ID:                 definition.ID,
+			Version:            definition.Version,
 			ContentFingerprint: fingerprint,
 			Files:              manifest,
 			QueryCount:         len(dataset.queries),

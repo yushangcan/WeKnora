@@ -1,0 +1,34 @@
+{
+  "dataset": "hfl/cmrc2018",
+  "source_page": "https://huggingface.co/datasets/hfl/cmrc2018",
+  "revision": "137f2c45a24275fb68f6961c4d357f46288886aa",
+  "retrieved_at_utc": "2026-09-10T15:11:48.9463908Z",
+  "license_from_dataset_card": "cc-by-sa-4.0",
+  "transformed": false,
+  "files": [
+    {
+      "split": "train",
+      "path": "raw/train-00000-of-00001.parquet",
+      "bytes": 3365898,
+      "sha256": "2b5ee0ce1caf754c8d164eeba467039d17a8e8b41ad7a791262869d7470826fb",
+      "expected_rows": 10142,
+      "source_url": "https://huggingface.co/datasets/hfl/cmrc2018/resolve/137f2c45a24275fb68f6961c4d357f46288886aa/data/train-00000-of-00001.parquet"
+    },
+    {
+      "split": "validation",
+      "path": "raw/validation-00000-of-00001.parquet",
+      "bytes": 1136115,
+      "sha256": "c3d3116e5845b8d3c44a863c1e2f973817c9f10a52e503b079ac49d4366f78b2",
+      "expected_rows": 3219,
+      "source_url": "https://huggingface.co/datasets/hfl/cmrc2018/resolve/137f2c45a24275fb68f6961c4d357f46288886aa/data/validation-00000-of-00001.parquet"
+    },
+    {
+      "split": "test",
+      "path": "raw/test-00000-of-00001.parquet",
+      "bytes": 394683,
+      "sha256": "7cb3f679e735abdeeb37bba176042f5f0b0a62e4c4cf69884cfacf78c855ae16",
+      "expected_rows": 1002,
+      "source_url": "https://huggingface.co/datasets/hfl/cmrc2018/resolve/137f2c45a24275fb68f6961c4d357f46288886aa/data/test-00000-of-00001.parquet"
+    }
+  ]
+}

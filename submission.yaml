@@ -1,0 +1,15 @@
+version: 1
+student:
+  name: "徐博"
+  github_id: "yushangcan"
+topic:
+  id: "3"
+  title: "质量评测基线与成本可观测"
+result:
+  type: code
+  url: "https://github.com/yushangcan/WeKnora/tree/rhino-2026-final-3/docs/submission"
+repository:
+  url: "https://github.com/yushangcan/WeKnora"
+  branch: "codex/evaluation-four-dimension-results"
+  commit: "154f33aeb579c8eff3479ea1ada3c2004b896d33"
+  tag: "rhino-2026-final-3"

@@ -1,0 +1,4 @@
+# Preserve original artifact bytes, including psql padding and final newlines.
+*.json -text
+*.jsonl -text
+*.txt -text -whitespace

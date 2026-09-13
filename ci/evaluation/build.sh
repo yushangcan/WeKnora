@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# The standard server links sqlite-vec even when this suite uses PostgreSQL.
+# Match the native build prerequisite from docker/Dockerfile.app.
+apt-get update
+apt-get install -y --no-install-recommends libsqlite3-dev
 # /src is read-only. Keep compiled files and generated fixtures out of checkout.
 git config --global --add safe.directory /src
 mkdir -p /build/runtime/config /build/runtime/dataset/samples

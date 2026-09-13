@@ -30,6 +30,16 @@ def report_fixture():
 
 
 class EvidenceTest(unittest.TestCase):
+    def test_retrieval_degradation_requires_missing_relevant_pids_and_zero_recall(self):
+        report = report_fixture()
+        for case in report["result"]["cases"]:
+            case["evidence"]["metric_input_pids"] = []
+        report["result"]["retrieval"]["recall"] = 0.0
+        run.validate_report(report, "a" * 40, positive=False, retrieval_positive=False)
+        report["result"]["retrieval"]["recall"] = 1.0
+        with self.assertRaisesRegex(RuntimeError, "lower recall"):
+            run.validate_report(report, "a" * 40, positive=False, retrieval_positive=False)
+
     def test_complete_report_passes(self):
         run.validate_report(report_fixture(), "a" * 40)
 
@@ -160,6 +170,19 @@ class ProviderTest(unittest.TestCase):
         messages = [{"role": "user", "content": "What is the capital of Japan?"}]
         self.assertEqual(stub.answer(messages, "normal"), "Tokyo")
         self.assertEqual(stub.answer(messages, "degraded"), "Incorrect")
+
+    def test_retrieval_degradation_filters_relevant_documents(self):
+        try:
+            with self.post("/control", {"mode": "degraded-retrieval"}):
+                pass
+            with self.post("/v1/rerank", {"model": "ci-rerank", "query": "capital of France",
+                    "documents": ["Paris is the capital of France."]}) as response:
+                result = json.load(response)["results"]
+            self.assertEqual(result[0]["index"], 0)
+            self.assertLess(result[0]["relevance_score"], 0.3)
+        finally:
+            with self.post("/control", {"mode": "normal"}):
+                pass
 
 
 if __name__ == "__main__":

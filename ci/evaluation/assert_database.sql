@@ -1,12 +1,12 @@
 DO $$
 BEGIN
-    IF (SELECT COUNT(*) FROM evaluation_runs) <> 3
-       OR (SELECT COUNT(*) FROM evaluation_runs WHERE status = 'success' AND total = 2 AND finished = 2) <> 3 THEN
-        RAISE EXCEPTION 'expected three completed evaluation runs';
+    IF (SELECT COUNT(*) FROM evaluation_runs) <> 4
+       OR (SELECT COUNT(*) FROM evaluation_runs WHERE status = 'success' AND total = 2 AND finished = 2) <> 4 THEN
+        RAISE EXCEPTION 'expected four completed evaluation runs';
     END IF;
-    IF (SELECT COUNT(*) FROM evaluation_run_cases) <> 6
-       OR (SELECT COUNT(*) FROM evaluation_run_cases WHERE status = 'success') <> 6 THEN
-        RAISE EXCEPTION 'expected six persisted successful cases';
+    IF (SELECT COUNT(*) FROM evaluation_run_cases) <> 8
+       OR (SELECT COUNT(*) FROM evaluation_run_cases WHERE status = 'success') <> 8 THEN
+        RAISE EXCEPTION 'expected eight persisted successful cases';
     END IF;
     IF EXISTS (SELECT 1 FROM evaluation_runs WHERE owner_id <> '' OR lease_until IS NOT NULL) THEN
         RAISE EXCEPTION 'terminal run still owns an execution lease';

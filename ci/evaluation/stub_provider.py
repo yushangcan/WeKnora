@@ -77,7 +77,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": "invalid_request"})
             return
         if self.path == "/control":
-            if body.get("mode") not in ("normal", "degraded"):
+            if body.get("mode") not in ("normal", "degraded", "degraded-retrieval"):
                 self.send_json(400, {"error": "invalid_mode"})
                 return
             with STATE_LOCK:
@@ -109,7 +109,8 @@ class Handler(BaseHTTPRequestHandler):
         elif operation == "rerank":
             query_topic = topic(body.get("query", ""))
             results = [{"index": i, "document": {"text": text},
-                        "relevance_score": 0.99 if query_topic and query_topic == topic(text) else 0.01}
+                        "relevance_score": 0.99 if (mode != "degraded-retrieval" and
+                            query_topic and query_topic == topic(text)) else 0.01}
                        for i, text in enumerate(body.get("documents", []))]
             results.sort(key=lambda r: (-r["relevance_score"], r["document"]["text"]))
             self.send_json(200, {"id": "synthetic-rerank", "model": model,

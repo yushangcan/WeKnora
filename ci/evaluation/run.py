@@ -68,14 +68,18 @@ def cli_env(headers):
             "EVALUATION_QUALITY_TOLERANCE": "0", "EVALUATION_GATE_METRICS": METRICS}
 
 
-def run_cli(name, env, command=None, expect_failure=False):
+def run_cli(name, env, command=None, expect_failure=False, expected_metric=None):
     with (EVIDENCE / f"{name}.log").open("w", encoding="utf-8") as log:
         result = subprocess.run([CLI] + ([command] if command else []),
                                 env=env, stdout=log, stderr=subprocess.STDOUT, timeout=210)
     output = (EVIDENCE / f"{name}.log").read_text(encoding="utf-8")
     if expect_failure:
         require(result.returncode != 0 and "quality gate failed" in output,
-                "degraded answer did not trigger the quality gate")
+                "degraded result did not trigger the quality gate")
+        if expected_metric:
+            require(any("quality regression" in line and expected_metric in line
+                        for line in output.splitlines()),
+                    f"quality gate did not identify {expected_metric}")
     else:
         require(result.returncode == 0, f"{name} failed (see {name}.log)")
     print(f"{name}: {'rejected as expected' if expect_failure else 'passed'}", flush=True)
@@ -85,7 +89,7 @@ def read_report(name):
     return json.loads((EVIDENCE / f"{name}.json").read_text(encoding="utf-8"))["data"]
 
 
-def validate_report(detail, commit, positive=True):
+def validate_report(detail, commit, positive=True, retrieval_positive=True):
     task, config, result = detail["task"], detail["config"], detail["result"]
     require(task["status"] == 2 and result["run"]["status"] == "success", "run did not succeed")
     require(task["total"] == task["finished"] == 2, "run did not finish exactly two cases")
@@ -104,13 +108,19 @@ def validate_report(detail, commit, positive=True):
         require(case["status"] == "success", "case is incomplete")
         require(evidence["unmapped_result_count"] == 0, "retrieved PID was not preserved")
         require(evidence["ground_truth_pids"] == [EXPECTED_CASES[case["case_id"]]], "incorrect ground truth")
-        require(evidence["metric_input_pids"] == evidence["ground_truth_pids"], "retrieval did not isolate relevant passage")
+        if retrieval_positive:
+            require(evidence["metric_input_pids"] == evidence["ground_truth_pids"], "retrieval did not isolate relevant passage")
+        else:
+            require(not set(evidence.get("metric_input_pids") or []) & set(evidence["ground_truth_pids"]),
+                    "retrieval degradation still returned the relevant passage")
         if positive:
             require(evidence["generated_answer_fingerprint"] == evidence["reference_answer_fingerprint"],
                     "synthetic answer does not match reference")
     require(result["usage"]["calls"]["total"] > 0 and result["usage"]["reported_call_count"] > 0,
             "usage observation missing")
     require(result["cost"]["amount"] is None, "synthetic provider must not invent monetary cost")
+    if not retrieval_positive:
+        require(result["retrieval"]["recall"] == 0.0, "retrieval degradation did not lower recall to zero")
     if positive:
         for metric in ("recall", "mrr", "map"):
             value = result["retrieval"][metric]
@@ -150,22 +160,22 @@ def validate_dataset(dataset, directory=Path("/build/runtime/dataset/samples")):
             "dataset fingerprint does not describe the mounted fixture")
 
 
-def evaluate(headers, env, name, commit, positive=True):
+def evaluate(headers, env, name, commit, positive=True, retrieval_positive=True):
     run_cli(name, {**env, "EVALUATION_REPORT_PATH": str(EVIDENCE / f"{name}.json")})
     report = read_report(name)
-    validate_report(report, commit, positive)
+    validate_report(report, commit, positive, retrieval_positive)
     validate_dataset(report["config"]["dataset"])
     run_id = report["task"]["id"]
     history(headers, run_id, name)
     return report
 
 
-def compare(headers, env, baseline_id, candidate_id, name, failure=False):
+def compare(headers, env, baseline_id, candidate_id, name, failure=False, expected_metric=None):
     env = {**env, "EVALUATION_BASELINE_RUN_ID": baseline_id,
            "EVALUATION_COMPARISON_RUN_IDS": baseline_id + "," + candidate_id,
            "EVALUATION_COMPARISON_REPORT_PATH": str(EVIDENCE / f"{name}.json")}
     run_cli(name, env, "compare")
-    run_cli(name + "-gate", env, "gate", failure)
+    run_cli(name + "-gate", env, "gate", failure, expected_metric)
 
 
 def run(commit):
@@ -190,15 +200,29 @@ def run(commit):
     degraded_id = degraded["task"]["id"]
     require(degraded_id not in (baseline_id, candidate_id), "degraded run ID collided")
     compare(headers, env, baseline_id, degraded_id, "regression", failure=True)
+    # Drop all relevant rerank scores below the real pipeline's filter threshold.
+    # The unchanged dataset/config must yield zero recall and a metric-specific failure.
+    request("/control", {"mode": "degraded-retrieval"}, control_headers, base=STUB_URL)
+    try:
+        retrieval = evaluate(headers, env, "retrieval-degraded", commit,
+                             positive=False, retrieval_positive=False)
+    finally:
+        request("/control", {"mode": "normal"}, control_headers, base=STUB_URL)
+    retrieval_id = retrieval["task"]["id"]
+    require(len({baseline_id, candidate_id, degraded_id, retrieval_id}) == 4, "run IDs collided")
+    compare(headers, env, baseline_id, retrieval_id, "retrieval-regression",
+            failure=True, expected_metric="recall")
     stats = request("/stats", base=STUB_URL)
     write_json("provider-stats.json", stats)
     require(all(stats.get(k, 0) > 0 for k in ("chat", "embedding", "rerank")),
             "a provider operation was skipped")
     write_json("runs.json", {"tenant_id": int(headers["X-Tenant-ID"]),
         "baseline": baseline_id, "candidate": candidate_id, "degraded": degraded_id,
+        "retrieval-degraded": retrieval_id,
         "commit": commit, "provider": "synthetic-ci-v1"})
-    write_json("run-status.json", {"status": "passed", "commit": commit, "runs": 3, "cases": 6,
+    write_json("run-status.json", {"status": "passed", "commit": commit, "runs": 4, "cases": 8,
         "positive_gate": "passed", "negative_gate": "rejected", "provider": "synthetic-ci-v1",
+        "retrieval_negative_gate": "rejected", "degraded_recall": retrieval["result"]["retrieval"]["recall"],
         "vcs_modified": candidate["config"]["runtime"]["vcs_modified"]})
 
 
@@ -207,15 +231,18 @@ def verify_restart(commit):
     env = cli_env(headers)
     ids = json.loads((EVIDENCE / "runs.json").read_text())
     require(ids["commit"] == commit, "restart checked a different checkout")
-    for name in ("baseline", "candidate", "degraded"):
+    for name in ("baseline", "candidate", "degraded", "retrieval-degraded"):
         before = read_report(name)
         after = request("/api/v1/evaluation?task_id=" + ids[name], headers=headers)
         write_json(f"restart-{name}.json", after)
-        validate_report(after["data"], commit, positive=name != "degraded")
+        validate_report(after["data"], commit, positive=name in ("baseline", "candidate"),
+                        retrieval_positive=name != "retrieval-degraded")
         require(after["data"]["result"] == before["result"], "persisted result changed after app restart")
         history(headers, ids[name], f"restart-{name}")
     compare(headers, env, ids["baseline"], ids["candidate"], "restart-comparison")
-    write_json("restart-status.json", {"status": "passed", "runs": 3, "cases": 6})
+    compare(headers, env, ids["baseline"], ids["retrieval-degraded"], "restart-retrieval-regression",
+            failure=True, expected_metric="recall")
+    write_json("restart-status.json", {"status": "passed", "runs": 4, "cases": 8})
 
 
 if __name__ == "__main__":

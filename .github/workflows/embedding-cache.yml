@@ -21,6 +21,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 env:
   GO_VERSION: "1.26"
   CGO_ENABLED: "1"

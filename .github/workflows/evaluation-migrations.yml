@@ -39,6 +39,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash
+
 env:
   GO_VERSION: "1.26"
   GOMAXPROCS: "2"
@@ -109,7 +113,8 @@ jobs:
       - name: Run fresh migrations
         run: |
           migrate -path migrations/versioned -database "$DATABASE_URL" up
-          migrate -path migrations/versioned -database "$DATABASE_URL" version | tee migration-status.txt
+          migrate -path migrations/versioned -database "$DATABASE_URL" version 2>&1 | tee migration-status.txt
+          test -s migration-status.txt
 
       - name: Verify evaluation and usage tables
         run: |
@@ -121,12 +126,14 @@ jobs:
       - name: Repeat up as upgrade no-op
         run: |
           migrate -path migrations/versioned -database "$DATABASE_URL" up
-          migrate -path migrations/versioned -database "$DATABASE_URL" version | tee migration-upgrade-status.txt
+          migrate -path migrations/versioned -database "$DATABASE_URL" version 2>&1 | tee migration-upgrade-status.txt
+          test -s migration-upgrade-status.txt
 
       - name: Roll back one migration and restore it
         run: |
           migrate -path migrations/versioned -database "$DATABASE_URL" down 1
-          migrate -path migrations/versioned -database "$DATABASE_URL" version | tee migration-down-status.txt
+          migrate -path migrations/versioned -database "$DATABASE_URL" version 2>&1 | tee migration-down-status.txt
+          test -s migration-down-status.txt
           migrate -path migrations/versioned -database "$DATABASE_URL" up
 
       - name: Verify restored schema

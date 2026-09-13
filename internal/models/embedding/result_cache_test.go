@@ -116,7 +116,8 @@ func TestResultCacheReportsApplicationMetrics(t *testing.T) {
 	}
 
 	got := CacheMetrics(cache)
-	if got.Requests != 3 || got.HitItems != 2 || got.MissItems != 2 {
+	// Hit/miss items count input positions; provider items count deduplicated texts.
+	if got.Requests != 3 || got.HitItems != 2 || got.MissItems != 3 {
 		t.Fatalf("unexpected request metrics: %#v", got)
 	}
 	if got.ProviderRequests != 2 || got.ProviderItems != 2 {
@@ -324,7 +325,8 @@ func TestResultCacheFailsOpenWhenBackendErrors(t *testing.T) {
 		t.Fatalf("provider calls = %d, want 1", calls)
 	}
 	metrics := CacheMetrics(cache)
-	if metrics.GetErrors != 1 || metrics.SetErrors != 1 {
+	// The initial lookup and singleflight leader recheck both reach the backend.
+	if metrics.GetErrors != 2 || metrics.SetErrors != 1 {
 		t.Fatalf("cache errors were not observed: %#v", metrics)
 	}
 }

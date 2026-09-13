@@ -1,0 +1,128 @@
+# Standalone, disposable Evaluation contract stack. Never merge with the
+# production compose file: no shared container names, ports, env file or data.
+name: weknora-evaluation
+services:
+  build:
+    image: golang:1.26-bookworm
+    profiles: [tools]
+    working_dir: /src
+    entrypoint: [bash, /src/ci/evaluation/build.sh]
+    environment:
+      CGO_ENABLED: "1"
+      GOMAXPROCS: "2"
+      GOFLAGS: "-p=2"
+      GIT_OPTIONAL_LOCKS: "0"
+      GOPROXY: https://proxy.golang.org,direct
+    volumes:
+      - .:/src:ro
+      - binaries:/build
+      - go-mod:/go/pkg/mod
+      - go-cache:/root/.cache/go-build
+
+  postgres:
+    image: paradedb/paradedb:v0.22.2-pg17
+    networks: [evaluation]
+    environment:
+      POSTGRES_USER: weknora_ci
+      POSTGRES_PASSWORD: ephemeral_ci_database
+      POSTGRES_DB: weknora_ci
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U weknora_ci -d weknora_ci"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7.0-alpine
+    networks: [evaluation]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  stub-provider:
+    image: python:3.12-alpine
+    networks: [evaluation]
+    command: [python, /suite/stub_provider.py]
+    volumes:
+      - ./ci/evaluation:/suite:ro
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8090/health', timeout=2)"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  app:
+    image: golang:1.26-bookworm
+    networks: [evaluation]
+    working_dir: /build/runtime
+    command: [/build/weknora]
+    environment:
+      GIN_MODE: release
+      LOG_LEVEL: warn
+      LOG_FORMAT: ""
+      DB_DRIVER: postgres
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: weknora_ci
+      DB_PASSWORD: ephemeral_ci_database
+      DB_NAME: weknora_ci
+      RETRIEVE_DRIVER: postgres
+      REDIS_ADDR: redis:6379
+      REDIS_DB: "0"
+      JWT_SECRET: ephemeral-evaluation-ci-jwt-secret
+      STORAGE_TYPE: local
+      LOCAL_STORAGE_BASE_DIR: /data/files
+      AUTO_MIGRATE: "true"
+      DISABLE_REGISTRATION: "false"
+      WEKNORA_AUTH_DEFAULT_TENANT_MODE: create_personal
+      WEKNORA_TENANT_ENABLE_RBAC: "true"
+      SSRF_WHITELIST: stub-provider
+      BUILTIN_MODELS_CONFIG: /suite/builtin_models.yaml
+      DOCREADER_ADDR: ""
+      DUCKDB_SKIP_EXTENSION_LOAD: "1"
+      WEKNORA_EMBEDDING_CACHE_ENABLED: "false"
+      NO_PROXY: "*"
+      GOMAXPROCS: "2"
+    volumes:
+      - binaries:/build:ro
+      - go-mod:/go/pkg/mod:ro
+      - ./ci/evaluation:/suite:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      stub-provider: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, --max-time, "2", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+      start_period: 10s
+
+  runner:
+    image: python:3.12-alpine
+    networks: [evaluation]
+    profiles: [tools]
+    entrypoint: [python, /suite/run.py]
+    environment:
+      NO_PROXY: "*"
+      EVALUATION_EXPECTED_COMMIT: ${EVALUATION_EXPECTED_COMMIT:?Set EVALUATION_EXPECTED_COMMIT to git rev-parse HEAD}
+    volumes:
+      - ./ci/evaluation:/suite:ro
+      - binaries:/build:ro
+      - ${EVALUATION_ARTIFACT_DIR:-./tmp/evaluation-ci}:/evidence
+    depends_on:
+      app: {condition: service_healthy}
+
+networks:
+  evaluation:
+    internal: true
+
+volumes:
+  binaries:
+  go-mod:
+  go-cache:
+  postgres-data:

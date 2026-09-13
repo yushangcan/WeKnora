@@ -1,164 +1,55 @@
 name: Evaluation Reproducibility
 
+# Synthetic integration/contract check. Real-provider and cross-commit quality
+# measurements still use cmd/evaluation against an explicitly chosen baseline.
 on:
   pull_request:
     paths:
+      - "cmd/server/**"
       - "cmd/evaluation/**"
-      - "internal/evaluation/**"
-      - "internal/application/service/evaluation.go"
-      - "internal/application/repository/evaluation*.go"
-      - "internal/handler/evaluation.go"
-      - "internal/types/evaluation*.go"
-      - "migrations/versioned/000091*"
-      - "migrations/versioned/000092*"
-      - "migrations/versioned/000093*"
-      - "migrations/versioned/000094*"
-      - "migrations/versioned/000095*"
-      - "internal/application/service/evaluation_lease*.go"
-      - "internal/container/evaluation_recovery*.go"
-      - "internal/types/interfaces/evaluation_repository.go"
+      - "internal/**"
+      - "config/**"
+      - "migrations/**"
+      - "go.mod"
+      - "go.sum"
+      - "ci/evaluation/**"
+      - "docker-compose.evaluation.yml"
+      - "scripts/evaluation_ci.sh"
       - ".github/workflows/evaluation-reproducibility.yml"
   schedule:
     - cron: "17 2 * * 1"
   workflow_dispatch:
 
+concurrency:
+  group: evaluation-reproducibility-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
-env:
-  GO_VERSION: "1.26"
-  WEKNORA_BASE_URL: ${{ vars.WEKNORA_BASE_URL }}
-  WEKNORA_TENANT_ID: ${{ vars.WEKNORA_TENANT_ID }}
-  WEKNORA_API_KEY: ${{ secrets.WEKNORA_API_KEY }}
-  EVALUATION_DATASET_ID: ${{ vars.EVALUATION_DATASET_ID }}
-  EVALUATION_KNOWLEDGE_BASE_ID: ${{ vars.EVALUATION_KNOWLEDGE_BASE_ID }}
-  EVALUATION_CHAT_MODEL_ID: ${{ vars.EVALUATION_CHAT_MODEL_ID }}
-  EVALUATION_RERANK_MODEL_ID: ${{ vars.EVALUATION_RERANK_MODEL_ID }}
-  EVALUATION_POLL_INTERVAL: "5s"
-  EVALUATION_TIMEOUT: "30m"
-  EVALUATION_REPORT_PATH: "tmp/evaluation-report.json"
-  EVALUATION_BASELINE_RUN_ID: ${{ vars.EVALUATION_BASELINE_RUN_ID }}
-  EVALUATION_COMPARISON_RUN_IDS: ${{ vars.EVALUATION_COMPARISON_RUN_IDS }}
-  EVALUATION_COMPARISON_REPORT_PATH: "tmp/evaluation-comparison.json"
-  EVALUATION_QUALITY_TOLERANCE: ${{ vars.EVALUATION_QUALITY_TOLERANCE }}
-  EVALUATION_GATE_METRICS: ${{ vars.EVALUATION_GATE_METRICS }}
-
 jobs:
   reproducibility:
-    name: Scheduled evaluation reproducibility
+    name: Self-contained evaluation contract
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
+      - name: Test synthetic provider and evidence guards
+        run: python3 -m unittest discover -s ci/evaluation -p 'test_*.py' -v
 
-      - name: Check evaluation configuration
-        id: preflight
-        shell: bash
+      - name: Build and exercise the isolated stack
+        env:
+          EVALUATION_ARTIFACT_DIR: ${{ github.workspace }}/tmp/evaluation-ci
         run: |
-          set -u
-          missing=()
-          [[ -n "${WEKNORA_BASE_URL:-}" ]] || missing+=(WEKNORA_BASE_URL)
-          [[ -n "${WEKNORA_TENANT_ID:-}" ]] || missing+=(WEKNORA_TENANT_ID)
-          [[ -n "${WEKNORA_API_KEY:-}" ]] || missing+=(WEKNORA_API_KEY)
-          [[ -n "${EVALUATION_DATASET_ID:-}" ]] || missing+=(EVALUATION_DATASET_ID)
-          if (( ${#missing[@]} > 0 )); then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            printf 'status=skipped\nreason=missing configuration: %s\n' "${missing[*]}" > evaluation-ci-status.txt
-            echo "::notice::Evaluation reproducibility skipped; configure the required repository variables and WEKNORA_API_KEY secret."
-          elif [[ "${{ github.event_name }}" == "pull_request" && -z "${EVALUATION_BASELINE_RUN_ID:-}" ]]; then
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            printf 'status=blocked\nreason=EVALUATION_BASELINE_RUN_ID is required for pull_request quality gating\n' > evaluation-ci-status.txt
-            echo "::error::Evaluation pull request gating requires EVALUATION_BASELINE_RUN_ID."
-            exit 1
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-            printf 'status=ready\ncommit=%s\n' "$GITHUB_SHA" > evaluation-ci-status.txt
-          fi
-
-      - name: Run evaluation CLI
-        if: steps.preflight.outputs.ready == 'true'
-        run: go run ./cmd/evaluation
-
-      - name: Select current evaluation run for comparison
-        id: current_run
-        if: steps.preflight.outputs.ready == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          candidate_run_id="$(jq -r '.data.task.id // .data.result.run.run_id // empty' tmp/evaluation-report.json)"
-          if [[ -z "$candidate_run_id" ]]; then
-            echo "evaluation report does not contain the current run ID" >&2
-            exit 1
-          fi
-          echo "candidate_run_id=$candidate_run_id" >> "$GITHUB_OUTPUT"
-          echo "candidate_run_id=$candidate_run_id" >> evaluation-ci-status.txt
-          if [[ -n "${EVALUATION_BASELINE_RUN_ID:-}" ]]; then
-            comparison_ids="${EVALUATION_COMPARISON_RUN_IDS:-}"
-            if [[ -z "$comparison_ids" ]]; then
-              comparison_ids="$EVALUATION_BASELINE_RUN_ID"
-            fi
-            case ",${comparison_ids}," in
-              *,"$candidate_run_id",*) ;;
-              *) comparison_ids="$comparison_ids,$candidate_run_id" ;;
-            esac
-            echo "EVALUATION_COMPARISON_RUN_IDS=$comparison_ids" >> "$GITHUB_ENV"
-          fi
-
-      - name: Verify evaluation ran the current commit
-        if: steps.preflight.outputs.ready == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          reported_commit="$(jq -r '.data.config.runtime.commit_sha // empty' tmp/evaluation-report.json)"
-          if [[ -z "$reported_commit" ]]; then
-            echo "evaluation report does not contain config.runtime.commit_sha; reproducibility is partial" >&2
-            exit 1
-          fi
-          if [[ "$reported_commit" != "$GITHUB_SHA" ]]; then
-            echo "evaluation service ran commit $reported_commit, expected $GITHUB_SHA" >&2
-            exit 1
-          fi
-          echo "evaluated_commit=$reported_commit" >> evaluation-ci-status.txt
-
-      - name: Compare against configured baseline
-        if: >-
-          steps.preflight.outputs.ready == 'true' &&
-          env.EVALUATION_BASELINE_RUN_ID != ''
-        run: go run ./cmd/evaluation compare
-
-      - name: Block quality regression
-        if: >-
-          steps.preflight.outputs.ready == 'true' &&
-          env.EVALUATION_BASELINE_RUN_ID != ''
-        run: go run ./cmd/evaluation gate
-
-      - name: Record successful execution
-        if: steps.preflight.outputs.ready == 'true'
-        shell: bash
-        run: |
-          {
-            echo "status=completed"
-            echo "commit=$GITHUB_SHA"
-            echo "evaluated_commit=$GITHUB_SHA"
-            echo "candidate_run_id=${{ steps.current_run.outputs.candidate_run_id }}"
-            echo "report=tmp/evaluation-report.json"
-            if [[ -f tmp/evaluation-comparison.json ]]; then
-              echo "comparison_report=tmp/evaluation-comparison.json"
-            fi
-          } > evaluation-ci-status.txt
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          bash scripts/evaluation_ci.sh
 
       - name: Upload evaluation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: evaluation-reproducibility-${{ github.run_id }}
-          if-no-files-found: ignore
+          name: evaluation-contract-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
           retention-days: 14
-          path: |
-            evaluation-ci-status.txt
-            tmp/evaluation-report.json
-            tmp/evaluation-comparison.json
+          path: tmp/evaluation-ci/

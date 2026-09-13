@@ -1,0 +1,41 @@
+# Deterministic models for the self-contained Evaluation CI.  The provider is
+# intentionally local to the Compose network and never reaches a paid API.
+builtin_models:
+  - id: ci-chat
+    tenant_id: 10000
+    name: ci-chat
+    type: KnowledgeQA
+    source: remote
+    is_default: true
+    status: active
+    parameters:
+      base_url: http://stub-provider:8090/v1
+      api_key: ci-stub-key
+      provider: generic
+
+  - id: ci-embedding
+    tenant_id: 10000
+    name: ci-embedding
+    type: Embedding
+    source: remote
+    is_default: true
+    status: active
+    parameters:
+      base_url: http://stub-provider:8090/v1
+      api_key: ci-stub-key
+      provider: generic
+      embedding_parameters:
+        dimension: 8
+        truncate_prompt_tokens: 0
+
+  - id: ci-rerank
+    tenant_id: 10000
+    name: ci-rerank
+    type: Rerank
+    source: remote
+    is_default: true
+    status: active
+    parameters:
+      base_url: http://stub-provider:8090/v1
+      api_key: ci-stub-key
+      provider: generic

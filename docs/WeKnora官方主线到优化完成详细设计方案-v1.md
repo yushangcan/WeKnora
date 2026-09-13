@@ -2,7 +2,7 @@
 
 > 本文从官方主线开始，解释当前分支这段时间为什么改、改了什么、数据如何流转、每个阶段如何验收，以及最后还缺哪些真实环境证据。
 >
-> 当前代码基线：`upstream/main=988cbb03`，优化分支：`codex/evaluation-four-dimension-results`，当前 HEAD：`3ec3f1a9`。本文描述的是源码和提交记录中已经存在的实现；没有真实 Provider、远端 Actions 或现场多实例证据的部分，会明确标记为“待验证”。
+> 初版审计快照：`upstream/main=988cbb03`，优化分支：`codex/evaluation-four-dimension-results`，当时的实现 HEAD：`3ec3f1a9`。第 1—16 节保留该历史快照；后续实现与验收状态见第 17 节。本文区分已有源码和真实运行证据，没有真实 Provider、远端 Actions 或现场多实例证据的部分明确标记为“待验证”。
 
 ## 1. 先区分三类资料
 
@@ -644,7 +644,7 @@ migration workflow 使用 `paradedb/paradedb:v0.22.2-pg17`，因为官方全量 
 - `0346acff`、`e97fde17`、`d1ec9d94`：PR candidate、commit SHA 和文档 guard；
 - `e2685d6e`：Embedding Cache Linux workflow。
 
-### 12.5 当前最后三个 commit
+### 12.5 初版审计时最后三个实现 commit
 
 - `3843480c`：前端模型页面补充 VLM/ASR 和费用来源；
 - `a4bab041`：Evaluation owner/lease/heartbeat、过期恢复和写入 fencing；
@@ -745,8 +745,58 @@ migration workflow 使用 `paradedb/paradedb:v0.22.2-pg17`，因为官方全量 
 11. 真实 E2E、Actions、Provider、Redis 多实例证据单独归档；
 12. 八解析引擎横评若要开始，另立 Phase 6，不与上述闭环混合。
 
-## 16. 当前结论
+## 16. 初版审计结论
 
 当前代码已经完成了评测可观测、模型调用统计、成本解析基础、Embedding Cache、Wiki Prompt 结构优化、历史比较、质量门禁和多实例租约保护的大部分开发工作。剩余重点已经从“继续堆功能”转为“用固定环境完成真实验收”：自包含 Evaluation CI、真实 Provider 费用与调用、缓存 cold/warm/disabled 对照、Wiki Provider 证据和多实例故障演练。
 
 换句话说，核心开发主线已经基本闭合；下一阶段应优先补证据和现场闭环，避免把代码级通过误报为生产收益。八解析引擎横评仍然是独立的可选任务。
+
+## 17. 后续实现记录：2026-09-13 自包含 Evaluation CI
+
+本阶段在总设计文档提交 `6c892f58` 之后实现第 14 节第一步的 CI 环境和
+验收驱动。详细设计、运行命令、断言、artifact 和环境限制见
+[Evaluation 自包含 CI 设计与验收](Evaluation自包含CI设计与验收.md)。
+
+### 17.1 从外部服务依赖改为本次运行自建环境
+
+原 workflow 需要外部 App 地址、长期 API Key 和已有 baseline；缺少配置时会
+跳过。新 workflow 使用独立 `docker-compose.evaluation.yml`，从当前 checkout
+编译标准 App 和 Evaluation CLI，启动临时 ParadeDB/PostgreSQL、Redis 以及
+合成 Chat/Embedding/Rerank Provider。评测通过注册、登录和签发评测权限 Key
+进入真实认证路径，再调用现有 Evaluation API。
+
+固定 fixture 有两个问答 Case、两个相关段落和一个干扰段落。真实 Dataset loader
+读取五个 Parquet 文件；验收脚本核对文件清单顺序、唯一性、大小和 SHA-256，
+并核对 App 编译产物上报的 commit 与 checkout 一致。
+
+### 17.2 自动验收的完整步骤
+
+1. 创建 baseline 和 candidate 两次正常 Run，各自完成两个 Case；
+2. 核对答案 fingerprint、PID、质量下限、Usage 和未知费用 NULL 语义；
+3. 正常 comparison 和 quality gate 必须通过；
+4. 将 Stub 切换为错误答案，执行第三次真实 Run，其 quality gate 必须拒绝；
+5. 重启 App，通过历史 API 读回三次 Run 和六个 Case，并核对结果保持一致；
+6. 查询数据库，检查终态和租约释放，导出 Run/Case 证据；
+7. 无论成功或失败，都尝试保留日志和最终退出状态，清理本次运行的专属资源。
+
+这补充了已有 CLI、持久化和 gate 的集成验收入口。同一 checkout 内生成的
+baseline 是合成用例的契约对照，不能解释为官方主线与优化分支的真实模型质量对照。
+本项也不覆盖运行中崩溃接管；完成后重启读回与租约故障演练是不同的验收目标。
+
+### 17.3 当前验收状态与下一步
+
+| 层次 | 2026-09-13 状态 |
+|---|---|
+| CI 代码、独立 Compose、固定 fixture、Stub、验收脚本 | 已实现 |
+| Stub / 报告 / 数据集证据检查 | 10 项 Python 测试通过 |
+| Evaluation CLI 回归 | `go test ./cmd/evaluation -count=1` 通过 |
+| fixture 确定性、Compose 配置、workflow 和 Bash 语法 | 检查通过 |
+| 完整入口失败语义 | Docker 不可用时退出 1，并保留失败状态和诊断文件 |
+| 本次 Linux 编译及完整容器 E2E | 未完成，受本机 Docker Desktop 启动失败阻断 |
+| 远端 GitHub Actions | 未执行 |
+
+因此，第一步应标记为“实现已补齐，完整 E2E 待验收”。原第 13 节的历史
+Linux/数据库定向测试结果，不代表本阶段的新集成环境已经跑通。
+下一步先取得统一入口成功运行的 artifact，再按第 14 节顺序完成真实 Provider
+费用与调用、Embedding disabled/cold/warm、Wiki 小样本和多实例故障演练。
+八解析引擎横评继续暂缓。

@@ -1,0 +1,3556 @@
+[
+  {
+    "id": "74d56aaf-4fb7-4d23-abdd-ec18c8e519a3",
+    "started_at": 1789312737.9154058,
+    "input_sha256": "ee4bb29f8afde7ea654cbcf21d02ad9a4ef7735fbc8d39fc79b4fff6d1fc4fec",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 1.4849999999860302
+  },
+  {
+    "id": "f3c0855b-99ec-41b5-8be5-7d19e2490704",
+    "started_at": 1789312737.9159617,
+    "input_sha256": "d80b7b10d08d66225e0ee44329a5df9a860f5993016cf3c61161ec1cdd05da6b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.655999999959022
+  },
+  {
+    "id": "cff14d0b-3d33-4533-a713-b094424c8cfb",
+    "started_at": 1789312737.9182868,
+    "input_sha256": "9a48e915ba632cb2cb624309b920341f4e87119e03e293608c0b464c70ea1273",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 4.14100000000326
+  },
+  {
+    "id": "0aa617fe-8ef8-4aab-b287-8dfaceb3b42b",
+    "started_at": 1789312737.9189594,
+    "input_sha256": "2a6d3daa07633d03bcc3aaf6e3e97637f9e8f76bbf8461478881bb402ccafaf8",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 5.921999999962281
+  },
+  {
+    "id": "a85bbc23-ddc2-43f6-8650-f200f1b9113f",
+    "started_at": 1789312737.9214265,
+    "input_sha256": "ba25894f0db871d3b74f2c4d515d5725f5d0a40cc77b1889642dcd364e6c96f7",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.75
+  },
+  {
+    "id": "671934f5-79df-4a68-8dd3-9bf4bcd8937a",
+    "started_at": 1789312739.4066432,
+    "input_sha256": "ba2c4f3798ade32cde612d1505742491de229939893b0f3f1a08321e41967c50",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.98499999998603
+  },
+  {
+    "id": "08378d5f-9683-4add-b070-0690a9e744b1",
+    "started_at": 1789312740.5800426,
+    "input_sha256": "428d19ce3106c4e3cc0a34cc0f62578675904db6e049900cefe422ba50d67510",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.64100000000326
+  },
+  {
+    "id": "20572d5a-0c42-4e58-aa65-b6682c55597e",
+    "started_at": 1789312742.0637147,
+    "input_sha256": "7c2e128d3555961b4ee30803224d160f3418faea1c6f9be55abbc5295d199d5a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.76600000000326
+  },
+  {
+    "id": "1cc10c79-b47b-4c70-8386-54229c7a7294",
+    "started_at": 1789312743.8491948,
+    "input_sha256": "bcf9d573c6d3594edac66a97faa641c772d679e4254eb72659708ebb70836253",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.78100000001723
+  },
+  {
+    "id": "17c953b1-63bc-420e-816b-42b5bcb12b4a",
+    "started_at": 1789312745.6826487,
+    "input_sha256": "92e7e6000a15272f146d26faeae6c7bb357806849bdb5be73abaea329aedc9c3",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.73399999999674
+  },
+  {
+    "id": "02362fef-446f-4c11-b36d-735f8de06758",
+    "started_at": 1789312747.413024,
+    "input_sha256": "e5fa05e4831c447116ca1aa11e3ea4f6c11d6e7bdb12e5db92db138787c3a02b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.530999999959022
+  },
+  {
+    "id": "fcebc24e-1bba-480a-9832-b9e52a4e0a42",
+    "started_at": 1789312749.2310028,
+    "input_sha256": "074c7e525160309ca072323ca4007f1b42a099143b8a4382f68596250b4bd201",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.14000000001397
+  },
+  {
+    "id": "f0f90bc9-4d1f-4d03-a1eb-14af6049eec1",
+    "started_at": 1789312750.8505964,
+    "input_sha256": "14056f38538b6756ee202d38454321549e2ab3020209837de42f0e7a12828a6b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.28100000001723
+  },
+  {
+    "id": "e8c765f9-f52f-4dde-9c84-78233dc419a0",
+    "started_at": 1789312752.6411326,
+    "input_sha256": "9142524f9b99a98c6b60b99fa2d41ae6bc0593240daf16b9ab7d6a04e57681fd",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.327999999979511
+  },
+  {
+    "id": "e5fa7735-5175-44f8-8a29-05a3e9c3c139",
+    "started_at": 1789312754.4208066,
+    "input_sha256": "f17aafded1375224adffb00293d3f935d2943a395afd673a717a73829d7c10cb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.077999999979511
+  },
+  {
+    "id": "c624c827-4ba2-47dc-ac6f-8fc24c7a55e2",
+    "started_at": 1789312755.951494,
+    "input_sha256": "db8c62d0276bb9b31a7700c362178615ed5a07641bc890edf28a8e8df53d3975",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.40600000001723
+  },
+  {
+    "id": "949ed00b-45e3-42e0-81ad-469c30b4107b",
+    "started_at": 1789312757.3750515,
+    "input_sha256": "f07eb808ba69d655e1b29397757f5fd756089b8de0f84b2c93bde7a17140df12",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.827999999979511
+  },
+  {
+    "id": "0727540a-dada-442c-9354-b85439277813",
+    "started_at": 1789312759.1401575,
+    "input_sha256": "be0ba00c5331aaa9c52893175b6472b4b445f5a56a19998b1d20a8bdbf71b1f1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.76500000001397
+  },
+  {
+    "id": "62691696-a66e-4867-9d02-df8c542787ad",
+    "started_at": 1789312760.9876058,
+    "input_sha256": "1ff22c687e83ac207f7791fcb8dc76cc8187154f133dcbd3170502f724b91dbb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.672000000020489
+  },
+  {
+    "id": "be11904d-0835-4922-b0be-74bff7bcf0b4",
+    "started_at": 1789312762.515684,
+    "input_sha256": "dfd942fb6ea02694ad714106659d4c67e448018ec62b08c8ba022c30e0d87143",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.96799999999348
+  },
+  {
+    "id": "94e57737-2e0e-4269-8905-e2c0137ef201",
+    "started_at": 1789312764.3696272,
+    "input_sha256": "5d56965d3650a1669423cbf08f1a3f1576c491b249f16bddea5d03797b711eb6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.938000000023749
+  },
+  {
+    "id": "a9091f3c-f496-4957-b30d-abc67ae4bd8a",
+    "started_at": 1789312766.2233255,
+    "input_sha256": "e934fb59f2bf3dc855118e13854593f982708aac9e20a771b961e1473f4589e0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.85899999999674
+  },
+  {
+    "id": "173b6077-fcfa-437c-b526-219a69d44931",
+    "started_at": 1789312767.9288251,
+    "input_sha256": "0f9a76dbc8c8e2ecd19b325f60de7a3c87c1d2a0225e1704be710ebf0fdb8705",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.905999999959022
+  },
+  {
+    "id": "aa53741f-8283-4068-9e92-bcec5d0469e8",
+    "started_at": 1789312769.6765134,
+    "input_sha256": "9569207fdcf7e026993973aa58b7280b2515a62958d410b37556984decba413e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.827999999979511
+  },
+  {
+    "id": "1135239e-c0ce-4775-9b6d-4a5d1d18b52e",
+    "started_at": 1789312771.5102124,
+    "input_sha256": "f74611e83eb97c337342a547f94a0ce5261536e2b515214a08a01ad929b6768b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.71899999998277
+  },
+  {
+    "id": "50a18af5-96d5-419d-8dbd-c65510cffe92",
+    "started_at": 1789312773.311785,
+    "input_sha256": "e6e80dbf69d31274d765e7564c21e2a27691aaa4fbcde957d19ef5643c73926c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.485000000044238
+  },
+  {
+    "id": "8e1ba1e1-27bd-472f-b94b-f386217680d6",
+    "started_at": 1789312775.1011095,
+    "input_sha256": "68f45aae167c21c10311deb9e274a62230781f42e85d726342e9ce8e1fde3b0f",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.25
+  },
+  {
+    "id": "1a647d5f-4ee1-42dd-a93f-332da687c37f",
+    "started_at": 1789312776.8403153,
+    "input_sha256": "6ea9ebff4b2deeaed6a04d8b46a7046015eb2c66ba6ca5fcecd9ec97386e072d",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.14100000000326
+  },
+  {
+    "id": "0928a4a4-8d85-4921-abc2-80a86a0a664f",
+    "started_at": 1789312778.5119529,
+    "input_sha256": "d0ec849e5eed19abda95d103e97b6eb22cc07884604d9c1689531d78dd2a1910",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.061999999976251
+  },
+  {
+    "id": "9a9d01d9-147c-4034-b6b7-8151f826032e",
+    "started_at": 1789312780.2283113,
+    "input_sha256": "7b0e5e177e92f913aab92b1668e50c9e7e3163597c7587aac8547f0e19e2be36",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.562000000034459
+  },
+  {
+    "id": "0ed5c022-ea59-4dd7-b6c6-4e9a32b35674",
+    "started_at": 1789312781.8166633,
+    "input_sha256": "dfaa38b5cba0c904cc62b01c4959477203aaaa7dc331f6168dc80b7dd2546a48",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.782000000006519
+  },
+  {
+    "id": "08dec3c2-fe49-4247-a712-11ba9dc66c13",
+    "started_at": 1789312783.3609204,
+    "input_sha256": "0e52d586335452e08b17479a14646ca083af4f615c24d96ae6bf51f974346f52",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.9689999999827705
+  },
+  {
+    "id": "e8f9c79e-8df8-4da5-82bc-7c17f44f114d",
+    "started_at": 1789312784.9882386,
+    "input_sha256": "8caacd0f2f0de7c50f8f7ce2ba9ea34c291eba50d835fefd01a80c42bfcb7f2a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.047000000020489
+  },
+  {
+    "id": "20dd8b31-ec2e-43b3-9ca1-1b00fdef82d2",
+    "started_at": 1789312786.580557,
+    "input_sha256": "bd211bbf300be7a8b3a4a8c7644698bf49920613808731e034fc0d7734bc4bf9",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.23399999999674
+  },
+  {
+    "id": "f6a7e32e-b93c-4ce4-bc27-9642bebd307e",
+    "started_at": 1789312787.7899082,
+    "input_sha256": "422e096553695c18b49391ee8a9b4a47210187230d8bd94904612688e486b942",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.60999999998603
+  },
+  {
+    "id": "00ed668b-efa5-4d7a-9ea8-2db6ef79ca74",
+    "started_at": 1789312789.618532,
+    "input_sha256": "5f222e4a8807823d6cb12bdf3457a2347ffcbc77a339c8e6bfbd443f5cb0a36e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.547000000020489
+  },
+  {
+    "id": "aa6a1378-d399-49b9-a308-f5125eefedbf",
+    "started_at": 1789312791.3370829,
+    "input_sha256": "8d6e3f88ac38955226cdebd34d5f8329a590b6c190b841f38e30959cf13e1f8b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.625
+  },
+  {
+    "id": "c17c51d9-1104-4dfb-9977-de30b86bd268",
+    "started_at": 1789312793.0450819,
+    "input_sha256": "7101ba9ce239d9d6c0152d29ae48bd3862ecbe58a739b110f7ec6d6843691b95",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.71899999998277
+  },
+  {
+    "id": "3c0c7c60-9a68-47e2-bc44-d8583d353679",
+    "started_at": 1789312794.828614,
+    "input_sha256": "f53ac87fd7d2980b5e3c92b73bbf3903fb16f9b174870d00fe42606c902d1e03",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.563000000023749
+  },
+  {
+    "id": "9053575b-80d6-45f8-ac78-e8c55fc67666",
+    "started_at": 1789312796.4128401,
+    "input_sha256": "df12d54fa48cf28d3a73e9b0b32c20ba1a996e80e512a55d49559747b189d5c0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.64100000000326
+  },
+  {
+    "id": "fd31a1dd-5760-4f8a-b002-cb90de9049fd",
+    "started_at": 1789312798.1779532,
+    "input_sha256": "270ac92970292573738ad1355a8fbf6d78acc563e631876a024cb1a32aa668fc",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.296999999962281
+  },
+  {
+    "id": "b77e7006-343d-46dd-8efd-27489a965230",
+    "started_at": 1789312799.9756432,
+    "input_sha256": "cb41612ec577a5eaceaf5c3b1ee51e8a72516fbc39649c5c964d5ebb2d264359",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.7810000000172295
+  },
+  {
+    "id": "8a9c03f2-e0e2-4efb-a17f-30a47817c749",
+    "started_at": 1789312801.7827442,
+    "input_sha256": "ae70b3bb9cf7f3b8b539c68d4fcdb0c35193e596f6e7346234c6038670863490",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.85999999998603
+  },
+  {
+    "id": "3cc6e3c9-e32e-4b2d-beb0-cd423aa12a01",
+    "started_at": 1789312803.402243,
+    "input_sha256": "b6b5a75e7af8aa9cc9d3d165bbbcf7dc5f1212f9aea181dbd0c58c0480c3dc67",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.920999999972992
+  },
+  {
+    "id": "e4e86411-9d3b-41a0-88e3-4812e1f6f054",
+    "started_at": 1789312805.0759168,
+    "input_sha256": "97965ab32925d6f909201248262feef27249e486a691dfe32b610555ec62a0dd",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.047000000020489
+  },
+  {
+    "id": "73905a0e-4836-423e-b0dd-d74982f3c9b0",
+    "started_at": 1789312806.4868286,
+    "input_sha256": "bd32597b664b90f0fc28e2d1d46b80b3481b601494e49fb7e430d2ebd778c40c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.34399999998277
+  },
+  {
+    "id": "a0bdae6f-3021-4770-bc8b-d49d20ac8b68",
+    "started_at": 1789312807.7588263,
+    "input_sha256": "437b0926ef5d976a25392599f344be6a673ef31a5ff38fa9189aa991fecc5624",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.797000000020489
+  },
+  {
+    "id": "a0fa3de6-5462-4afc-a4e5-bf1f148c0273",
+    "started_at": 1789312809.6560297,
+    "input_sha256": "0375c9c803bd09d8d29f45928ebcd64f572851d94d72ee921e4dea3a790f81ad",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.327999999979511
+  },
+  {
+    "id": "9d272f72-eef5-45ba-8434-06ba653a60da",
+    "started_at": 1789312811.3254244,
+    "input_sha256": "1be0c23ac745d3e5172fa015703fa0947cdaedbbe022ca4bf0a6eaac03744ab1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.297000000020489
+  },
+  {
+    "id": "989f9df7-fc68-4803-818e-7c1164992a48",
+    "started_at": 1789312813.1313128,
+    "input_sha256": "9c4df75f880465f653bdb4637a81b767f9fc8f42f192d98a7efaa82aa59a6efe",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.077999999979511
+  },
+  {
+    "id": "b55c156b-5370-4fb5-b8e5-88535b09bbb8",
+    "started_at": 1789312814.8441186,
+    "input_sha256": "30e1bcdc87caa195145faf0df8906149b1af321f91e5c360ae2254943a26c636",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.125
+  },
+  {
+    "id": "2b8a11b9-63dc-4fa6-8ab9-adba74ab74fd",
+    "started_at": 1789312816.5643046,
+    "input_sha256": "afdd13f05845691e352f4b0f56e054cad6777452ed34ffcb5cd49633911241dc",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.110000000044238
+  },
+  {
+    "id": "59639a29-1740-47b8-8456-31eab906e917",
+    "started_at": 1789312818.0032558,
+    "input_sha256": "5b916d6916c234c8f8c258f788e1f9d7701215d1bd41593acf795542e9c9e360",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.34399999998277
+  },
+  {
+    "id": "a44d39d1-bd02-4960-ba19-c5c5e4eadf79",
+    "started_at": 1789312819.629504,
+    "input_sha256": "a83fff1c534c74113058c4d8b694e5e9e4a448ffe901911d30f923afe42cc44b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.297000000020489
+  },
+  {
+    "id": "4b85520e-ba66-4f27-83ff-3f7c50bd1dc7",
+    "started_at": 1789312821.2193918,
+    "input_sha256": "06aad468aa5ee2258f20d680cc6e8b0a4d4ec051a6ebece53d55522a2155f129",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.078000000037719
+  },
+  {
+    "id": "e5c83528-682b-4c3d-84b6-41308bef5dd7",
+    "started_at": 1789312822.9811409,
+    "input_sha256": "435b70f6df0ef593a5b8da72e52dfae3aba62cd3df908f9332d379177c93c4ea",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.98399999999674
+  },
+  {
+    "id": "da5a534a-cf1f-4c45-8a33-0a438670f39c",
+    "started_at": 1789312824.6881304,
+    "input_sha256": "75c188686194b65c2e475961fdd6b2273a5f35efd3fddd05ed9220d88e8715c9",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.797000000020489
+  },
+  {
+    "id": "94aebd3a-5081-4f7a-b54b-81da4634a25a",
+    "started_at": 1789312826.3568468,
+    "input_sha256": "b710ad90d115b120a44105c694f0be7ab0952cb40429539fc084d325d48fd8a3",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.592999999993481
+  },
+  {
+    "id": "5ca80bfa-26ba-4bfc-a585-0c7672e7e611",
+    "started_at": 1789312827.9565637,
+    "input_sha256": "bab2688e0bc14cbfee3ecb78aa07ba45e5a1b2da08ae42909a9c6c272e19191d",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.719000000040978
+  },
+  {
+    "id": "225955b4-8dd4-49d7-b522-6d44fa094c63",
+    "started_at": 1789312829.3054118,
+    "input_sha256": "19807cc55c33604194288887541f142541c78aa93f809392b0e14ae28ebe41a4",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.09399999998277
+  },
+  {
+    "id": "79a169fe-2eda-485c-b7ff-50e1add587d4",
+    "started_at": 1789312830.9765005,
+    "input_sha256": "3241bc22185b445e58af8581583becaaf320d051c3a6373e1eb43b1132a1ed2b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.078000000037719
+  },
+  {
+    "id": "4b7d21d6-3dd7-4a70-b44c-29486556a651",
+    "started_at": 1789312832.4972248,
+    "input_sha256": "adc99924edc9f69c5bfad97040fa9276138ecec897d668b2fee0314b09a519a5",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.28200000000652
+  },
+  {
+    "id": "982b5342-04ad-44d2-9433-e7c5f4714d42",
+    "started_at": 1789312833.9576309,
+    "input_sha256": "0d171a53d388c2c56cfa6d695784aaaf483ed2cdb063d43fa10f9286989aba54",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.5
+  },
+  {
+    "id": "4976c579-c74e-4e4c-bea2-b75896bd1e3c",
+    "started_at": 1789312835.6836615,
+    "input_sha256": "fe964f5c5704b67fc9a9aa206b92b802c8f731223efbd2e4aa027d14baf3cd37",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.327999999979511
+  },
+  {
+    "id": "edc0fcb3-d220-40a3-811a-01191e4895d3",
+    "started_at": 1789312837.4046292,
+    "input_sha256": "596ee1d6c16d8c4eb787e12d961050f408ab0cf574a950fd43bdeb6a8f9e2148",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.421999999962281
+  },
+  {
+    "id": "17915d01-8ddb-498c-a1f1-b11ec4e367c8",
+    "started_at": 1789312839.06048,
+    "input_sha256": "4991d43aa155294f6605cd8baffb8b8a5a68869c4662f5470da8df43b95e1aca",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.421999999962281
+  },
+  {
+    "id": "5aa29bc9-fb31-4b2c-aa2b-09819dffda06",
+    "started_at": 1789312840.7764478,
+    "input_sha256": "3b304747052ad8368064d408347df9ac3a485666bd36ae4e1d06ff36a50da443",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.436999999976251
+  },
+  {
+    "id": "ddf2a95e-348f-4ba8-9104-94b88f920611",
+    "started_at": 1789312842.4654346,
+    "input_sha256": "5f71fda2193de3ff67805926f559c41883905fa8f69935f6208ebc8ac2f848d1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.203000000037719
+  },
+  {
+    "id": "e75b9994-4b36-4a54-a287-3d80588899d3",
+    "started_at": 1789312844.022127,
+    "input_sha256": "03b08ea6c2c702160f2c65bbe3bd8c72c268d268c8a89e49fa3bd9dcd13da284",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.25
+  },
+  {
+    "id": "b8fd1238-c417-409c-a438-1f010f06774a",
+    "started_at": 1789312845.8399432,
+    "input_sha256": "3fba6b918745784c5eac60979ccc9b71e59c67bdbb4dc9344abefacf76cf5a2b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.172000000020489
+  },
+  {
+    "id": "566bbd38-e86b-46d8-a32a-f59af975f4e2",
+    "started_at": 1789312847.493264,
+    "input_sha256": "eaaa010e9c4e518a030c6207b65dcf7d2aa8dbaf6fc8e7519257cd651b9e54c2",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.15700000000652
+  },
+  {
+    "id": "1292fac8-e422-4a38-9dfa-52b64e4c5129",
+    "started_at": 1789312849.228495,
+    "input_sha256": "921aa42327c5a878852397fb3fb9946f5048457fba39a13982534babd1ce1a0b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.14000000001397
+  },
+  {
+    "id": "a45a675c-4158-4d75-b281-4a386b69a818",
+    "started_at": 1789312850.666755,
+    "input_sha256": "9b68309228402460cdc6f9b2f60f989147e71f566149f61a9afa55b3ab431b31",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.187999999965541
+  },
+  {
+    "id": "6fab735f-d9a6-4bdc-a60e-33a438359390",
+    "started_at": 1789312852.2909377,
+    "input_sha256": "2f2288cfa796256d3add9461fb3bf67cfd99f1932e433022857af0d8c2bfabaf",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.25
+  },
+  {
+    "id": "17e34b63-d40d-4734-8305-a290d6d43c72",
+    "started_at": 1789312854.023026,
+    "input_sha256": "fe081eea1ecac851232a71e59a9b420f1ce8ef3dcea6c0e7e870ae556f6d5cd0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.077999999979511
+  },
+  {
+    "id": "5976f42c-c40a-4fb8-8c72-8f8f504168fd",
+    "started_at": 1789312855.6549141,
+    "input_sha256": "2107ea303c4fb85680b25453e2730fdcf40fe45bec98ef3f29ebae0e48fe2ef2",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.10999999998603
+  },
+  {
+    "id": "dc7029fc-04b5-42a4-8358-e1326c4aaa6b",
+    "started_at": 1789312857.3740673,
+    "input_sha256": "7ba7179cab3d101b245f3d1016763bdab55cd1bc01a88887275c451f342df809",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.936999999976251
+  },
+  {
+    "id": "5921c11b-f674-46ec-833b-ddf67d092d87",
+    "started_at": 1789312858.8655972,
+    "input_sha256": "ef0de75010292435fab56655b10636894cda8baaff27d6525fecccc0edfb1abe",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.125
+  },
+  {
+    "id": "064ec666-280b-43f3-a37b-062de79357e1",
+    "started_at": 1789312860.555378,
+    "input_sha256": "95a67a73576dc1c81fb21be23e9e02bfcf610aa6922b7807e63f22be7661cb4e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.780999999959022
+  },
+  {
+    "id": "d60dff25-08bb-45f2-b56d-40280c96a6e1",
+    "started_at": 1789312862.1037652,
+    "input_sha256": "d6f5c2908821c88eb9cd4da09ef692a2ac77d6e6e61b434c9765b4be6084cdff",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.76500000001397
+  },
+  {
+    "id": "0d7945ab-378c-4603-9f47-b7990cca34a8",
+    "started_at": 1789312863.786296,
+    "input_sha256": "2d1668f57a72f6e9580a97074ab19e6e9ebe23719d4a6b945cf6a14e019b30d6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.796999999962281
+  },
+  {
+    "id": "e40dc4df-7921-49a9-b9ea-d11d40468897",
+    "started_at": 1789312865.3310819,
+    "input_sha256": "962386e66f1caa8cbe88429a1c8b7fb5717acd79d72416df8667a6ff09642987",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.0
+  },
+  {
+    "id": "91c30c04-171e-47d5-8bee-dcc941c83a1d",
+    "started_at": 1789312867.0021844,
+    "input_sha256": "afae3b0d40fbc0e4dfb85de1438df7e89e00d251c3ea163ffd66eab7c5d0bd4b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.89100000000326
+  },
+  {
+    "id": "4bd96abe-b1f9-449a-b936-f16a4f2728c3",
+    "started_at": 1789312868.3455162,
+    "input_sha256": "8d8d1be243f64b274486f8feceb6799d476f5df2b290ac2f3c9470bbd4315408",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.03100000001723
+  },
+  {
+    "id": "6ecc85e2-ae7a-45e5-a710-83553f5ec3d4",
+    "started_at": 1789312869.8743658,
+    "input_sha256": "20fd6acbd719bfbd3af67ef718862fab27881aa1b149496d6bf8f9738d62390e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.922000000020489
+  },
+  {
+    "id": "dbeb68da-4199-47e4-8289-f0671d551acd",
+    "started_at": 1789312871.6003723,
+    "input_sha256": "8dc38c4503425817d01c37f705217998a6250c1ff169012be1854c316e25438f",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.9060000000172295
+  },
+  {
+    "id": "a70b16dc-50bd-4a85-af8d-b002704baf30",
+    "started_at": 1789312873.337029,
+    "input_sha256": "61f0564a1482b74b488580a562d3352aba01058fa3c6458ec503be224e24ed0c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.688000000023749
+  },
+  {
+    "id": "51cfbe1a-95a4-4d93-b658-db63cf0827cb",
+    "started_at": 1789312874.9128006,
+    "input_sha256": "e516230f3ac0bc9c00cb8dae8cfde85f4f8eadccc5303b8bbc36948dd83a83b5",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.687999999965541
+  },
+  {
+    "id": "7b94dd6c-5d43-4d7d-b4bc-79e293103156",
+    "started_at": 1789312876.3827083,
+    "input_sha256": "9d1cb6b1578349d1a22e4f5f6a5a73eade4a603b5702c957538bbc076f12bab5",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.0
+  },
+  {
+    "id": "aeaa2549-9512-4268-bbb1-f7f78e7d2df2",
+    "started_at": 1789312877.8151457,
+    "input_sha256": "f188417c255252a438c8a695252228053b8b3c14e013534ab94d917d0536b928",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.125
+  },
+  {
+    "id": "83667188-09cc-4420-8272-4289877264fc",
+    "started_at": 1789312879.5174527,
+    "input_sha256": "0dbcdde362f80f995becfc704dac86516df15c5da8105028e649cb1483b623a0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.061999999976251
+  },
+  {
+    "id": "5738eb0c-7d93-4187-a47d-f5d4fa6b96ac",
+    "started_at": 1789312881.0296094,
+    "input_sha256": "c751266840626535434295c90fb90a91f829e0993aef2bd2306b3f591b9b30c8",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.296999999962281
+  },
+  {
+    "id": "b46cad41-1e82-4ec3-b892-ecaa86f28ec5",
+    "started_at": 1789312882.616206,
+    "input_sha256": "4eb2be14f4ff2b34e8c488dbb92a2fe96c086688274cdcadf2bdb4e33ae60614",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.047000000020489
+  },
+  {
+    "id": "4ca201af-2b9b-4323-8eb2-4429524b4dde",
+    "started_at": 1789312884.3984501,
+    "input_sha256": "c324b24d50eb66f308621f9355cacc4a1b98830dc0e181bcddcbf0be6d7a7d3c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.936999999976251
+  },
+  {
+    "id": "cfbd4e22-89e8-4a18-88c7-b6c90d626f04",
+    "started_at": 1789312885.95253,
+    "input_sha256": "28d6d0bfef8c1e5af53aad4f7ee79f18a23acd66051e9eb4c23d3ddbddd8938c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.875
+  },
+  {
+    "id": "c356bf4c-a8c0-4cd5-a8cf-146bbd549e55",
+    "started_at": 1789312887.5994105,
+    "input_sha256": "382578567f78f5efccee2ac7dd4b7b5c243c62f8aebd0de00221dba0c60c7d56",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.812000000034459
+  },
+  {
+    "id": "f2ea9ab4-284e-4682-9cb2-888681fe4183",
+    "started_at": 1789312889.3452837,
+    "input_sha256": "66e3f792a579a8d73c1353f4eee6c3b1edcfde1af796b4b58d30451aa51581a7",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.75
+  },
+  {
+    "id": "1dd740bc-4e3a-41d1-a3dd-8e100d920b25",
+    "started_at": 1789312890.6784577,
+    "input_sha256": "327b85de1f86fe361e4c2e676689ba7de7fcd32fb35cd57cc083b55257846fe2",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.139999999955762
+  },
+  {
+    "id": "2138447e-0738-4d55-82bb-f001c2d6a2f6",
+    "started_at": 1789312892.3435256,
+    "input_sha256": "c189d3569871b242d428fea95029fe56bb987136011bbb79ab1349a11f412c94",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.10899999999674
+  },
+  {
+    "id": "916130af-7dc3-4c1c-81f9-ad8178d3d7bb",
+    "started_at": 1789312893.843521,
+    "input_sha256": "1829e62f6c8b3328acd73c99a07534a882a3920cee36e9caa34bd2cf3cd0e1f1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.01500000001397
+  },
+  {
+    "id": "499ab8cc-4665-49e0-88a0-b6a0ac3ce509",
+    "started_at": 1789312895.4225452,
+    "input_sha256": "1f3f52a7554bc3b7628053c463602fcb730a24c939800f176f24b9a5aef89495",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 6.921999999962281
+  },
+  {
+    "id": "ef92800f-cbf1-4e2b-9c7e-2c30d52d177b",
+    "started_at": 1789312897.115971,
+    "input_sha256": "ae1bce7400fb2cd9bebef89e79774302d2e06527a4424a14991fd4c9c3f9c711",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 6.48499999998603
+  },
+  {
+    "id": "fe211550-e5d8-4fc0-bd53-f42de66cb1b9",
+    "started_at": 1789312898.824251,
+    "input_sha256": "eb704fdf1772b2d19640e297462b4aee4b018072db590dd9bbeed3db3cdd8938",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 6.39100000000326
+  },
+  {
+    "id": "913ccb3d-6731-4bc0-bdaf-5946ace3d4bc",
+    "started_at": 1789312900.4633462,
+    "input_sha256": "e2a675b308b24c484bfdf140d9bb7e20ac5c9ae4bbd5f97e8cc7fe9c95c3cf22",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 5.25
+  },
+  {
+    "id": "cc0748e9-a52c-400d-8326-89c4630e1ee7",
+    "started_at": 1789312901.8839128,
+    "input_sha256": "85d3dea35a6e405d56bb2dcbb735bacbde4741d3c2b7170d752640b5977b0928",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 4.26600000000326
+  },
+  {
+    "id": "2d89f241-dcc8-4b72-9d90-03d414c5cb12",
+    "started_at": 1789312902.3678625,
+    "input_sha256": "7746e7bcd52c985e81c36db1fc21337363b62b5bfb893fa1f0c8a305fa9f9b8b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 4.25
+  },
+  {
+    "id": "c6fdd20b-81b7-4648-8b05-8d486de5cd4e",
+    "started_at": 1789312903.6214826,
+    "input_sha256": "0d7c4269d4e300f3d08f9ce24b2868023082354280220110d3702587439b44f0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 3.4689999999827705
+  },
+  {
+    "id": "592c5abf-bfec-4aa0-84a3-cab2a742b56b",
+    "started_at": 1789312905.2197826,
+    "input_sha256": "5239eb82eabd9e9f2eac8ce274c9e6c4ae512ab8e3f3a4d37c414af594106911",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.312000000034459
+  },
+  {
+    "id": "a9b98774-6e9e-437e-868e-8c417ec77958",
+    "started_at": 1789312905.7276554,
+    "input_sha256": "b812da64828401a0d5dc79a36727b58e1a3fac2a07d661d84df0b42854d971e0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.3429999999934807
+  },
+  {
+    "id": "d66b6be9-35a2-450f-a040-30dae2e6cb30",
+    "started_at": 1789312906.154486,
+    "input_sha256": "5b364c2a2716b33f381c72252628392bb64abd89d39c55a5fff5ec3a67b77d2e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.375
+  },
+  {
+    "id": "14023656-47a7-44f1-9145-78b4d550d3e8",
+    "started_at": 1789312906.6209176,
+    "input_sha256": "d86be939c540b891a0434e1683e1bd97ab181ab6a742c117696f497fd60734ae",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.3910000000032596
+  },
+  {
+    "id": "e8dd2d5a-9f9d-48fc-b90b-57b67d4a0e08",
+    "started_at": 1789312907.0960908,
+    "input_sha256": "6bd5724452faac9f14f9e6e5dda0453f072be5fc59995a4697246119be79a672",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.4530000000377186
+  },
+  {
+    "id": "70d5b267-93b4-4859-8ac1-33fb2dce10c5",
+    "started_at": 1789312907.5449996,
+    "input_sha256": "4ac9843a27f39d7f9f98465b233b0a91168fc518397d24ca481cabb56e928e08",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.4219999999622814
+  },
+  {
+    "id": "636fafe7-0afb-499c-835f-8135a9f4a151",
+    "started_at": 1789312908.0821822,
+    "input_sha256": "25ed5654683a15aa63597924f45b0ce784414f95afdda2f809a8a424f7159e35",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.344000000040978
+  },
+  {
+    "id": "14c1e92d-5f4a-48c5-a92f-cf7ecd590640",
+    "started_at": 1789312908.5419877,
+    "input_sha256": "ef9c105ee6272c1071f4b900518e71f1cb2c5a1644680c019d153aecb17fd82a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.405999999959022
+  },
+  {
+    "id": "f6e3bdee-5c6a-485b-a8fd-31f333a9c328",
+    "started_at": 1789312909.0206656,
+    "input_sha256": "e87f4db0197032eac0654d8eb8c1ae4779fdc2efc625d59e9c9d4617492a10fa",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.375
+  },
+  {
+    "id": "04e8da0c-54bb-4b21-b76e-6a5a0fa4c00f",
+    "started_at": 1789312909.561112,
+    "input_sha256": "c66df539e95771fa36f9d7ea0ccb57fbb12e785fb01b0e9258c8b4d66b4e639a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.2660000000032596
+  },
+  {
+    "id": "c0e59ba7-72a2-4c11-867d-3c6748f977a2",
+    "started_at": 1789312909.9851787,
+    "input_sha256": "41c7ef8eb3ad5a9b882e4be161512cc5ea0a5e51a648dfde7d35074ed97217d9",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.327999999979511
+  },
+  {
+    "id": "024ebca2-b932-4fa2-918c-7f39ec3e4ee6",
+    "started_at": 1789312910.4442134,
+    "input_sha256": "a72b12e77788e12861040386c6fb36b562812a7bba7e9d8d687b7987254bbe16",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 3.2040000000270084
+  },
+  {
+    "id": "e36733db-cb9f-45ea-b54f-aadc36e925fc",
+    "started_at": 1789312910.9563215,
+    "input_sha256": "a73e6b1e1aa8c59f068682414b6082936e1eb68aa97439d3fd4a8037b7cba61f",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 4.328000000037719
+  },
+  {
+    "id": "7dc2b114-79ac-422b-bdd2-15d68db17601",
+    "started_at": 1789312911.4145093,
+    "input_sha256": "0c8d250a537f906874d254c1beea4f3892a8bcc0ea0f68e5d79407e6c5f6b2ed",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 5.296999999962281
+  },
+  {
+    "id": "3b422b55-6860-4ba1-bd4b-563814b55c5d",
+    "started_at": 1789312911.852963,
+    "input_sha256": "b1d6d2e85acab03da582155370885de7110a5e04e9881a2c37019e3b739d3970",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 6.453000000037719
+  },
+  {
+    "id": "833d0a0a-b62c-4795-89f9-eeabd26fda12",
+    "started_at": 1789312912.336705,
+    "input_sha256": "15b2799bfaf294eb3145779e74fc806b146cd5fe65db8f7bba9ad555f2631f1e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.703000000037719
+  },
+  {
+    "id": "b6859957-6e07-48c6-8a85-8760336db40a",
+    "started_at": 1789312913.6534019,
+    "input_sha256": "2f5cba4860f6f336971af272e6c2afaf8578a3efa7b41b5b93d048850e401663",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.03100000001723
+  },
+  {
+    "id": "a33fa096-bfd7-4655-be93-6b2233535c46",
+    "started_at": 1789312915.2977984,
+    "input_sha256": "387ec6ab673f0b66fa1c1ffc6079e5fd6d40991321e07dfe918aa58c8d549283",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.077999999979511
+  },
+  {
+    "id": "b6139d50-1faa-4ae4-8b9b-e674c8f29a4e",
+    "started_at": 1789312916.7298377,
+    "input_sha256": "e4f5885e8ec6e2e7e0ab32b48edfc9799c345cc8cd1c91adb5bef51a8ceca4d2",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.40600000001723
+  },
+  {
+    "id": "c4f6f769-294c-4ab2-b292-784ef4e54d92",
+    "started_at": 1789312918.3197448,
+    "input_sha256": "08b36164ecf47995a59a9a26a99144e79dfe2ff5595724bec3238b27a0d82d1a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.5
+  },
+  {
+    "id": "35143450-fe5a-48eb-a6e7-08cd07162762",
+    "started_at": 1789312920.0431676,
+    "input_sha256": "914d5e3b86e8bfbb311443d94e953c71f9c3ebb12d78d17b5d80f493177e60b2",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.530999999959022
+  },
+  {
+    "id": "781dad0c-06e3-4ddf-ac44-391645061296",
+    "started_at": 1789312921.6856134,
+    "input_sha256": "8fd84e7e5fa2f093d87be693718f1f838b88a3016cd581e040f798f51b041c07",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.51600000000326
+  },
+  {
+    "id": "35773ee5-7a14-4c32-96ce-c3a03a4b5d62",
+    "started_at": 1789312923.3880084,
+    "input_sha256": "df09d2f805f9864dfd73b0fb534fb8ec3705362b183a4b0236d8eb8d228c4c26",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.40600000001723
+  },
+  {
+    "id": "548b05ab-7d99-446d-a5c2-38b0bc8fb3cd",
+    "started_at": 1789312925.1461923,
+    "input_sha256": "5df9d664524961599e187f6266031891dd68101d8e1a186e41c4e081ca12cc1d",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.186999999976251
+  },
+  {
+    "id": "f43f8b6d-4dc0-4f50-94f7-01d5f1d6b606",
+    "started_at": 1789312926.8265433,
+    "input_sha256": "8a070c1a5d7ecba82d2dd0e6ce4db87c667ac8dea55ed21200cbf96504d460cb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.10899999999674
+  },
+  {
+    "id": "a1e925fd-0163-4ab3-b973-f1e3dfb45349",
+    "started_at": 1789312928.581905,
+    "input_sha256": "bcbc832b3b4b64be214ce61c504e4c131003e901d5e17b4f83fbceb9caafeb6a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.828000000037719
+  },
+  {
+    "id": "5a5e7945-f000-413a-9215-b11a70d0eb06",
+    "started_at": 1789312930.2216713,
+    "input_sha256": "31c6cf93892d262bd3a4d7797efd0c8bd5c0cefc6af42657275a9aa541215039",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.35899999999674
+  },
+  {
+    "id": "06325953-b99e-40b5-a327-361f61122754",
+    "started_at": 1789312931.8018222,
+    "input_sha256": "4af977f3c9d1360000263a38ff1d32fb1ca84d646157a4abba0f47d2575232f1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 6.311999999976251
+  },
+  {
+    "id": "10dc7cc3-eff7-43f2-87a1-f5eeb8a6307f",
+    "started_at": 1789312933.346633,
+    "input_sha256": "f73589f21534aaaf073784db6dd9c32cfd0ccc7137b220a579193957291b67c7",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 5.312000000034459
+  },
+  {
+    "id": "57be8339-7bbc-487f-a581-18c4eedbc757",
+    "started_at": 1789312934.9584117,
+    "input_sha256": "de6970e4d68d62713676b962a1406b134deeeec405011fc7e784a81f46ebcb0a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 4.547000000020489
+  },
+  {
+    "id": "38f5a395-f98b-4b3b-b46c-17b805216af8",
+    "started_at": 1789312936.4188125,
+    "input_sha256": "88aa45b1643213c5efc2bf421c983b4a50842123deb8e3b25b68c3b3f7447599",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 3.562999999965541
+  },
+  {
+    "id": "d2182f33-254e-4a1d-84e3-f76c17913008",
+    "started_at": 1789312937.593134,
+    "input_sha256": "c1d34d20ed539a051ae3d6778757ebd51b306a546abefa6fa6cdc3a706474564",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.89000000001397
+  },
+  {
+    "id": "edf3a7af-f5d8-4500-a406-d05362ac89da",
+    "started_at": 1789312938.119583,
+    "input_sha256": "4005bc31774c2820f11c7c3cbc2ca9118496a30f00b0bfae5081baaed5eb2421",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.85999999998603
+  },
+  {
+    "id": "80aeddd3-2715-4cd4-a8d1-c3252d79f10a",
+    "started_at": 1789312938.6743994,
+    "input_sha256": "750873270bb7d7b07edae1ecfdb71cfd895ab6bcccfb0c64c7e7a7383e602b1e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.827999999979511
+  },
+  {
+    "id": "ae93fed1-a95e-46c5-8460-328dc3cadccc",
+    "started_at": 1789312939.518373,
+    "input_sha256": "2e31dfac3dcb1f3e8e7377411a28be1ad94ba9ceaa80abb5166c3d1b5098cc71",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.4839999999967404
+  },
+  {
+    "id": "49bb4663-a5de-48b8-aad8-a53062efebdf",
+    "started_at": 1789312939.9945488,
+    "input_sha256": "605f175f05319c17a3d99020fe6163bd12c1f446eeb69382421cb4a38b0beca0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.4380000000237487
+  },
+  {
+    "id": "0dd51b47-4b3b-419b-a86b-32d4a49ee6a5",
+    "started_at": 1789312940.502329,
+    "input_sha256": "ad106ac80e2a5eeafa58ad4c9fdf2096267ca5ba203025bc568a836f1fd5fe4d",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.4060000000172295
+  },
+  {
+    "id": "3474ee74-cdea-4822-b631-0f6071e1a62b",
+    "started_at": 1789312940.9867826,
+    "input_sha256": "262e695e8b7d6a099bb0e9c13c49d517aa9e0a4fbf4b25214223aadcb0ef8f22",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.4380000000237487
+  },
+  {
+    "id": "46eb812c-1449-4352-aabf-d158c356ed0a",
+    "started_at": 1789312941.5147686,
+    "input_sha256": "df670098fbdd0bdffb5706b3ce591bf6a475f1230fef7714670fd88d4351ff8e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.375
+  },
+  {
+    "id": "b5b799f1-4df3-40e4-a537-b60e379438ff",
+    "started_at": 1789312942.020118,
+    "input_sha256": "60a89710f5763d0fa78c881839c1ce0befa3725cef11ef643ab395bbda271880",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.3429999999934807
+  },
+  {
+    "id": "2d440b61-ee82-4ac8-9052-3e32a8d95910",
+    "started_at": 1789312942.4334486,
+    "input_sha256": "3515c1ea8777b79dcc70d64fbf9ec49308dccb7e3bd86c03672e5adc13e73265",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.327999999979511
+  },
+  {
+    "id": "5beb826c-1b40-458d-98cd-bfb5a4d37074",
+    "started_at": 1789312942.9274015,
+    "input_sha256": "58c63abbd88fa436b95810497cda90892a74fb41144049ddc01cea73bb4e1551",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.327999999979511
+  },
+  {
+    "id": "1d6024a6-dac5-4128-b368-bca85259accf",
+    "started_at": 1789312943.4374852,
+    "input_sha256": "2bcc84f895e94fea5055129666805b83080f698819afd249472e8f8528d7dcf6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 2.2660000000032596
+  },
+  {
+    "id": "79eac604-3f7e-4f6e-be01-9354e2264fe1",
+    "started_at": 1789312943.9120119,
+    "input_sha256": "cd9b034bb27bb687b38f4c48e4f7d708f2c5e6ae7faed433043ba293fd9b5981",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 3.3439999999827705
+  },
+  {
+    "id": "33d8c068-0a6a-4822-a3bf-a762bf6637ba",
+    "started_at": 1789312944.3690424,
+    "input_sha256": "e026d8117e9edccad36177f2d853ff47a05b6474283dce36335b934a492dc151",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 4.125
+  },
+  {
+    "id": "bcf0f558-d9a5-4f69-a0c6-607d9014f8de",
+    "started_at": 1789312944.771353,
+    "input_sha256": "09e9bb360551066731450c5f19b1fd7f47e57cac81d05f87ff3e554d4cfb5005",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 5.4060000000172295
+  },
+  {
+    "id": "3573a6ff-e74b-460d-a627-a51f566e588e",
+    "started_at": 1789312945.2717175,
+    "input_sha256": "0929be82b73c7c5f0b48e7f2e414915c76ca78c5f3cf13cd551c87591ea489ce",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 6.25
+  },
+  {
+    "id": "4903a734-cf7e-4717-9345-5f3fe0d2d45e",
+    "started_at": 1789312945.7224395,
+    "input_sha256": "ece620306e89498e8b5f5f5fa23a0de6e59f6aa25614ca2a930b9c55ec7f4f33",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.48399999999674
+  },
+  {
+    "id": "a250f0fa-c294-44d5-86bf-5e01ee1ade03",
+    "started_at": 1789312947.2608066,
+    "input_sha256": "f7156e4b5f14fdab0853023788fecae03fcd2c33a8e60815ee53379c1496adda",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.561999999976251
+  },
+  {
+    "id": "7f4cbd95-ba0f-46f7-8be8-1c8b25e5d939",
+    "started_at": 1789312948.5035024,
+    "input_sha256": "136d519548ea19207c00a1a3bb860469e913e37d5ca32eec37f5d782016d6100",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.98399999999674
+  },
+  {
+    "id": "8a82ce66-2252-425d-a81e-8547a3a28b78",
+    "started_at": 1789312950.1862142,
+    "input_sha256": "ac8e85f390122b20dac4443c88609413309bb0ccfd5e81220ed6b22085c826f1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.844000000040978
+  },
+  {
+    "id": "68aebc1f-7760-47f6-848b-84ae9e51fa62",
+    "started_at": 1789312951.5344687,
+    "input_sha256": "5f82756ca3b063b0808ccb95236543f34fb9ab51685824ba90d3a12ee39aab93",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.14100000000326
+  },
+  {
+    "id": "48016f39-a2fb-4020-8143-b6904ab226ea",
+    "started_at": 1789312953.2219331,
+    "input_sha256": "494ab19351dd0feba5e51a49e952a76bc5673b7619ed32a9e480760578eeec99",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.203000000037719
+  },
+  {
+    "id": "1b2fb25e-6935-4df9-a756-343334173cdc",
+    "started_at": 1789312954.8336842,
+    "input_sha256": "38a95e5efa786ef29774e56068fcf8c8eaf3029f0b8c2a9dce1b9f24790168cc",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.25
+  },
+  {
+    "id": "60e2ddca-138b-41b7-8609-f972ce3f6e7a",
+    "started_at": 1789312956.4990463,
+    "input_sha256": "28488a37b6e38ef40bbfd1f3167abb838013239ef08567d6cf7b41d69f7a5436",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.875
+  },
+  {
+    "id": "51307c12-15b9-437d-9647-36c099fdd7c8",
+    "started_at": 1789312958.0434217,
+    "input_sha256": "b7928dc82f3a8ff2b3b4b9c6e36cabf6bd3b71b8d3a5e684d1a954ea46446062",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.7189999999827705
+  },
+  {
+    "id": "c6e60467-7f0c-4cb9-9961-1e6db0f8881a",
+    "started_at": 1789312959.6925817,
+    "input_sha256": "4f7bea74026a59e77b1bf8e2c444001487b66288642fe9b9334397ad8a1fca51",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.610000000044238
+  },
+  {
+    "id": "21c9f4de-8a25-4a21-8f09-1846328b20a3",
+    "started_at": 1789312961.4398592,
+    "input_sha256": "d847d3570f699000773cc09495d38e892d99b8091021ef5d3b6030ef0984dda5",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.51600000000326
+  },
+  {
+    "id": "c3951d75-9f4d-484b-b064-4feb3fd6e835",
+    "started_at": 1789312963.0940304,
+    "input_sha256": "9529ba3695ee06cc4fbfc31c856894f174d1b9655f2adbab2a5ca278e3dda0ac",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.5
+  },
+  {
+    "id": "e2933e8e-7ce0-4427-9769-a1213a8359c7",
+    "started_at": 1789312964.3922253,
+    "input_sha256": "681650a0dc8aa4e6a3495ebb0172592598a8e2d1ee620facfc21551622275ab1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.077999999979511
+  },
+  {
+    "id": "4a014b5e-f6d5-4d0b-916a-afa60a1c5c07",
+    "started_at": 1789312965.7699137,
+    "input_sha256": "36fd6db644bccdaa7b59d41807201ce651617fe8681ca3ba35ee7201da7b7941",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.25
+  },
+  {
+    "id": "2d063d8f-26a6-4a47-a0dd-751dba618610",
+    "started_at": 1789312967.3072,
+    "input_sha256": "53b3c9f833be578c176e4aecd76153d811dc9f8c1ad5a12d4ac0d03554a55e91",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.34399999998277
+  },
+  {
+    "id": "bb6bec55-2c20-4c41-89ed-4b1f70a16f85",
+    "started_at": 1789312968.971747,
+    "input_sha256": "50b26253af9220cf27b80933f77e6b757840f524bb6d8028d2cd32e4e83b412d",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.40600000001723
+  },
+  {
+    "id": "4cd318bb-afcd-470d-93e1-d3c6cdfc7dee",
+    "started_at": 1789312970.6309395,
+    "input_sha256": "4e092b63e3b25cd2503edb165f63a3d7c0a940ee1fd807ed8c944b954cc0f541",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.625
+  },
+  {
+    "id": "0f330c6b-b09c-4ce0-a358-0ecc2bb93a72",
+    "started_at": 1789312972.4801419,
+    "input_sha256": "9a73e93a7cc49e54da0a93354fa49d8c491d6d03b49e37d405680f946f61b656",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.71799999999348
+  },
+  {
+    "id": "cd8c3358-44fa-4963-9ef9-cea8f3e17589",
+    "started_at": 1789312974.0295572,
+    "input_sha256": "2f0cb65668d0b40027eddbb59f1fdf3dd0d6ec5a6c628bbb7d53bf9b5fc88647",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.812999999965541
+  },
+  {
+    "id": "9334f91c-f211-4849-a90f-823078da8cd2",
+    "started_at": 1789312975.6554198,
+    "input_sha256": "c699caddbec79cd8412c7381cd3218ed71a1cc6b3b16f9bfd9cd832d700977ef",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.796999999962281
+  },
+  {
+    "id": "eb52c827-22fd-4918-8d5f-d107e52f484c",
+    "started_at": 1789312977.392243,
+    "input_sha256": "dab34468494c2f82d392b760f710a3192caab13164793959ea963dac5152a1ae",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.952999999979511
+  },
+  {
+    "id": "19fb2653-85a5-4b0a-b52b-558cfd74b557",
+    "started_at": 1789312979.2623365,
+    "input_sha256": "fbe2974b6d8cd59c7defedcd342c53dc0428f0b16eff2b4fb65583b9312cdcd8",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.96899999998277
+  },
+  {
+    "id": "2c7cdbcb-ab36-48df-b6d3-5cd265fa1b9f",
+    "started_at": 1789312981.2062376,
+    "input_sha256": "e73bdf28af4354274c0a08b68e6c900458f7d864f95e06ccba192a8809be70a7",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.422000000020489
+  },
+  {
+    "id": "c6a3dbf3-c738-4f7e-a786-25ef73416871",
+    "started_at": 1789312982.858261,
+    "input_sha256": "c135736d51a72b68cfbbc80ae05b691ee865c75761c493a7372958fccd81a1c1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.59399999998277
+  },
+  {
+    "id": "f504b2cf-8342-4f5e-b5a0-d8259d13dd33",
+    "started_at": 1789312984.4775066,
+    "input_sha256": "14aaa5aacf3c793e4b689459632aad6a2a8f1ae983e6552ea4dca69f91cc1227",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.71799999999348
+  },
+  {
+    "id": "93124257-6ac7-4098-86c5-2d35abc396ab",
+    "started_at": 1789312986.3605928,
+    "input_sha256": "fe42e14bf6549c20c2a11676dccadcce9a3b78188eb5f38cd9939f45336fc0ac",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.297000000020489
+  },
+  {
+    "id": "7ce55bd1-d4fb-4c50-a3d9-8e32e06251aa",
+    "started_at": 1789312988.2290072,
+    "input_sha256": "bc363d997a9edc49a3d95038a42e9ed6156cf8d9defb04fd2dc93f33d4f72318",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 7.842999999993481
+  },
+  {
+    "id": "7cabbb5c-7192-4638-aff7-b0f78625073d",
+    "started_at": 1789312989.6459994,
+    "input_sha256": "443320bd5451e589be5e6b129c5f31bc9e08a0aababf0db21dfb2b147cebb26a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.21799999999348
+  },
+  {
+    "id": "a417df02-6576-4a63-9b87-638734deb181",
+    "started_at": 1789312991.4721057,
+    "input_sha256": "5838894b7f645cb76ff282f8905d9902cf3e973a1111e83aeb3915f5a2e05229",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.21799999999348
+  },
+  {
+    "id": "61e77ec3-922d-4ec7-867b-acf3e9b88e59",
+    "started_at": 1789312993.2128527,
+    "input_sha256": "130732e53b94c53b3961083f0357f7b615f48849e2fe3fc9747dd077829c39d0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.28100000001723
+  },
+  {
+    "id": "2af66777-10cb-493d-946e-4413b1bd751b",
+    "started_at": 1789312994.6762588,
+    "input_sha256": "fa004073e28873281d159d26da768d4d9bf472a23cf7e9621bfa3aa08552f653",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.686999999976251
+  },
+  {
+    "id": "9188810d-8d43-4768-9200-4cfbd68a2dda",
+    "started_at": 1789312996.0848234,
+    "input_sha256": "356042dc14aff734eb3dc02aee6cb94d9fcf706c4e5a5ade2470721d7bcf561a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.063000000023749
+  },
+  {
+    "id": "2697a28f-4055-4313-adb5-9e9cbeb0857a",
+    "started_at": 1789312997.8766997,
+    "input_sha256": "87519ffae26dd689186a918d4db71eacc776ebe0cfcecaf3715ddf0b1394cfa0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.936999999976251
+  },
+  {
+    "id": "3ff6511f-c0be-470b-8059-321b19a5779d",
+    "started_at": 1789312999.6986575,
+    "input_sha256": "6e2e0e0cca2ad7ef90f4e9ad80b066b9480b54ae9add339b194bdd2bea826ed6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.922000000020489
+  },
+  {
+    "id": "d22fb9fd-e10b-40ce-8b38-cedec6f130ba",
+    "started_at": 1789313001.4993198,
+    "input_sha256": "0d845426553d025ea8e35804d80e3c41d28630759d1c99090d5191367418bb79",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.797000000020489
+  },
+  {
+    "id": "623e1629-3f79-4441-8804-fff36ad81228",
+    "started_at": 1789313003.3692362,
+    "input_sha256": "085b71d92588dbb5f5d57419e447ae156329cf2304b8f9ad3272422aa0be9f25",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.59399999998277
+  },
+  {
+    "id": "93cdde40-aac5-4ee4-b44c-761173df3d83",
+    "started_at": 1789313005.1505134,
+    "input_sha256": "affbabc5b1eafc06595f22833c982db298489c6d5b63e990d03b9380feb43219",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.311999999976251
+  },
+  {
+    "id": "9aaedd8b-38b8-4099-894b-a5aadb05ec18",
+    "started_at": 1789313006.8250842,
+    "input_sha256": "a23ce492c6c76de1902fb819fb2462e344ca31cc1b8413fc884428994d0f5ff6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.40700000000652
+  },
+  {
+    "id": "95ff1c98-1f04-4ce5-b6bb-c8c4ac9bde8b",
+    "started_at": 1789313008.6219914,
+    "input_sha256": "393c000339866113d29c146910ca938fbbeccc3cf49f6dc6945463a7e90fec4f",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.35999999998603
+  },
+  {
+    "id": "1fea756e-e798-4319-890f-9da2d29b7f01",
+    "started_at": 1789313010.309877,
+    "input_sha256": "8d844850b725159ad69fe2c863f8a2bbc57fd7d17f2d1f8d9ed820aac8c75623",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.171999999962281
+  },
+  {
+    "id": "742c9869-2dbd-4b4f-bfde-15b6cdc7cf90",
+    "started_at": 1789313011.9731896,
+    "input_sha256": "d021b302a06bc2bc2ab745a5b34e0b6177398b3c8088417cac66820ea8447fb6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.21799999999348
+  },
+  {
+    "id": "99ef3f34-12fc-417d-8a8f-cc6844162fd2",
+    "started_at": 1789313013.4809961,
+    "input_sha256": "c7e444bf99ee0140d4b1c3da3b851d997704ae6f8c91932995987416ce6b9724",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.53100000001723
+  },
+  {
+    "id": "3d645c92-a789-436b-91bd-fe043cfc2a70",
+    "started_at": 1789313015.2379272,
+    "input_sha256": "e4f67486719184cbb1f3f60ad01ea87edd12e3f8ac69744d6e5682995b0dacad",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.577999999979511
+  },
+  {
+    "id": "4197096c-b424-45c6-a2b4-4f1c511d0b37",
+    "started_at": 1789313016.9853954,
+    "input_sha256": "83daff4b0d14c02433b1b09ae3fbd210f6c576adaec0d4d5dcfc4bdfefbec59f",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.672000000020489
+  },
+  {
+    "id": "217eb7b9-6f9d-492d-931b-e10f5b3fcc95",
+    "started_at": 1789313018.4816744,
+    "input_sha256": "9f1ee0ba2d21fcac0e26db782dde654dc87057338bcc00378a268179f2861c26",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.922000000020489
+  },
+  {
+    "id": "b8100bb4-a99b-471f-8e18-8a3ab26ee52f",
+    "started_at": 1789313020.2088933,
+    "input_sha256": "534233463fb4327d69c0f44d49d1d6787f220e7690b180f98828ea10b9ee9a7b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.625
+  },
+  {
+    "id": "503604f2-7cdd-42cc-b8f1-3a76a422b108",
+    "started_at": 1789313022.0214868,
+    "input_sha256": "1621a093bd7068531acebd6b80290fc9187837decc1aca42614791bf500200b6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.545999999972992
+  },
+  {
+    "id": "a010dc2a-44cd-4a15-bc72-ca3c41206966",
+    "started_at": 1789313023.8410034,
+    "input_sha256": "1300efae7502abe0bed85601c98a924f5c6ebb086e3c41405ae3613e72707335",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.313000000023749
+  },
+  {
+    "id": "89e3a730-6fa8-4115-8d5b-8ea1e1f979ea",
+    "started_at": 1789313025.6779559,
+    "input_sha256": "2ae1fd1b244412fc118c8bb01cef96a62f524946edececd2371baec4d8e05326",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.280999999959022
+  },
+  {
+    "id": "2ffef070-1b74-4248-883d-9b465bb5d71d",
+    "started_at": 1789313027.3998888,
+    "input_sha256": "9d5cfa7e9d5531a658b7b674640906a1beafb63d9b966f8a9c5e61df31f50ec5",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.061999999976251
+  },
+  {
+    "id": "940b6418-4918-4b4f-bef0-aa1a211114ea",
+    "started_at": 1789313028.84523,
+    "input_sha256": "15074c267161a84260a80dfdf2d679065ca1f9b946ccdfcf6261c547564ba10b",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.35899999999674
+  },
+  {
+    "id": "624e7ed3-6672-49a7-97b4-19c849cd293f",
+    "started_at": 1789313030.5754187,
+    "input_sha256": "76d4ac42de42fba37b9a78394dca6d970e97f33f5ffe101fe19c457bf4ffd411",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.485000000044238
+  },
+  {
+    "id": "69b9a351-05eb-48f4-b929-5b4e1abe998a",
+    "started_at": 1789313032.155199,
+    "input_sha256": "93a63363eab67f23f3855759d1e23aec9e6821c4537fa5c1c66a71d516eae0d5",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.96899999998277
+  },
+  {
+    "id": "cbf62b9d-2cc2-478d-8e92-26f30a75616a",
+    "started_at": 1789313033.9658608,
+    "input_sha256": "b6d6e9ac9bba858e54d5c796382ab9447ced4cca51967f11327e9709a950fabc",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.01600000000326
+  },
+  {
+    "id": "33993178-9e80-4a9d-963a-79eac3c34cd8",
+    "started_at": 1789313035.476349,
+    "input_sha256": "99909cd31bb70461a41c6140d24b030aeda9f56a1ab8137f2394d111ac64694e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.75
+  },
+  {
+    "id": "ca4b8834-b48c-4277-9d65-72017128812f",
+    "started_at": 1789313037.2253087,
+    "input_sha256": "e86cfd11b10c100be48c733c27be81bd495a5872baf2feb7a37836e6219f8df0",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.60899999999674
+  },
+  {
+    "id": "99e22b08-609b-40dd-bf0f-a8033e6558a8",
+    "started_at": 1789313039.0931342,
+    "input_sha256": "ec6ca3bfde2b94fe575c28e5733d4dd321544894d6035fb30823a5ab2dedb046",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.422000000020489
+  },
+  {
+    "id": "abbea226-4219-49cb-b35d-6290931e716a",
+    "started_at": 1789313041.1516733,
+    "input_sha256": "d1f0a6458e064f901c317fc2493bba4c4d267abc8cdd7eb30a3f37ab2a85abdb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.21799999999348
+  },
+  {
+    "id": "b0dede8e-666b-457a-8af0-7a6da0db445b",
+    "started_at": 1789313042.9961014,
+    "input_sha256": "6439536abdda925d0b62ad17b957714eb77df7b0480460e35ce7cb80229743d6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.23499999998603
+  },
+  {
+    "id": "dbc6dd16-611a-4dc0-80cd-6678eb2a05d0",
+    "started_at": 1789313044.2377853,
+    "input_sha256": "8b1010e065bc1cf4bcddc4d79d9c75e04dd416046963083986780ea284e2f17f",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.797000000020489
+  },
+  {
+    "id": "f4d471cb-1d10-4864-84ee-254c16ab9470",
+    "started_at": 1789313045.8502073,
+    "input_sha256": "a6f71b653510a7dc60ca82b9f2ee5f4ee860b05751c32ba893d5387d0c3908aa",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.03100000001723
+  },
+  {
+    "id": "d68e436f-230d-4655-9a7b-1c9624bbcfe4",
+    "started_at": 1789313047.5288606,
+    "input_sha256": "6527f0c14e6245ec8f7a28f6689cac934a0c8611c886c63a939c40c518151631",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.077999999979511
+  },
+  {
+    "id": "ae076e13-fc35-4378-9694-850481ecfec2",
+    "started_at": 1789313049.3863695,
+    "input_sha256": "d85e7e346be6195956f4a10ab6d115ec9ae0b6cf4eee71a0fb26d0c3f7e8b35c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.98399999999674
+  },
+  {
+    "id": "93c43ac7-565a-4215-af2c-f0528eb4260a",
+    "started_at": 1789313051.2443616,
+    "input_sha256": "4ff0c1742baae30202487dab581cf8dc226c94565fb9cd50317425cead6b73cb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.65700000000652
+  },
+  {
+    "id": "3c2b5db7-0664-42ab-890b-2a6acb39caf9",
+    "started_at": 1789313053.0511763,
+    "input_sha256": "1ed24713c7c2cc2156bbb60bb40bc40542955bf78392c786db4de7f3b918b20f",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.375
+  },
+  {
+    "id": "a6fa6931-9f48-411f-af02-51a16d74cc3a",
+    "started_at": 1789313054.8940952,
+    "input_sha256": "d3c7d5ae1547beaf346c46c010e54d8f69b74c6afd9ac0501bd59548a3be12ea",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.51500000001397
+  },
+  {
+    "id": "4e2e8e99-770d-416c-9e75-a2a852262ddd",
+    "started_at": 1789313056.6108537,
+    "input_sha256": "d85ddb05b72c4c83ee6a3223f840f47d321bc6d1a0e969daa4bf5348bba6dfde",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.73499999998603
+  },
+  {
+    "id": "51d0b06c-305b-4a5a-a6fc-ebb15db0cf1f",
+    "started_at": 1789313058.3821309,
+    "input_sha256": "8cef1a6f743f54f41f67214aa5df199117d2d6eca38d72549687ca9bc8cba4ff",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.10899999999674
+  },
+  {
+    "id": "d1c57ddd-40b9-465a-a3c3-04b733b2e918",
+    "started_at": 1789313059.906214,
+    "input_sha256": "31f4461a6548f863b7b061a78e4d0c3c6ff2d740cb582961e9e5b1a360c57eaa",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.375
+  },
+  {
+    "id": "ccb7e08f-b36d-4242-9a32-58b4164d924b",
+    "started_at": 1789313061.4412913,
+    "input_sha256": "aa6ebecc1878c50786aab9935f34f147a73a4693a9553de6492a34d72656821c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.719000000040978
+  },
+  {
+    "id": "143c8d1c-25d6-414f-bb95-b9d52868dc8d",
+    "started_at": 1789313063.426423,
+    "input_sha256": "eb46d70fd22580d6269e14c29fab20437b4fd77542ee6c0fd547c50194ea9ac1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.60899999999674
+  },
+  {
+    "id": "ccf46e9c-7420-4b34-9432-6903927d895a",
+    "started_at": 1789313065.3588324,
+    "input_sha256": "feb84c8436a402c2896e344ad309fad0de23c9c97900a7ba84665060be7a2eec",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.59399999998277
+  },
+  {
+    "id": "081c884c-f598-456c-9547-79883585ff9a",
+    "started_at": 1789313066.5031648,
+    "input_sha256": "36607afea5ed6d4bae34c945fc54285bf46c51acd89fce6508db1182ea6fe9d6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.327999999979511
+  },
+  {
+    "id": "cb75d4ac-88cd-4693-996b-2c56626fc1b6",
+    "started_at": 1789313068.3027446,
+    "input_sha256": "fe7e8930b0b96951e2293eb22fd097900f596e0993dbb915938c3204e97b3a0d",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.25
+  },
+  {
+    "id": "f3417335-c51f-4ef5-b215-020b8b8cc5fa",
+    "started_at": 1789313070.1825438,
+    "input_sha256": "3bddf39436364f67303530c7cb40c185967bf1028758644105e54d8ae7a6e9f4",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.186999999976251
+  },
+  {
+    "id": "67004434-8714-49ec-93da-4f8f15a59ab4",
+    "started_at": 1789313072.0585423,
+    "input_sha256": "ec9a8fcddbcb4a9e2cbc315820b0572698484f77df2859530c8c514155c22d49",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.061999999976251
+  },
+  {
+    "id": "903600ab-023c-4f7e-b03c-b295dfad65e6",
+    "started_at": 1789313073.972285,
+    "input_sha256": "23126afbae2840e3687f855f64b976d7a8cc0b5cda33301c49c976fb68568051",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.90600000001723
+  },
+  {
+    "id": "f7c963c1-58c2-4159-aaa1-270e08cdfa68",
+    "started_at": 1789313075.8431191,
+    "input_sha256": "276b0a8bcf9083a32a7a7a9c1a8348907b3b784ecc951215885af74c15c1ea9e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.89000000001397
+  },
+  {
+    "id": "7033ec14-9761-4ff1-8c43-e3ceb624b249",
+    "started_at": 1789313077.56462,
+    "input_sha256": "ec4f06d146d7bbfea776cb588fdbf007f12329f68f7a607cec76869404f67bf6",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.860000000044238
+  },
+  {
+    "id": "dd36a6fb-8068-4160-b47b-804ebf13ef2e",
+    "started_at": 1789313079.3780894,
+    "input_sha256": "de01297cafe61bd5bd297d0ce7dd389904a7c8cdf9a1bdc557e377bcc6154e7a",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.90600000001723
+  },
+  {
+    "id": "6b4bcfbf-6cba-4076-a853-97f2f0d951dd",
+    "started_at": 1789313081.1260824,
+    "input_sha256": "e91203bd1c4d0ca604ef6ddbb9f0cc1991d5c47aeac829c66d6259fcc23beee2",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.061999999976251
+  },
+  {
+    "id": "33bb6f7f-0118-49d3-9c70-0c9d33144e7c",
+    "started_at": 1789313082.8958883,
+    "input_sha256": "b3e57b01b48f472c68931b447e85b5ed938644d561ae6eeb463f3da9f5e46166",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.077999999979511
+  },
+  {
+    "id": "cd27a8a2-b7fd-4d4c-81b2-9dbe3b67f3c2",
+    "started_at": 1789313084.7565532,
+    "input_sha256": "6ee785775ae9ea85e8478c93f64cea47b22e56a5f3a3d193436956481a78dbd5",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.15600000001723
+  },
+  {
+    "id": "7ee5c678-0f64-4fe4-b172-96fc655357ab",
+    "started_at": 1789313086.4416525,
+    "input_sha256": "36b0d940036dab2001965a11450c511a131baa526a62868fa9c0677c44541776",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.375
+  },
+  {
+    "id": "b33e53d2-b516-4dc9-b338-e23e2742b321",
+    "started_at": 1789313088.3016353,
+    "input_sha256": "133a63fe594651c743d2bf403c11b64976274940b3e66d31c48cb15257ca9669",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.202999999979511
+  },
+  {
+    "id": "8c962bb3-b3b5-4d4a-a946-c8ced9633003",
+    "started_at": 1789313090.2110913,
+    "input_sha256": "6e5ba3109afc7ea25d60228a55d2dcbd80768d5de19f600b1b808ac0e6ef8f7c",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.313000000023749
+  },
+  {
+    "id": "73a0c6bf-a0c2-4bb2-94c2-0c691a8201ac",
+    "started_at": 1789313091.9883957,
+    "input_sha256": "782eb949bee8e65df237103d425377179613d4518c1f85740085e88c1ec49fea",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 9.10999999998603
+  },
+  {
+    "id": "6eff71c8-2d26-4654-adc1-80e8baee0c23",
+    "started_at": 1789313093.920457,
+    "input_sha256": "18c9136ad258df901976c291b949e3c4792e191a26cddb8e80c9966f83a611e1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 5,
+    "elapsed_seconds": 8.702999999979511
+  },
+  {
+    "id": "7d99b4b3-6361-4ecd-a932-23f35c3ecab4",
+    "started_at": 1789313095.8268828,
+    "input_sha256": "d4eac3d8150d9ff0189359912aacd08f8e1e91fc18b2226d9f8e35aa6eaaf3ec",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 3,
+    "elapsed_seconds": 7.875
+  },
+  {
+    "id": "ded6c20b-82b3-4f52-bc26-2a0991f3398f",
+    "started_at": 1789313103.8766172,
+    "input_sha256": "189ab6aaf2eb86b59b32254ee2a5043ac8e61ac58a54c4d682de412bbbfefb32",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "6a39a367-b238-4d8d-9d8b-70d2dee23991",
+    "started_at": 1789313103.8783727,
+    "input_sha256": "9b263bc90ac6591dbcd7fddb5c974423d00128dd1322f65ccdfa7d79be8319fb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.031000000017229468
+  },
+  {
+    "id": "70b13728-c3da-4698-b9bc-74ba82b974a3",
+    "started_at": 1789313103.879642,
+    "input_sha256": "6c86eead5c633f01c31eeba371503387822d24a5f0bc90ccf658d11566d1347e",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.061999999976251274
+  },
+  {
+    "id": "a520bc88-9027-4d28-9bb9-4ae1ff383644",
+    "started_at": 1789313103.8813875,
+    "input_sha256": "415986ddeefafd140685f173e38ffc4b11eaf29fe93d0c1b3d36dae33d5b7559",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0779999999795109
+  },
+  {
+    "id": "2ecb9ae7-830d-44b8-a652-81e116b97c2b",
+    "started_at": 1789313105.8778944,
+    "input_sha256": "4bad2e50ced48d6847f9f4ce2bf32e5fe6d4264972308234ad371cef3410aa4d",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "8e134c14-6d92-4a12-8ef2-7586f3e6349d",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 604,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 190,
+        "text_tokens": 0
+      },
+      "input_tokens": 13777,
+      "input_tokens_details": null,
+      "output_tokens": 604,
+      "prompt_tokens": 13777,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 14381
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "0de5ab62d092abcb945aba9906ff57ad4ae8ca3434d2d34b2045826f8693f4e4",
+    "elapsed_seconds": 37.23399999999674
+  },
+  {
+    "id": "d902d3a5-335a-47cb-97b9-72b667bcb9c6",
+    "started_at": 1789313143.8302493,
+    "input_sha256": "45a38aec1206be631f0653ef1d84e61c27c40cc5a4eca2fcd367a8293d20fa02",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.14100000000325963
+  },
+  {
+    "id": "5c931eb6-0b40-4fe2-a7ca-889fce631cb9",
+    "started_at": 1789313104.6153765,
+    "input_sha256": "56cf0e090f1dc3a6e36ad5ae0c25f623503698f30480e3f61fae9465d8b47328",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 43.68800000002375
+  },
+  {
+    "id": "0f4c38f2-96de-4c93-bf32-35e52319e121",
+    "started_at": 1789313148.3263822,
+    "input_sha256": "fb6fbae0d5253a92588d1bd8a23f0be075916124e2b23c939f376dc4d0ecab24",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "841b84b5-af39-46a6-9374-3a07059d1c94",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 19,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1152,
+      "input_tokens_details": null,
+      "output_tokens": 19,
+      "prompt_tokens": 1152,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1171
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "d6e70ec4465cc584e639a068f1b45dbb88ff70a03566512c56537aa122186904",
+    "elapsed_seconds": 3.547000000020489
+  },
+  {
+    "id": "9ae4f149-f3bb-4d6f-bb5b-243161d2ef2a",
+    "started_at": 1789313151.9144998,
+    "input_sha256": "e785e4a26b5fa8a290313493b7b75ad990936fb060bfb2df5cf81f6fda4eff54",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "1f09b0c1-6116-483d-83a1-0fa10eaa65f4",
+    "started_at": 1789313104.6160312,
+    "input_sha256": "9232183431f75fb524560cee446cee7d9f36720b2888256d0c29788c7b64e440",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 60.42200000002049
+  },
+  {
+    "id": "396f5e66-ae50-4c81-8cd3-9eb656b71a61",
+    "started_at": 1789313165.0546663,
+    "input_sha256": "bede41ee1157a8b6f520a8bf1d030f61f82aa70efde06a1ffa567a3ea1103d0f",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "aca26e71-0a47-4c11-9bc8-392d3c16de56",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 175,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 35,
+        "text_tokens": 0
+      },
+      "input_tokens": 1099,
+      "input_tokens_details": null,
+      "output_tokens": 175,
+      "prompt_tokens": 1099,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1274
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "36ed6f26599b0fcc9e3eaf39065ffba427dcb764af432574dc81028cff814456",
+    "elapsed_seconds": 7.577999999979511
+  },
+  {
+    "id": "2bd173b5-1df9-4c0e-817c-5622c7ece640",
+    "started_at": 1789313172.6595824,
+    "input_sha256": "892ea9638a068ff2c3e44daced91ba7225d0971b8d2560cc2f1e497689de30e1",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0
+  },
+  {
+    "id": "a29cc076-6aea-4733-82d4-3f2da6cd3a1a",
+    "started_at": 1789313104.6594193,
+    "input_sha256": "0a81e470d5379eebb77bb40bad0e6209342c27231ca361d3323588177411db8d",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 77.15599999995902
+  },
+  {
+    "id": "1566300d-d156-456c-8797-c97e250319e4",
+    "started_at": 1789313181.834399,
+    "input_sha256": "70ee260f17ccd731023110190273bb398249f03fb05da19a3610e370cd59db94",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "dcb43130-ce39-4d9e-b94f-a8205aa3067a",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 118,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 35,
+        "text_tokens": 0
+      },
+      "input_tokens": 1559,
+      "input_tokens_details": null,
+      "output_tokens": 118,
+      "prompt_tokens": 1559,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1677
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "77ba70e724c5531ee872322a11978aa11dbaa70ec79b5eea757db479207713a3",
+    "elapsed_seconds": 6.797000000020489
+  },
+  {
+    "id": "c65ebb9d-c5ec-43b7-b639-851b11b429e0",
+    "started_at": 1789313188.6552663,
+    "input_sha256": "fb04d91ac1e481178f9d20dfacdbc8ddcfcdc5b372a9373b6997e44b7a7da601",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0
+  },
+  {
+    "id": "b8e213b0-d106-4a64-a4ce-6089e35353f9",
+    "started_at": 1789313104.6842558,
+    "input_sha256": "2f5df20cf967fa463947406bdaa98bc3406c1bf9ffcb42e216899ce034d3d2a1",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 93.98399999999674
+  },
+  {
+    "id": "309e5b20-8775-4f61-a23e-204496f22393",
+    "started_at": 1789313198.6844525,
+    "input_sha256": "2a623fe9bbaa178911c87294ffcdfd790f6c170750044179dab13df83b118b68",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "ba6c3271-fecd-4e5f-a9a3-3c87cce74860",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 31,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1024,
+      "input_tokens_details": null,
+      "output_tokens": 31,
+      "prompt_tokens": 1024,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1055
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "8c02abb1a36074180a42587680260cf6265b96d82615947087833bb62b847c10",
+    "elapsed_seconds": 6.875
+  },
+  {
+    "id": "29009001-dfcd-4b2a-a632-431923d620e4",
+    "started_at": 1789313205.5708957,
+    "input_sha256": "9525c25c3125fa15e685737a7fd63a3c88b1f9fe5271653eb812d8efd1547004",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "cb5b29ef-6ce6-4a81-8874-060da2cc5776",
+    "started_at": 1789313152.016055,
+    "input_sha256": "c684f68d96ed3124be4da6a6f5b08f93c5c0733939f75e45220105054f99dc18",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 62.81199999997625
+  },
+  {
+    "id": "260b7cdc-b173-4bb9-aed1-fa4a3443d710",
+    "started_at": 1789313214.8598342,
+    "input_sha256": "0f2e92e23949e8441d6d1e7d054274e3ddfeb78b683d8d3855d62a0141f689d2",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "db3d5cdd-2382-4d3b-821e-193764505cda",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 71,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1116,
+      "input_tokens_details": null,
+      "output_tokens": 71,
+      "prompt_tokens": 1116,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1187
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "0fb0e3ae60ace726c3aa3a2ef529a76352deb9e4707eeb789c2713b2c61eca9c",
+    "elapsed_seconds": 4.23499999998603
+  },
+  {
+    "id": "1a64d1de-7be8-4703-b9cc-5413f61e1521",
+    "started_at": 1789313219.1238194,
+    "input_sha256": "b81d6ace2342ddfd1c1acab2b6c0ac3fe80651e48c8ef3b732344222e7ae5a13",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0
+  },
+  {
+    "id": "121138aa-a9fd-4d6e-a79c-3a1c0d12c65e",
+    "started_at": 1789313172.7756326,
+    "input_sha256": "091e301caccba818c83693246799616042a3477c20c0d0be9c23021d918d5659",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 58.25
+  },
+  {
+    "id": "17849887-4f0b-409b-b3d8-cd68685abeac",
+    "started_at": 1789313231.0436456,
+    "input_sha256": "62162c1d38a136d0af2a232344c10a9d0f431f176d39c8df6df449bc9f7fa22e",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "edc8544b-dd5d-4479-bebc-dad1ab748f93",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 30,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1087,
+      "input_tokens_details": null,
+      "output_tokens": 30,
+      "prompt_tokens": 1087,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1117
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "a41c02f78bd45a909c0818fac6aa5d10747694a8f8a967f0f420c7cbdf93d0f3",
+    "elapsed_seconds": 12.577999999979511
+  },
+  {
+    "id": "bd67e1e6-409b-4a6b-baef-c93af12059e5",
+    "started_at": 1789313243.6354885,
+    "input_sha256": "a977264b25031fe7737ee4911aa6633ec338e02bc10052c8a624ff8358177640",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "5011f582-f03e-417d-bce5-fb21606bfc06",
+    "started_at": 1789313188.7733397,
+    "input_sha256": "ce5f1f26e7151c397a8a1d7be857c909d204d5935b522a30a8e0c663351762a0",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 58.76500000001397
+  },
+  {
+    "id": "f5f5044e-f6d8-4aae-b589-5f24efa1f63e",
+    "started_at": 1789313247.5733395,
+    "input_sha256": "3b7539c61b52d97c3407632745e9ceafa361756d5f52935074e13ac9540d07f8",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "eed459d8-d369-4664-9e37-8feaf0af2656",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 25,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1916,
+      "input_tokens_details": null,
+      "output_tokens": 25,
+      "prompt_tokens": 1916,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1941
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "b58c142a793bf4c11db6e20a690143e07ff7240f2025be2f8b301d953b091ada",
+    "elapsed_seconds": 8.594000000040978
+  },
+  {
+    "id": "81e37ab0-51b0-4298-a548-98e2436362dd",
+    "started_at": 1789313256.1823177,
+    "input_sha256": "79a2371306ff62144e084d32fc8066bd1845a5d68907e4f934eff1b624d3a2fb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.014999999955762178
+  },
+  {
+    "id": "002a4dd2-2426-45a4-ac2a-a2cc3cc2b590",
+    "started_at": 1789313205.6857777,
+    "input_sha256": "7ddf1b33d3b2f462c33a034529cddc866135463fc705f9d0f9ee80462eedc11e",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 56.82900000002701
+  },
+  {
+    "id": "1b321558-a339-447e-bf24-85f1ac2b9e15",
+    "started_at": 1789313262.5466182,
+    "input_sha256": "a3788926c31833ef3bac77587fd73bec92c3ffd79149c741f04b3b7cd78bbe99",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "841a8aad-6849-4704-882a-10979e4aa05d",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 137,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 53,
+        "text_tokens": 0
+      },
+      "input_tokens": 1131,
+      "input_tokens_details": null,
+      "output_tokens": 137,
+      "prompt_tokens": 1131,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1268
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "2cdad40a65f85a302747e3d13978a23d6abcbb6a8084397eb5ddd6fd311ead98",
+    "elapsed_seconds": 10.780999999959022
+  },
+  {
+    "id": "34f793ba-473b-4fda-abff-246559c566ff",
+    "started_at": 1789313273.3826296,
+    "input_sha256": "8396d25de60c9295d3144c2233f77e70aa786e60d650d534f453bc4c7f76a8fc",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "ebd1dfe6-da45-4770-abba-bdfb8d155e9a",
+    "started_at": 1789313219.2361948,
+    "input_sha256": "fd98c3f6abeb573c8aa88f8ad81aacfd5e62dc3c58a69ecf891dfb690ddeb195",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 60.04700000002049
+  },
+  {
+    "id": "be0ccd52-4b5c-485b-ab04-ef8c032e2a87",
+    "started_at": 1789313279.3019803,
+    "input_sha256": "6a3397b8af0ad7a6cbb22eaf066d3da5c2414b556332fdc55dc6712ecfc50c72",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "98343969-6b63-46ee-90f9-51c1dc3803d5",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 43,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1437,
+      "input_tokens_details": null,
+      "output_tokens": 43,
+      "prompt_tokens": 1437,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1480
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "a52ea8cbaafd9c38c66478a4fefe4f9625f356ef4ddef1c6a541583c89c49f17",
+    "elapsed_seconds": 7.014999999955762
+  },
+  {
+    "id": "584bae26-e5ad-468a-bd62-ce6b6f0839ee",
+    "started_at": 1789313286.3581479,
+    "input_sha256": "c684aecf48cee0de2e6a0bdb82a084e6a510421398ce9ede516dfb3822ed3d14",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0
+  },
+  {
+    "id": "1c76add1-bc00-461c-b2ca-ddd65d5500be",
+    "started_at": 1789313243.739727,
+    "input_sha256": "533dbcaf0e83872c8812eba6c764d64cce77af7b34b5676591d3b4142d66b405",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 51.03200000000652
+  },
+  {
+    "id": "9e60b24e-1b10-449b-bb22-9a9f4c6f12ed",
+    "started_at": 1789313294.8017023,
+    "input_sha256": "acf86e19a41b53485a07bed842df88301e4617e55b9da31d51b5d019c0828f6b",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "bdd419a1-a75e-4374-9738-daf3700913a1",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 90,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 43,
+        "text_tokens": 0
+      },
+      "input_tokens": 1434,
+      "input_tokens_details": null,
+      "output_tokens": 90,
+      "prompt_tokens": 1434,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1524
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "8084794cd6555bb92411779ab122da87c2548604a5c62c3ce5f51f2d0201774a",
+    "elapsed_seconds": 8.186999999976251
+  },
+  {
+    "id": "1c168b37-0ef1-4c6c-82e0-ef648c7c707f",
+    "started_at": 1789313303.0162146,
+    "input_sha256": "902bf01b262ac59207e90f5f0d4ff074caa2043cb01210340870aacae735f896",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0
+  },
+  {
+    "id": "a34d9efa-4bf7-4e42-b7aa-a3c7854fb770",
+    "started_at": 1789313256.2878597,
+    "input_sha256": "45bc748978bfc158bb09bf43eab51220a4648911a7ea2d0e839c2cb0301cc160",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 55.71899999998277
+  },
+  {
+    "id": "13ec8d7b-81cc-4589-b110-abc64fe84390",
+    "started_at": 1789313312.046529,
+    "input_sha256": "d579af70151208915140a2380cd5ce46aef3c35ae341d123ec08be29436b8367",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "eea6812d-9a31-4029-a714-ebf754c61c62",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 31,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 4743,
+      "input_tokens_details": null,
+      "output_tokens": 31,
+      "prompt_tokens": 4743,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 4774
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "3fbe8daf791a88803f6bc93079b6a8096af40f685e08965570424b4b861ae3c5",
+    "elapsed_seconds": 9.139999999955762
+  },
+  {
+    "id": "0024e9f2-df7b-4417-810d-0cfb39f9cfb6",
+    "started_at": 1789313321.2303424,
+    "input_sha256": "e4d10cd1d40c5348a1608e05f102b4a0756e8d835a54ec22960003be41e2cbeb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.015000000013969839
+  },
+  {
+    "id": "e973094e-ab4f-4ac2-bbab-cee574b3e118",
+    "started_at": 1789313273.4862218,
+    "input_sha256": "9d118218d2f321131a9ad5738efe822ae801ff4c6030975eb43361abffb402a2",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 54.81300000002375
+  },
+  {
+    "id": "89a4fd94-64b0-4eec-ab70-bfca0d0f4b71",
+    "started_at": 1789313328.3225543,
+    "input_sha256": "7f9116a98254b5e6c0de73d7b1b394525dbeedd5c93ba134118e47392afa9626",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "0857aa39-c8ad-4dab-9367-735653af8b9b",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 200,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 70,
+        "text_tokens": 0
+      },
+      "input_tokens": 1215,
+      "input_tokens_details": null,
+      "output_tokens": 200,
+      "prompt_tokens": 1215,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1415
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "30ca81ab1a846e203f83b0033c3099f47175e09589bea90c089ada8be6226664",
+    "elapsed_seconds": 9.14100000000326
+  },
+  {
+    "id": "1cb55bef-06a7-4e52-b977-7391371c3ec8",
+    "started_at": 1789313337.4901443,
+    "input_sha256": "45cc9bde1d5211fded671ef5644df924775967096f0d322e8ae4a20600d4ccc2",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0
+  },
+  {
+    "id": "f7bb1ef2-6efc-4452-9a45-6c3966e17ff1",
+    "started_at": 1789313286.4628718,
+    "input_sha256": "0fbe2dc5c0b98f94046e3b156f653b3f13382faf720d79d6b215a96cc8af03f9",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 57.53100000001723
+  },
+  {
+    "id": "6ed1b8ed-8cc9-4402-af7f-921081c9278c",
+    "started_at": 1789313344.0154734,
+    "input_sha256": "5636d7cfc8bcdccc600b690c50c9d0402e367ada3f2979cc2a2e54eb0abac41a",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "ccf5b34c-1b25-4191-8780-ded604f07b0d",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 24,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1663,
+      "input_tokens_details": null,
+      "output_tokens": 24,
+      "prompt_tokens": 1663,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1687
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "dab9c01ecc95fee952a845f0fb314232dffaa1df77556afa181461ad5de2a957",
+    "elapsed_seconds": 5.811999999976251
+  },
+  {
+    "id": "881a5281-7950-449a-999c-54987551db00",
+    "started_at": 1789313349.8676066,
+    "input_sha256": "86d67af4f05fe5b4f9f5ad2e9b32e37823732be93ec591b3c02044881fcbbef3",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "bf62dfa6-c204-4153-a682-d1d8540fc996",
+    "started_at": 1789313303.1124208,
+    "input_sha256": "e6b9f296199b9eec50993048a2b9517d787d667f691ee1008c5ed3fbebf42864",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 58.34399999998277
+  },
+  {
+    "id": "19088c32-4316-4004-8b31-409677df9a7c",
+    "started_at": 1789313361.483899,
+    "input_sha256": "22d960e656ae75ae874840e10acd5b0425ce546739514ea7432268a33dfcbf26",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "c3b87180-627d-474d-8f29-935160cf9760",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 83,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 47,
+        "text_tokens": 0
+      },
+      "input_tokens": 1957,
+      "input_tokens_details": null,
+      "output_tokens": 83,
+      "prompt_tokens": 1957,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 2040
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "82c5a00ab7d072dea7b0c81acd488f1f99da3271236538a8607b2ebe6b8309c8",
+    "elapsed_seconds": 4.23499999998603
+  },
+  {
+    "id": "4723d38a-8a2a-4a4c-935c-b12873224ff2",
+    "started_at": 1789313365.758892,
+    "input_sha256": "200ac9eeb45c78ac72354dc5eea02ef5a51e02151d3dd8e1daa575bb03d15419",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "ff6cb329-322e-448a-89ed-e734b459c472",
+    "started_at": 1789313321.468685,
+    "input_sha256": "d9d3224547227316b64cae4c53413eab21e3927d19fbc3936f04ce93520d5e83",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 54.375
+  },
+  {
+    "id": "a3f4a03e-e779-4472-a7ce-6c52f95b8d09",
+    "started_at": 1789313375.871705,
+    "input_sha256": "b65e0c36f2abfe9b45fe94a0a5cab63b4a753aea593fef18b33deb153528f0f3",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "6368a190-70d8-4b44-8a02-33d9ff57e217",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 40,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1223,
+      "input_tokens_details": null,
+      "output_tokens": 40,
+      "prompt_tokens": 1223,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1263
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "af32a412d7bb28730fc5aeb53b70183944b18139e966b01b5817c3e91a32f0f2",
+    "elapsed_seconds": 10.563000000023749
+  },
+  {
+    "id": "4b2dea99-df2d-4543-8d3f-022b53787a00",
+    "started_at": 1789313386.4577537,
+    "input_sha256": "48a43d274996cac8181e30151be9cc44d40935de0970406b3fa44038779bf13d",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.0
+  },
+  {
+    "id": "081ae06f-f6be-45a1-a1c3-3952c7a15686",
+    "started_at": 1789313337.590949,
+    "input_sha256": "c019423bf86770ed5c5c3754160d82b8528dcaf5623a2642737e00bf40a00eec",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 56.01600000000326
+  },
+  {
+    "id": "646da51c-a789-4f64-b88f-c8c24536785f",
+    "started_at": 1789313393.8442476,
+    "input_sha256": "b6adb68024da1c96916bca09d64449057f8b9c2573ba53ae8b70455f32221de4",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "e841e7b0-18c0-4e61-a83a-7dbc74823135",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 29,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 16660,
+      "input_tokens_details": null,
+      "output_tokens": 29,
+      "prompt_tokens": 16660,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 16689
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "77203dff3379c5b61487212deeb12e48d047d0318bac2c5d2a58080d0185e69d",
+    "elapsed_seconds": 6.375
+  },
+  {
+    "id": "ae83fc0d-1771-4996-b9de-c0c242305949",
+    "started_at": 1789313400.2594302,
+    "input_sha256": "d5a59fe556e05f5f5771ecaee77f1101e1623eafea01869d63ce70d518d798ae",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.01600000000325963
+  },
+  {
+    "id": "6f32933b-218b-4bcb-9608-84df94bf8f7a",
+    "started_at": 1789313349.973254,
+    "input_sha256": "e457d5746a2f465540f15aaf4a1877321147dc0acdfdc58090af1aa42125e24c",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 60.14000000001397
+  },
+  {
+    "id": "67729811-92cf-4f06-9428-a3518ef30540",
+    "started_at": 1789313410.1370099,
+    "input_sha256": "519f2b148e98c15b6ed142163c089d58b2fa37f8805e2718c3bd56e4822efa9f",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "2ade979d-37fb-4e9d-b3a1-65e998baf425",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 31,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1524,
+      "input_tokens_details": null,
+      "output_tokens": 31,
+      "prompt_tokens": 1524,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1555
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "7fbd54ded2b5c157b89ab97c4353a1492163d71e094065a372563ae8ce6c1aa4",
+    "elapsed_seconds": 7.625
+  },
+  {
+    "id": "45ef8be9-c8fd-47ad-b47c-525ad2552c16",
+    "started_at": 1789313365.8522594,
+    "input_sha256": "9183d78404a44edd28487024e5b3c6bd2aef80fdf5945ddb9f5b0cc045260da3",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 62.46799999999348
+  },
+  {
+    "id": "889dbc84-8258-48bf-ad82-dd07e4f2bba3",
+    "started_at": 1789313428.3442736,
+    "input_sha256": "f680dd9da2e7e58323ac80ad5905a0d9cc54fc725ac91de105fefefd0e609d0e",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "fa5e8a5b-53c8-4887-8b8b-99b360be3b58",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 30,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1217,
+      "input_tokens_details": null,
+      "output_tokens": 30,
+      "prompt_tokens": 1217,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1247
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "94e0ccf9520be2934a1a8327f327b204f84a81ecf714fd50e3ff665e441cb59a",
+    "elapsed_seconds": 5.85899999999674
+  },
+  {
+    "id": "62a946bd-dbae-4e5e-bb98-071ce7c94453",
+    "started_at": 1789313386.5613952,
+    "input_sha256": "dff57bd62492ba6d74027d728e9162511758b2f025c13588acfa01d2fab52c9f",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 58.65700000000652
+  },
+  {
+    "id": "828ba079-dfbe-47c9-8968-6adde4a153bf",
+    "started_at": 1789313445.2476084,
+    "input_sha256": "40007ec79e456382292944b80ebe9617a81b9474442bd363a3bad51f01c1c095",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "533dd5b5-568e-44bf-a2bb-0cab5015d917",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 172,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 57,
+        "text_tokens": 0
+      },
+      "input_tokens": 1832,
+      "input_tokens_details": null,
+      "output_tokens": 172,
+      "prompt_tokens": 1832,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 2004
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "978c44f978953a02efa6819847f95c5f2bfbab31f72c05dade2868c814fc557c",
+    "elapsed_seconds": 7.875
+  },
+  {
+    "id": "c7556fce-5e5e-409c-85cb-75442c330423",
+    "started_at": 1789313400.3583205,
+    "input_sha256": "daf62cf28d4ea66b403f4d30a2488c0bb7bfa5b95ac3d4785e7f63a8395b407c",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 62.5
+  },
+  {
+    "id": "6a5326be-05ba-4c85-a3f1-4776c8b5c345",
+    "started_at": 1789313462.8810697,
+    "input_sha256": "abd12892f344786377adcd59415468f46920d9fa5ffe6ba40e9b6efeb18c4876",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "30e60274-13ee-43c3-a317-ed00f8f95d9d",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 24,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1583,
+      "input_tokens_details": null,
+      "output_tokens": 24,
+      "prompt_tokens": 1583,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1607
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "8d422d49e31082a4ec7d93b00078308b36069243e666f673c92bfebd54e5015e",
+    "elapsed_seconds": 4.9060000000172295
+  }
+]

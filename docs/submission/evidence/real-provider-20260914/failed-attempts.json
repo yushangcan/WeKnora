@@ -1,0 +1,43 @@
+[
+  {
+    "label": "cold-20",
+    "task": {
+      "id": "evaluation_10000_1789313528560_0b9bc9ca_default",
+      "tenant_id": 10000,
+      "dataset_id": "default",
+      "start_time": "2026-09-13T15:32:08.560115Z",
+      "status": 3,
+      "err_msg": "create chat completion: error, status code: 502, status: 502 Bad Gateway, message: , body: {\"error\": \"URLError\"}",
+      "total": 20,
+      "finished": 16
+    },
+    "run": {
+      "run_id": "evaluation_10000_1789313528560_0b9bc9ca_default",
+      "tenant_id": 10000,
+      "dataset_id": "default",
+      "started_at": "2026-09-13T15:32:08.560115Z",
+      "completed_at": "2026-09-13T15:39:58.122165Z",
+      "status": "partial"
+    }
+  },
+  {
+    "label": "cold-20-retry",
+    "task": {
+      "id": "evaluation_10000_1789314063378_2099a05e_default",
+      "tenant_id": 10000,
+      "dataset_id": "default",
+      "start_time": "2026-09-13T15:41:03.378668Z",
+      "status": 3,
+      "err_msg": "temporary evaluation knowledge indexing failed",
+      "total": 20
+    },
+    "run": {
+      "run_id": "evaluation_10000_1789314063378_2099a05e_default",
+      "tenant_id": 10000,
+      "dataset_id": "default",
+      "started_at": "2026-09-13T15:41:03.378668Z",
+      "completed_at": "2026-09-13T15:46:06.364236Z",
+      "status": "partial"
+    }
+  }
+]

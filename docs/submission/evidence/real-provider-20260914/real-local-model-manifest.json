@@ -1,0 +1,110 @@
+{
+  "embedding": "BAAI/bge-small-zh-v1.5",
+  "embedding_dimension": 512,
+  "rerank": "BAAI/bge-reranker-base",
+  "rerank_score": "sigmoid(logit)",
+  "threads_per_session": 2,
+  "backend": "onnxruntime CPUExecutionProvider",
+  "files": [
+    {
+      "path": "models--BAAI--bge-reranker-base\\files_metadata.json",
+      "bytes": 582,
+      "sha256": "003c2d114817c1fa0624ea68587cc6954efaad3a7bbd67904ed89ca2ff3cb998"
+    },
+    {
+      "path": "models--Qdrant--bge-small-zh-v1.5\\files_metadata.json",
+      "bytes": 732,
+      "sha256": "8d9d1c049a8899162adb49565505f6723c51039a3fa9f77de082e550ec743782"
+    },
+    {
+      "path": "models--BAAI--bge-reranker-base\\trees\\2cfc18c9415c912f9d8155881c133215df768a70.json",
+      "bytes": 2125,
+      "sha256": "1699a7ec438b9e5beb944671b7546b1fb16cac95af3532ffe7fa4b3265ce0e82"
+    },
+    {
+      "path": "models--BAAI--bge-reranker-base\\snapshots\\2cfc18c9415c912f9d8155881c133215df768a70\\config.json",
+      "bytes": 799,
+      "sha256": "289adf7ada1eb6b4afa7589a48a032d45a076cf2e46dcdb3b4cabc33be14f708"
+    },
+    {
+      "path": "models--BAAI--bge-reranker-base\\snapshots\\2cfc18c9415c912f9d8155881c133215df768a70\\special_tokens_map.json",
+      "bytes": 279,
+      "sha256": "d5469a60db23249c7f8945013d78df30b44b6bf686c6bb4740f4223f77b1b535"
+    },
+    {
+      "path": "models--BAAI--bge-reranker-base\\snapshots\\2cfc18c9415c912f9d8155881c133215df768a70\\tokenizer.json",
+      "bytes": 17098107,
+      "sha256": "9eb652ac4e40cc093272bbbe0f55d521cf67570060227109b5cdc20945a4489e"
+    },
+    {
+      "path": "models--BAAI--bge-reranker-base\\snapshots\\2cfc18c9415c912f9d8155881c133215df768a70\\tokenizer_config.json",
+      "bytes": 443,
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+    },
+    {
+      "path": "models--BAAI--bge-reranker-base\\snapshots\\2cfc18c9415c912f9d8155881c133215df768a70\\onnx\\model.onnx",
+      "bytes": 1112459588,
+      "sha256": "15b9a8c3da82eddf263df571281166e00e9308fe19d077084b642ebfcaf06d2b"
+    },
+    {
+      "path": "models--Qdrant--bge-small-zh-v1.5\\trees\\46fbe35fd4374a00fee7de77dfddaeb6dd6a2c59.json",
+      "bytes": 1197,
+      "sha256": "60edb44c140053b2cd19be3c5c579ecef9d609df864715cee061d1a8011804b3"
+    },
+    {
+      "path": "models--Qdrant--bge-small-zh-v1.5\\snapshots\\46fbe35fd4374a00fee7de77dfddaeb6dd6a2c59\\config.json",
+      "bytes": 739,
+      "sha256": "9088751d39abbf86ec3d19ffca92ad62ad19075f7e59712e6c71217fa125d1d3"
+    },
+    {
+      "path": "models--Qdrant--bge-small-zh-v1.5\\snapshots\\46fbe35fd4374a00fee7de77dfddaeb6dd6a2c59\\model_optimized.onnx",
+      "bytes": 94781076,
+      "sha256": "1294ea4b6331115a353d81f96b85e8c8d7fdcc284453d5b2fab5b016230aad38"
+    },
+    {
+      "path": "models--Qdrant--bge-small-zh-v1.5\\snapshots\\46fbe35fd4374a00fee7de77dfddaeb6dd6a2c59\\special_tokens_map.json",
+      "bytes": 125,
+      "sha256": "b6d346be366a7d1d48332dbc9fdf3bf8960b5d879522b7799ddba59e76237ee3"
+    },
+    {
+      "path": "models--Qdrant--bge-small-zh-v1.5\\snapshots\\46fbe35fd4374a00fee7de77dfddaeb6dd6a2c59\\tokenizer.json",
+      "bytes": 439125,
+      "sha256": "48cea5d44424912a6fd1ea647bf4fe50b55ab8b1e5879c3275f80e339e8fae26"
+    },
+    {
+      "path": "models--Qdrant--bge-small-zh-v1.5\\snapshots\\46fbe35fd4374a00fee7de77dfddaeb6dd6a2c59\\tokenizer_config.json",
+      "bytes": 367,
+      "sha256": "e6f3b96db926a37d4039995fbf5ad17de158dfb8f6343d607e4dbaad18d75f5a"
+    },
+    {
+      "path": "models--Xenova--bge-reranker-base\\trees\\280bcc27a84e0b898c251e06fddb25171bd9b101.json",
+      "bytes": 3806,
+      "sha256": "b461f47d919835468947c756a46646e6b2e2cb1c4d64b7c562458589051db1b3"
+    },
+    {
+      "path": "models--Xenova--bge-reranker-base\\snapshots\\280bcc27a84e0b898c251e06fddb25171bd9b101\\config.json",
+      "bytes": 782,
+      "sha256": "b6575b9d5be20d6747417c8e20c5a0db1636356e0b6d422d7244c628423c4d4c"
+    },
+    {
+      "path": "models--Xenova--bge-reranker-base\\snapshots\\280bcc27a84e0b898c251e06fddb25171bd9b101\\special_tokens_map.json",
+      "bytes": 279,
+      "sha256": "d5469a60db23249c7f8945013d78df30b44b6bf686c6bb4740f4223f77b1b535"
+    },
+    {
+      "path": "models--Xenova--bge-reranker-base\\snapshots\\280bcc27a84e0b898c251e06fddb25171bd9b101\\tokenizer.json",
+      "bytes": 17098079,
+      "sha256": "48564c5c7d3fa64d85d95e65414a542385f88b0f128fd8d4163fd7a57f2be05c"
+    },
+    {
+      "path": "models--Xenova--bge-reranker-base\\snapshots\\280bcc27a84e0b898c251e06fddb25171bd9b101\\tokenizer_config.json",
+      "bytes": 443,
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+    },
+    {
+      "path": "models--Xenova--bge-reranker-base\\snapshots\\280bcc27a84e0b898c251e06fddb25171bd9b101\\onnx\\model_quantized.onnx",
+      "bytes": 279301077,
+      "sha256": "dd98f3e67837d23210a6b7550c08cced4f61845b940ac45be3565840a10f3244"
+    }
+  ]
+}

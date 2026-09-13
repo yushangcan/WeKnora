@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "captured_at_utc": "2026-09-13T13:30:25Z",
-  "scope": "Selected original GitHub Actions artifact files; gate .log files are renamed .txt without changing bytes. Evaluation uses synthetic-ci-v1; cache benchmark uses a fake provider. No real-provider quality, billing or cache benefit claims.",
+  "version": 2,
+  "captured_at_utc": "2026-09-13T16:34:16.989789+00:00",
+  "scope": "Preserved historical GitHub Actions artifacts plus local real Luna 20-case acceptance and Embedding cache comparison. Raw and derived records are distinguished. No real billing, Wiki-cache uplift or large-scale quality claims.",
   "evaluation_contract": {
     "status": "passed",
     "commit": "f0a96a013269e35c2b265181fa5c88af8f3fcdf2",
@@ -202,6 +202,131 @@
           "path": "cache-34756888995/embedding-cache-benchmark.txt",
           "bytes": 691,
           "sha256": "4a132c3bc4290df845ed0a83fdb91b395db9cf8310eb8169f4d683fbd29bebb0"
+        }
+      ]
+    },
+    {
+      "kind": "real-provider",
+      "execution_environment": "local Docker Desktop + Windows ONNX bridge",
+      "tested_commit": "5ee7afee78c277102c901e886464d6160f26d9af",
+      "vcs_modified": true,
+      "reproducibility": "partial; dirty build diff was not captured",
+      "conclusion": "three successful runs, 20 cases each; two earlier failed attempts excluded",
+      "chat_model": "gpt-5.6-luna",
+      "files": [
+        {
+          "path": "real-provider-20260914/cache-comparison-report.md",
+          "bytes": 5235,
+          "sha256": "75d64ea163a650f5eaaec240b152cc6b0f03c1c2d3b34a319a307763eb23f329",
+          "evidence_type": "derived"
+        },
+        {
+          "path": "real-provider-20260914/cache-comparison-summary.json",
+          "bytes": 14280,
+          "sha256": "56453c283fb04d20ee5fa6e67efbc30bd173e47ff305db87668187a565fcafe2",
+          "evidence_type": "derived"
+        },
+        {
+          "path": "real-provider-20260914/cold-20-final-provider-events.json",
+          "bytes": 120262,
+          "sha256": "d73624f3ced11bfef37254438a151494bfe612a874622b04c31d50d593d3097b",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/cold-20-final-summary.json",
+          "bytes": 1240,
+          "sha256": "a8e02f7f316a36a09f0b571a63b41d6af600103b7c9c5c192a47701f7295e8e7",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/cold-20-final-usage-events.json",
+          "bytes": 53463,
+          "sha256": "6dbd302c230ccef4d70bcfb996377bfd9751a2df5a9f9af6b2a0257c18f67576",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/cold-20-final-usage-summary.json",
+          "bytes": 2641,
+          "sha256": "628ef90b9baaca8fac93285dc5b4600030f6897cd1a47f25a052d28239d3dc39",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/cold-20-final.json",
+          "bytes": 135664,
+          "sha256": "fc9bc2375f39951b763a62d2c933f3c727c76ab3a52c763471562950118da7e1",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/disabled-20-provider-events.json",
+          "bytes": 120028,
+          "sha256": "ec0f0805c230387802db5dffc48a13de034348e861d5cb98859589b99762c402",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/disabled-20-summary.json",
+          "bytes": 1238,
+          "sha256": "682e8be1e8a85b7ad0e7ef9d8588c80f97ee4af4538efc34d48fcc0bef6005fb",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/disabled-20-usage-events.json",
+          "bytes": 53369,
+          "sha256": "f33dcdd31a8163b33f3c2d89380bb805d5037367b988b412bfc0c10fff5580e5",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/disabled-20-usage-summary.json",
+          "bytes": 2580,
+          "sha256": "2528bfb3e99196bc44fcaebd2636a66f7a4df527b05e1ab9347935137821d0ed",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/disabled-20.json",
+          "bytes": 135587,
+          "sha256": "5d143ee8f04b888d38b416a9802a8976724d969355761db31a1fab91f3d36180",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/failed-attempts.json",
+          "bytes": 1348,
+          "sha256": "e9f6e73ea25ee455d27c9853e4de36fc2afe8231f6b8c716b2ddfeebe65656cc",
+          "evidence_type": "derived"
+        },
+        {
+          "path": "real-provider-20260914/real-local-model-manifest.json",
+          "bytes": 5008,
+          "sha256": "c697eae1a0c6b81977f651225c3c0d9d73162d6b3424f5658d1472b68567e4d9",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/warm-20-provider-events.json",
+          "bytes": 30706,
+          "sha256": "1dfd0f49c1d7bc5e42c905853326fc2d91c054426fe03c94002f3e8aaaac2ddd",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/warm-20-summary.json",
+          "bytes": 1231,
+          "sha256": "5c6be29243a043c3f5592da49d657c0db624a878d02aefdab777555c192e6604",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/warm-20-usage-events.json",
+          "bytes": 36878,
+          "sha256": "e2eeaebb4b0f8d0c38b5ad977de978cc8db1f683ff9096c23f400541f304830c",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/warm-20-usage-summary.json",
+          "bytes": 2624,
+          "sha256": "6f6a15c4b242852ec09ac8e5ef0ccd06bab12334b0be184fdc6ee2b50ea418f4",
+          "evidence_type": "original"
+        },
+        {
+          "path": "real-provider-20260914/warm-20.json",
+          "bytes": 116709,
+          "sha256": "072878cf57945374696bd4a45ee18d4e6faa25bb1475f8bfc5e3646e37480ad6",
+          "evidence_type": "original"
         }
       ]
     }

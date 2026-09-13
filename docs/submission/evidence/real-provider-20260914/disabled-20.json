@@ -1,0 +1,4156 @@
+{
+  "data": {
+    "task": {
+      "id": "evaluation_10000_1789312737638_e178c21d_default",
+      "tenant_id": 10000,
+      "dataset_id": "default",
+      "start_time": "2026-09-13T15:18:57.638655Z",
+      "status": 2,
+      "total": 20,
+      "finished": 20
+    },
+    "params": {
+      "session_id": "",
+      "user_id": "",
+      "max_rounds": 5,
+      "knowledge_base_ids": [],
+      "vector_threshold": 0.2,
+      "keyword_threshold": 0.3,
+      "embedding_top_k": 30,
+      "vector_database": "",
+      "rerank_model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+      "rerank_top_k": 30,
+      "rerank_threshold": 0.3,
+      "chat_model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+      "summary_config": {
+        "max_tokens": 0,
+        "repeat_penalty": 1,
+        "top_k": 0,
+        "top_p": 0,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "prompt": "",
+        "context_template": "",
+        "no_match_prefix": "",
+        "temperature": 0.3,
+        "seed": 0,
+        "max_completion_tokens": 2048,
+        "thinking": null
+      },
+      "fallback_strategy": "",
+      "fallback_response": "",
+      "fallback_prompt": "",
+      "enable_rewrite": false,
+      "enable_query_expansion": false,
+      "rewrite_prompt_system": "",
+      "rewrite_prompt_user": ""
+    },
+    "config": {
+      "schema_version": "evaluation-config/v2",
+      "dataset": {
+        "id": "default",
+        "version": "1",
+        "content_fingerprint": "sha256:9306ee0a2d4cf732238bff36b97c9d5334a30546994b51df2048ea6dcde3f0e4",
+        "files": [
+          {
+            "name": "queries.parquet",
+            "fingerprint": "sha256:3eea4a7a2c4474af6bfb87d85207d26c189b811fa437cd7d4c25d18439ae608d",
+            "size": 1862
+          },
+          {
+            "name": "corpus.parquet",
+            "fingerprint": "sha256:f74a79cffbb928b692730c9fa0edb509e8c5c4f98a267b8722b35ed8ac787707",
+            "size": 1233284
+          },
+          {
+            "name": "qrels.parquet",
+            "fingerprint": "sha256:ac573e47962b59a03bf185cc62ab2b43e62c385dce0f56f55c080e52a77e7b61",
+            "size": 857
+          },
+          {
+            "name": "qas.parquet",
+            "fingerprint": "sha256:7145ee7c256abd212d5a09180669f2da4a1e9f92698caa8305262cbe5b240387",
+            "size": 855
+          },
+          {
+            "name": "answers.parquet",
+            "fingerprint": "sha256:d4a22deed902021abb069bdf596247b7062b87f0d54b8fc8e15a1653d075765d",
+            "size": 1345
+          }
+        ],
+        "query_count": 20,
+        "corpus_count": 848,
+        "case_count": 20,
+        "ingestion_mode": "passage_chunking"
+      },
+      "models": {
+        "embedding": {
+          "id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+          "name": "BAAI/bge-small-zh-v1.5",
+          "type": "Embedding",
+          "source": "remote",
+          "provider": "generic",
+          "embedding_dimension": 512,
+          "endpoint_fingerprint": "sha256:b894193f46a480526ca15033fc560a8615f3f54955bf2b7de731d5d45746420c",
+          "parameters_fingerprint": "sha256:1f7150802be2cbdbab837dea18f40d56e693bf2787d4205f8ba71d524f08ed07",
+          "updated_at": "2026-09-13T15:18:57.483594Z"
+        },
+        "chat": {
+          "id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+          "name": "gpt-5.6-luna",
+          "type": "KnowledgeQA",
+          "source": "remote",
+          "provider": "openai",
+          "endpoint_fingerprint": "sha256:b894193f46a480526ca15033fc560a8615f3f54955bf2b7de731d5d45746420c",
+          "parameters_fingerprint": "sha256:6c8c3085c3185881dfeace92cd6edc75592ad0889a06d193f115897b65e769a2",
+          "updated_at": "2026-09-13T15:18:57.475858Z"
+        },
+        "rerank": {
+          "id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+          "name": "BAAI/bge-reranker-base",
+          "type": "Rerank",
+          "source": "remote",
+          "provider": "generic",
+          "endpoint_fingerprint": "sha256:b894193f46a480526ca15033fc560a8615f3f54955bf2b7de731d5d45746420c",
+          "parameters_fingerprint": "sha256:48e724a72d67fa3041f21fd3866c683ab388287b7bea0cceba95d055fd0c804d",
+          "updated_at": "2026-09-13T15:18:57.489316Z"
+        }
+      },
+      "chunking": {
+        "applied": true,
+        "source_unit": "dataset_passage",
+        "config": {
+          "chunk_size": 0,
+          "chunk_overlap": 0,
+          "separators": null
+        }
+      },
+      "retrieval": {
+        "vector_threshold": 0.2,
+        "keyword_threshold": 0.3,
+        "embedding_top_k": 30,
+        "rerank_top_k": 30,
+        "rerank_threshold": 0.3
+      },
+      "generation": {
+        "max_tokens": 0,
+        "max_completion_tokens": 2048,
+        "temperature": 0.3,
+        "top_p": 0,
+        "top_k": 0,
+        "seed": 0,
+        "repeat_penalty": 1,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "prompt_fingerprint": "sha256:5e96d8354b71400c563b0239a5b59cca7e6aeafa3d0e238fca4241d7c14e1747",
+        "context_fingerprint": "sha256:cf89b153b1269831ba555bc5e666e59c82e96447cbc7bc0c662b9319d5948d7b",
+        "no_match_prefix_fingerprint": "sha256:3ad8be20e39632126c6087fc495a9731b42f0aea37bdaa3df939e267692914a3",
+        "fallback_response_fingerprint": "sha256:5ddb4edc42896bb24c01718379533028d5f15266dc2fd4f696ba4c04957fc0f3",
+        "fallback_prompt_fingerprint": ""
+      },
+      "indexing": {
+        "vector_enabled": true,
+        "keyword_enabled": true
+      },
+      "runtime": {
+        "case_concurrency": 4,
+        "metric_version": "retrieval-generation/v3",
+        "result_version": "evaluation-run/v1",
+        "application_version": "0.7.2",
+        "commit_sha": "5ee7afee78c277102c901e886464d6160f26d9af",
+        "vcs_modified": true,
+        "commit_available": true
+      },
+      "reproducibility": {
+        "status": "partial",
+        "warnings": [
+          {
+            "code": "working_tree_modified",
+            "message": "The application was built from a modified working tree whose diff is not stored."
+          },
+          {
+            "code": "provider_config_partially_snapshotted",
+            "message": "One or more provider settings were excluded from the non-secret model snapshot."
+          }
+        ]
+      },
+      "config_hash": "sha256:99860311ddd25e229ff9b29bcf9961ab707cbaeffdf0b2d4f4454f918d51ea27"
+    },
+    "metric": {
+      "retrieval_metrics": {
+        "precision": 0.7854166666666667,
+        "recall": 1,
+        "ndcg3": 1,
+        "ndcg10": 1,
+        "mrr": 1,
+        "map": 1
+      },
+      "generation_metrics": {
+        "bleu1": 0.22787693207225637,
+        "bleu2": 0.19170347960546388,
+        "bleu4": 0.14132619941219685,
+        "rouge1": 0.35100505944602006,
+        "rouge2": 0.18654922027227,
+        "rougel": 0.34691661555782655
+      }
+    },
+    "result": {
+      "schema_version": "evaluation-run/v1",
+      "run": {
+        "run_id": "evaluation_10000_1789312737638_e178c21d_default",
+        "tenant_id": 10000,
+        "dataset_id": "default",
+        "started_at": "2026-09-13T15:18:57.638655Z",
+        "completed_at": "2026-09-13T15:31:07.896787Z",
+        "status": "success"
+      },
+      "retrieval": {
+        "precision": 0.7854166666666667,
+        "recall": 1,
+        "ndcg3": 1,
+        "ndcg10": 1,
+        "mrr": 1,
+        "map": 1
+      },
+      "answer": {
+        "bleu1": 0.22787693207225637,
+        "bleu2": 0.19170347960546388,
+        "bleu4": 0.14132619941219685,
+        "rouge1": 0.35100505944602006,
+        "rouge2": 0.18654922027227,
+        "rougel": 0.34691661555782655
+      },
+      "usage": {
+        "status": "partial",
+        "calls": {
+          "total": 61,
+          "succeeded": 61,
+          "failed": 0,
+          "items": 1853
+        },
+        "tokens": {
+          "prompt_tokens": 46572,
+          "completion_tokens": 1403,
+          "total_tokens": 47975,
+          "cached_tokens": 0,
+          "cache_read_tokens": 0,
+          "cache_write_tokens": 0,
+          "cache_miss_tokens": 46572
+        },
+        "cache_status": "miss",
+        "reported_call_count": 20,
+        "unavailable_call_count": 41,
+        "by_model": [
+          {
+            "model_type": "chat",
+            "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+            "model_name": "gpt-5.6-luna",
+            "operation": "chat",
+            "usage_source": "provider_reported",
+            "calls": {
+              "total": 20,
+              "succeeded": 20,
+              "failed": 0,
+              "items": 20
+            },
+            "tokens": {
+              "prompt_tokens": 46572,
+              "completion_tokens": 1403,
+              "total_tokens": 47975,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 46572
+            },
+            "duration_ms": 147948
+          },
+          {
+            "model_type": "embedding",
+            "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+            "model_name": "BAAI/bge-small-zh-v1.5",
+            "operation": "batch_embed",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 1,
+              "succeeded": 1,
+              "failed": 0,
+              "items": 1213
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 365837
+          },
+          {
+            "model_type": "embedding",
+            "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+            "model_name": "BAAI/bge-small-zh-v1.5",
+            "operation": "embed",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 20,
+              "succeeded": 20,
+              "failed": 0,
+              "items": 20
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 537
+          },
+          {
+            "model_type": "rerank",
+            "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+            "model_name": "BAAI/bge-reranker-base",
+            "operation": "rerank",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 20,
+              "succeeded": 20,
+              "failed": 0,
+              "items": 600
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 1203878
+          }
+        ],
+        "by_phase": [
+          {
+            "phase": "evaluation",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 60,
+              "succeeded": 60,
+              "failed": 0,
+              "items": 640
+            },
+            "tokens": {
+              "prompt_tokens": 46572,
+              "completion_tokens": 1403,
+              "total_tokens": 47975,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 46572
+            },
+            "duration_ms": 1352363
+          },
+          {
+            "phase": "preparation",
+            "usage_source": "unavailable",
+            "calls": {
+              "total": 1,
+              "succeeded": 1,
+              "failed": 0,
+              "items": 1213
+            },
+            "tokens": {
+              "prompt_tokens": 0,
+              "completion_tokens": 0,
+              "total_tokens": 0,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 0
+            },
+            "duration_ms": 365837
+          }
+        ]
+      },
+      "cost": {
+        "status": "unavailable",
+        "source": "not_reported",
+        "amount": null,
+        "warnings": [
+          {
+            "code": "pricing_not_available",
+            "message": "Stage one does not calculate prices; token usage and call counts are reported when available."
+          }
+        ]
+      },
+      "timing": {
+        "total_wall_time_ms": 730307,
+        "preparation_ms": 366241,
+        "evaluation_ms": 363968,
+        "cleanup_ms": 91,
+        "case_count": 20,
+        "case_avg_ms": 67870,
+        "case_min_ms": 48036,
+        "case_max_ms": 101695,
+        "case_p50_ms": 67225,
+        "case_p95_ms": 84776,
+        "model_call_cumulative_ms": 1718200
+      },
+      "cases": [
+        {
+          "case_id": "1",
+          "status": "success",
+          "started_at": "2026-09-13T15:25:03.861740378Z",
+          "completed_at": "2026-09-13T15:26:45.551565633Z",
+          "duration_ms": 101695,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1024,
+              "completion_tokens": 31,
+              "total_tokens": 1055,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1024
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1024,
+                  "completion_tokens": 31,
+                  "total_tokens": 1055,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1024
+                },
+                "duration_ms": 6871
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 98
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 93996
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1024,
+                  "completion_tokens": 31,
+                  "total_tokens": 1055,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1024
+                },
+                "duration_ms": 100965
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 1,
+            "question_fingerprint": "sha256:05d93e4c295e8a5402f87a945d6e173e0e59d3ab46084472c905791590c33d62",
+            "reference_answer_fingerprint": "sha256:622be7ac7f1d0b32af694754509e403a7dd757a92534d497760bbe529aabe118",
+            "generated_answer_fingerprint": "sha256:bceecb57cee956572da6490d871b8ec41b96d9ac6e6e106fb95610aea50a65ae",
+            "ground_truth_pids": [
+              751
+            ],
+            "search_pids": [
+              751,
+              566,
+              370,
+              173,
+              489,
+              765,
+              601,
+              103,
+              450,
+              307,
+              799,
+              692,
+              822,
+              276,
+              835,
+              81,
+              470,
+              456,
+              569,
+              838,
+              210,
+              710,
+              1,
+              640,
+              730,
+              28,
+              709,
+              671
+            ],
+            "rerank_pids": [
+              751
+            ],
+            "metric_input_pids": [
+              751
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.5333333333333333,
+                "bleu2": 0.5163977794943223,
+                "bleu4": 0.4758733096412523,
+                "rouge1": 0.6999999954500001,
+                "rouge2": 0.6315789430470914,
+                "rougel": 0.6999999954500001
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "2",
+          "status": "success",
+          "started_at": "2026-09-13T15:25:03.861668145Z",
+          "completed_at": "2026-09-13T15:26:12.636209856Z",
+          "duration_ms": 68778,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1099,
+              "completion_tokens": 175,
+              "total_tokens": 1274,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1099
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1099,
+                  "completion_tokens": 175,
+                  "total_tokens": 1274,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1099
+                },
+                "duration_ms": 7583
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 32
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 60431
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1099,
+                  "completion_tokens": 175,
+                  "total_tokens": 1274,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1099
+                },
+                "duration_ms": 68046
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 2,
+            "question_fingerprint": "sha256:fb40ffde1b50dc1daaf81f49528744335406a77e57b3c1d457ee87488cc74f61",
+            "reference_answer_fingerprint": "sha256:2d17a91ba1f304628dfc53f9b9ede062a115eefff5482135555154aa426cb00c",
+            "generated_answer_fingerprint": "sha256:1711a157fd2d818740e5877a64c891aaa414710400973287f5e8dfc7ba8fac65",
+            "ground_truth_pids": [
+              66
+            ],
+            "search_pids": [
+              66,
+              373,
+              72,
+              575,
+              644,
+              254,
+              618,
+              586,
+              419,
+              698,
+              117,
+              613,
+              214,
+              193,
+              138,
+              711,
+              707,
+              382,
+              21,
+              353,
+              360,
+              510,
+              454,
+              381,
+              59,
+              470,
+              484,
+              637
+            ],
+            "rerank_pids": [
+              66
+            ],
+            "metric_input_pids": [
+              66
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.08695652173913045,
+                "bleu2": 0.061824466773518647,
+                "bleu4": 0.03125572373450703,
+                "rouge1": 0.19999999755102044,
+                "rouge2": 0.06315789285318565,
+                "rougel": 0.19999999755102044
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "3",
+          "status": "success",
+          "started_at": "2026-09-13T15:25:03.861819915Z",
+          "completed_at": "2026-09-13T15:25:51.896140003Z",
+          "duration_ms": 48036,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1152,
+              "completion_tokens": 19,
+              "total_tokens": 1171,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1152
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1152,
+                  "completion_tokens": 19,
+                  "total_tokens": 1171,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1152
+                },
+                "duration_ms": 3568
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 52
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 43701
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1152,
+                  "completion_tokens": 19,
+                  "total_tokens": 1171,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1152
+                },
+                "duration_ms": 47321
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 3,
+            "question_fingerprint": "sha256:05dbae9712ffe534bfac8faf688899f2f54ecdd3b0768a363a86ca39a035f13e",
+            "reference_answer_fingerprint": "sha256:a119c35abee0cf7aa4593a7e0684ed6b984a0ecc6f8798f83699baa510d8418d",
+            "generated_answer_fingerprint": "sha256:e9417de7bde402ec3fee1b0df67fceba3048a4adefea1f66a0813eb1fff20059",
+            "ground_truth_pids": [
+              840
+            ],
+            "search_pids": [
+              840,
+              231,
+              690,
+              392,
+              210,
+              273,
+              544,
+              379,
+              491,
+              403,
+              29,
+              666,
+              512,
+              315,
+              522,
+              80,
+              454,
+              467,
+              382,
+              198,
+              706,
+              663,
+              718,
+              21,
+              266,
+              61,
+              268,
+              303,
+              794
+            ],
+            "rerank_pids": [
+              840
+            ],
+            "metric_input_pids": [
+              840
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.2222222222222222,
+                "bleu2": 0.16666666666666666,
+                "bleu4": 0.16036590969929357,
+                "rouge1": 0.33333333055555564,
+                "rouge2": 0,
+                "rougel": 0.33333333055555564
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "4",
+          "status": "success",
+          "started_at": "2026-09-13T15:25:03.861586694Z",
+          "completed_at": "2026-09-13T15:26:28.632395975Z",
+          "duration_ms": 84776,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1559,
+              "completion_tokens": 118,
+              "total_tokens": 1677,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1559
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1559,
+                  "completion_tokens": 118,
+                  "total_tokens": 1677,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1559
+                },
+                "duration_ms": 6803
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 73
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 77169
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1559,
+                  "completion_tokens": 118,
+                  "total_tokens": 1677,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1559
+                },
+                "duration_ms": 84045
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 4,
+            "question_fingerprint": "sha256:5fce080806f2ef2773f50638ddfc71b855d22b5162bc768d80615d89c29706b8",
+            "reference_answer_fingerprint": "sha256:e45f6e1eb312c815ee6c6e764ec9b1c2d6a358e398095c381197d0d77f1dfbd9",
+            "generated_answer_fingerprint": "sha256:be85065bc962ff661b88a363d66e5539c551d91497eb04edf6ab81491a395b54",
+            "ground_truth_pids": [
+              326
+            ],
+            "search_pids": [
+              326,
+              576,
+              443,
+              631,
+              619,
+              791,
+              190,
+              460,
+              500,
+              141,
+              268,
+              30,
+              361,
+              265,
+              29,
+              209,
+              69,
+              711,
+              48,
+              31,
+              573,
+              408,
+              95,
+              72,
+              184
+            ],
+            "rerank_pids": [
+              326
+            ],
+            "metric_input_pids": [
+              326
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.19512195121951223,
+                "bleu2": 0.1710797845536603,
+                "bleu4": 0.11211398595075861,
+                "rouge1": 0.3243243203798393,
+                "rouge2": 0.22222221831111116,
+                "rougel": 0.3243243203798393
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "5",
+          "status": "success",
+          "started_at": "2026-09-13T15:25:51.904709789Z",
+          "completed_at": "2026-09-13T15:26:59.103607058Z",
+          "duration_ms": 67205,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1116,
+              "completion_tokens": 71,
+              "total_tokens": 1187,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1116
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1116,
+                  "completion_tokens": 71,
+                  "total_tokens": 1187,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1116
+                },
+                "duration_ms": 4249
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 15
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 62839
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1116,
+                  "completion_tokens": 71,
+                  "total_tokens": 1187,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1116
+                },
+                "duration_ms": 67103
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 5,
+            "question_fingerprint": "sha256:a57cd76372d8e4e2946d5a7036a65aedc4728e18b011ac132d25d64624d8d790",
+            "reference_answer_fingerprint": "sha256:53430631dfdff07d3ce6557f120ca933fbba683992e0d6eaf8ec7c825b3b8d77",
+            "generated_answer_fingerprint": "sha256:90a3adfd20e155555223c357deefe08512fefc6b5912baff23da10ae52234b4a",
+            "ground_truth_pids": [
+              193
+            ],
+            "search_pids": [
+              193,
+              66,
+              586,
+              406,
+              138,
+              316,
+              253,
+              14,
+              74,
+              768,
+              139,
+              381,
+              223,
+              324,
+              680,
+              739,
+              543,
+              37,
+              345,
+              461,
+              385,
+              599,
+              264,
+              607,
+              398
+            ],
+            "rerank_pids": [
+              193
+            ],
+            "metric_input_pids": [
+              193
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.04000000000000001,
+                "bleu2": 0.028571428571428564,
+                "bleu4": 0.02452625300522044,
+                "rouge1": 0.03921568229142678,
+                "rouge2": 0,
+                "rougel": 0.03921568229142678
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "6",
+          "status": "success",
+          "started_at": "2026-09-13T15:26:12.64675893Z",
+          "completed_at": "2026-09-13T15:27:23.618536454Z",
+          "duration_ms": 70976,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1087,
+              "completion_tokens": 30,
+              "total_tokens": 1117,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1087
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1087,
+                  "completion_tokens": 30,
+                  "total_tokens": 1117,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1087
+                },
+                "duration_ms": 12577
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 19
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 58261
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1087,
+                  "completion_tokens": 30,
+                  "total_tokens": 1117,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1087
+                },
+                "duration_ms": 70857
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 6,
+            "question_fingerprint": "sha256:2d9f12b0d1f0394f25756cd2b002b8d341cf880dea918dd4471310dbeb7e301b",
+            "reference_answer_fingerprint": "sha256:3b4cf3f1d5cae796dedd2a7e45b69fdb236a580b6dc040e4444f08620203a951",
+            "generated_answer_fingerprint": "sha256:60ec668bf27f8a1d0fdc45842b103900d4ac5595ff390ae326625491ec6bd6f8",
+            "ground_truth_pids": [
+              243
+            ],
+            "search_pids": [
+              243,
+              180,
+              64,
+              50,
+              657,
+              813,
+              279,
+              232,
+              537,
+              524,
+              435,
+              674,
+              697,
+              453,
+              317,
+              692,
+              81,
+              40,
+              688,
+              207,
+              492,
+              309,
+              134,
+              160,
+              87
+            ],
+            "rerank_pids": [
+              243
+            ],
+            "metric_input_pids": [
+              243
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.1875,
+                "bleu2": 0.15811388300841897,
+                "bleu4": 0.1082597837309053,
+                "rouge1": 0.2857142832653061,
+                "rouge2": 0.14285714153061227,
+                "rougel": 0.2857142832653061
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "7",
+          "status": "success",
+          "started_at": "2026-09-13T15:26:28.643678373Z",
+          "completed_at": "2026-09-13T15:27:36.161641429Z",
+          "duration_ms": 67522,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1916,
+              "completion_tokens": 25,
+              "total_tokens": 1941,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1916
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1916,
+                  "completion_tokens": 25,
+                  "total_tokens": 1941,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1916
+                },
+                "duration_ms": 8592
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 18
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 58783
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1916,
+                  "completion_tokens": 25,
+                  "total_tokens": 1941,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1916
+                },
+                "duration_ms": 67393
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 7,
+            "question_fingerprint": "sha256:5504bdee191671df2f8aa1e2ad2918ebeb2e451df5d33820109aee46e226d976",
+            "reference_answer_fingerprint": "sha256:1697c2e054764f5cbac45b444176960ae8ace7d640d508d05c19e6e4075843ef",
+            "generated_answer_fingerprint": "sha256:1dd1131ad516289eb23f36861a96fcb8e0f0293dcc95e0dba5923cfcc2d31831",
+            "ground_truth_pids": [
+              202
+            ],
+            "search_pids": [
+              202,
+              187,
+              517,
+              514,
+              608,
+              804,
+              78,
+              155,
+              688,
+              98,
+              651,
+              245,
+              842,
+              307,
+              606,
+              776,
+              769,
+              683,
+              496,
+              320,
+              118,
+              103,
+              601
+            ],
+            "rerank_pids": [
+              202,
+              187
+            ],
+            "metric_input_pids": [
+              202,
+              187
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 0.5,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.25,
+                "bleu2": 0.21320071635561041,
+                "bleu4": 0.14991106946711685,
+                "rouge1": 0.39999999680000003,
+                "rouge2": 0.1999999982,
+                "rougel": 0.39999999680000003
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "8",
+          "status": "success",
+          "started_at": "2026-09-13T15:26:45.558710286Z",
+          "completed_at": "2026-09-13T15:27:53.351684817Z",
+          "duration_ms": 67797,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1131,
+              "completion_tokens": 137,
+              "total_tokens": 1268,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1131
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1131,
+                  "completion_tokens": 137,
+                  "total_tokens": 1268,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1131
+                },
+                "duration_ms": 10804
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 18
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 56856
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1131,
+                  "completion_tokens": 137,
+                  "total_tokens": 1268,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1131
+                },
+                "duration_ms": 67678
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 8,
+            "question_fingerprint": "sha256:636315039874acca34c0c25be2a5f7f2b0da5a5b9981df3b7584ed98ee61d910",
+            "reference_answer_fingerprint": "sha256:8b53bd43e98103f7cc2c4616fdb939145e61813318e85f1227a5468d410c9c0b",
+            "generated_answer_fingerprint": "sha256:5e30e445a99edd0a6902e72e4f064dcdb712914da998e71b1f82c9e203a7ab2e",
+            "ground_truth_pids": [
+              262
+            ],
+            "search_pids": [
+              262,
+              35,
+              431,
+              773,
+              478,
+              151,
+              347,
+              392,
+              607,
+              204,
+              694,
+              355,
+              143,
+              482,
+              429,
+              693,
+              141,
+              261,
+              817,
+              495,
+              555,
+              360,
+              26,
+              786,
+              381
+            ],
+            "rerank_pids": [
+              262
+            ],
+            "metric_input_pids": [
+              262
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.08771929824561404,
+                "bleu2": 0.039577974178831465,
+                "bleu4": 0.02694869058909299,
+                "rouge1": 0.15686274219146487,
+                "rouge2": 0,
+                "rougel": 0.11764705591695508
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "9",
+          "status": "success",
+          "started_at": "2026-09-13T15:26:59.112695765Z",
+          "completed_at": "2026-09-13T15:28:06.334039145Z",
+          "duration_ms": 67225,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1437,
+              "completion_tokens": 43,
+              "total_tokens": 1480,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1437
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1437,
+                  "completion_tokens": 43,
+                  "total_tokens": 1480,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1437
+                },
+                "duration_ms": 7033
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 21
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 60058
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1437,
+                  "completion_tokens": 43,
+                  "total_tokens": 1480,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1437
+                },
+                "duration_ms": 67112
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 9,
+            "question_fingerprint": "sha256:e3e6ab144febbfb19871b63b18ae6b4a24a9355788bf4b34db4a8e2a74196abb",
+            "reference_answer_fingerprint": "sha256:2fe9f4791cddcb92e8786cbc59b18319c4be6c2d7eeba73ee32f6232cb016abb",
+            "generated_answer_fingerprint": "sha256:b6148cee6a74c1bb8f8454d65da98f8fb7f5d6626e6baeca5ea1d3b3547042ac",
+            "ground_truth_pids": [
+              585
+            ],
+            "search_pids": [
+              585,
+              266,
+              254,
+              454,
+              132,
+              65,
+              283,
+              815,
+              96,
+              158,
+              264,
+              586,
+              130,
+              149,
+              345,
+              286,
+              528,
+              784,
+              74,
+              111,
+              312,
+              292,
+              793,
+              2,
+              582,
+              20,
+              330
+            ],
+            "rerank_pids": [
+              585
+            ],
+            "metric_input_pids": [
+              585
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.24,
+                "bleu2": 0.22360679774997894,
+                "bleu4": 0.18556675930109115,
+                "rouge1": 0.4347826052930058,
+                "rouge2": 0.30769230508875745,
+                "rougel": 0.4347826052930058
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "10",
+          "status": "success",
+          "started_at": "2026-09-13T15:27:23.626535631Z",
+          "completed_at": "2026-09-13T15:28:22.998689589Z",
+          "duration_ms": 59376,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1434,
+              "completion_tokens": 90,
+              "total_tokens": 1524,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1434
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1434,
+                  "completion_tokens": 90,
+                  "total_tokens": 1524,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1434
+                },
+                "duration_ms": 8199
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 17
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 51053
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1434,
+                  "completion_tokens": 90,
+                  "total_tokens": 1524,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1434
+                },
+                "duration_ms": 59269
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 10,
+            "question_fingerprint": "sha256:5096f739e9d1527e705257b9c29f9a91f23d29a441bca7e403a9369ff797f3ec",
+            "reference_answer_fingerprint": "sha256:0824780ae987b76c16aa9c2e96c6162c2def2e3d03f26fbf9fa3c92539165e47",
+            "generated_answer_fingerprint": "sha256:165488d469f44cf8f6f6e5dae18bf46d01299882b5e39b08c3c49d4ced00832e",
+            "ground_truth_pids": [
+              452
+            ],
+            "search_pids": [
+              452,
+              435,
+              90,
+              199,
+              548,
+              163,
+              335,
+              24,
+              516,
+              549,
+              309,
+              149,
+              157,
+              614,
+              797,
+              604,
+              672,
+              647,
+              87,
+              107,
+              331,
+              823,
+              413,
+              699
+            ],
+            "rerank_pids": [
+              452
+            ],
+            "metric_input_pids": [
+              452
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.07692307692307693,
+                "bleu2": 0.05547001962252292,
+                "bleu4": 0.048589719316429775,
+                "rouge1": 0.09090909004132232,
+                "rouge2": 0,
+                "rougel": 0.09090909004132232
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "11",
+          "status": "success",
+          "started_at": "2026-09-13T15:27:36.171300868Z",
+          "completed_at": "2026-09-13T15:28:41.205238325Z",
+          "duration_ms": 65038,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 4743,
+              "completion_tokens": 31,
+              "total_tokens": 4774,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 4743
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 4743,
+                  "completion_tokens": 31,
+                  "total_tokens": 4774,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 4743
+                },
+                "duration_ms": 9163
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 16
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 55733
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 4743,
+                  "completion_tokens": 31,
+                  "total_tokens": 4774,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 4743
+                },
+                "duration_ms": 64912
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 11,
+            "question_fingerprint": "sha256:c7dc136aa043ca4d0adcde2dbc352193e50925f34c8f368fab6b658a81bc00d8",
+            "reference_answer_fingerprint": "sha256:63d4ce68d75400405eb82aaa61610719ebe107e2bfea384431eff9e326b481a9",
+            "generated_answer_fingerprint": "sha256:9bd8a3f64aabcbc2e55e75f8e7fde467cc8b1cd7e15fc1f8bc181199d6961b21",
+            "ground_truth_pids": [
+              821
+            ],
+            "search_pids": [
+              821,
+              590,
+              229,
+              476,
+              140,
+              600,
+              131,
+              609,
+              457,
+              778,
+              188,
+              416,
+              372,
+              691,
+              627,
+              638,
+              559,
+              678,
+              270,
+              616,
+              617,
+              472,
+              618,
+              153,
+              145,
+              792,
+              789,
+              348,
+              685,
+              135
+            ],
+            "rerank_pids": [
+              821,
+              590,
+              600,
+              476,
+              140,
+              229
+            ],
+            "metric_input_pids": [
+              821,
+              590,
+              600,
+              476,
+              140,
+              229
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 0.16666666666666666,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.3333333333333333,
+                "bleu2": 0.30151134457776363,
+                "bleu4": 0.21200626759025185,
+                "rouge1": 0.6666666622222223,
+                "rouge2": 0.39999999680000003,
+                "rougel": 0.6666666622222223
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "12",
+          "status": "success",
+          "started_at": "2026-09-13T15:27:53.370811438Z",
+          "completed_at": "2026-09-13T15:28:57.47355106Z",
+          "duration_ms": 64107,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1215,
+              "completion_tokens": 200,
+              "total_tokens": 1415,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1215
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1215,
+                  "completion_tokens": 200,
+                  "total_tokens": 1415,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1215
+                },
+                "duration_ms": 9150
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 23
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 54829
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1215,
+                  "completion_tokens": 200,
+                  "total_tokens": 1415,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1215
+                },
+                "duration_ms": 64002
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 12,
+            "question_fingerprint": "sha256:02df6be704a9376547c4b16c0c323522d31000d9b57d0e36f60a371a8c017879",
+            "reference_answer_fingerprint": "sha256:3446f6f02562826697caaade1ecd5019888229c11f2d60131214b4b52580e057",
+            "generated_answer_fingerprint": "sha256:b1a7b9741e157e189257479579364788c8eaeed696e015c2711bb26494036026",
+            "ground_truth_pids": [
+              763
+            ],
+            "search_pids": [
+              763,
+              729,
+              648,
+              535,
+              741,
+              575,
+              408,
+              719,
+              305,
+              558,
+              259,
+              363,
+              77,
+              209,
+              462,
+              509,
+              521,
+              294,
+              30,
+              573,
+              223,
+              178,
+              588,
+              204,
+              311
+            ],
+            "rerank_pids": [
+              763
+            ],
+            "metric_input_pids": [
+              763
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.3666666666666667,
+                "bleu2": 0.27543069720987395,
+                "bleu4": 0.16832484320875543,
+                "rouge1": 0.49999999555555563,
+                "rouge2": 0.25641025214990143,
+                "rougel": 0.49999999555555563
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "13",
+          "status": "success",
+          "started_at": "2026-09-13T15:28:06.345788031Z",
+          "completed_at": "2026-09-13T15:29:09.850852281Z",
+          "duration_ms": 63509,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1663,
+              "completion_tokens": 24,
+              "total_tokens": 1687,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1663
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1663,
+                  "completion_tokens": 24,
+                  "total_tokens": 1687,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1663
+                },
+                "duration_ms": 5834
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 17
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 57546
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1663,
+                  "completion_tokens": 24,
+                  "total_tokens": 1687,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1663
+                },
+                "duration_ms": 63397
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 13,
+            "question_fingerprint": "sha256:0d17a90dead54793b2886da970e1bbdcdccc2c781549b2e02b02a5ddaf566ca6",
+            "reference_answer_fingerprint": "sha256:d834c272124ec448e0a890d08714aff1ac41fe883d84393d4b5439e3ec311a2d",
+            "generated_answer_fingerprint": "sha256:95416d2c4e8e0887385daa18d7e149b7f272c576efcd69e48223f5230b9f8f46",
+            "ground_truth_pids": [
+              105
+            ],
+            "search_pids": [
+              105,
+              126,
+              160,
+              40,
+              279,
+              410,
+              181,
+              222,
+              115,
+              750,
+              366,
+              44,
+              285,
+              692,
+              180,
+              255,
+              459,
+              670,
+              85,
+              207,
+              807,
+              175,
+              485,
+              754
+            ],
+            "rerank_pids": [
+              105,
+              126
+            ],
+            "metric_input_pids": [
+              105,
+              126
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 0.5,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.16666666666666666,
+                "bleu2": 0.12309149097933275,
+                "bleu4": 0.11390778025531027,
+                "rouge1": 0.19999999680000002,
+                "rouge2": 0,
+                "rougel": 0.19999999680000002
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "14",
+          "status": "success",
+          "started_at": "2026-09-13T15:28:23.006187348Z",
+          "completed_at": "2026-09-13T15:29:25.739927813Z",
+          "duration_ms": 62737,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1957,
+              "completion_tokens": 83,
+              "total_tokens": 2040,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1957
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1957,
+                  "completion_tokens": 83,
+                  "total_tokens": 2040,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1957
+                },
+                "duration_ms": 4257
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 18
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 58363
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1957,
+                  "completion_tokens": 83,
+                  "total_tokens": 2040,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1957
+                },
+                "duration_ms": 62638
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 14,
+            "question_fingerprint": "sha256:85fcefaab32b80ffa9004910e341fecb12980d352a92ebbfe3e3172c58fe8a1e",
+            "reference_answer_fingerprint": "sha256:17e8077e51203175890fb7b14e29795352b3c2f77b090698c620bb2e5cb56dc6",
+            "generated_answer_fingerprint": "sha256:fdbfc7cca36df35ee134d3cdf92ea76dce8bc110cae8a20216619374a50bff84",
+            "ground_truth_pids": [
+              356
+            ],
+            "search_pids": [
+              356,
+              29,
+              365,
+              474,
+              747,
+              124,
+              625,
+              414,
+              373,
+              594,
+              318,
+              490,
+              101,
+              642,
+              791,
+              595,
+              238,
+              807,
+              761,
+              53,
+              321,
+              144,
+              470,
+              150,
+              507,
+              196,
+              465
+            ],
+            "rerank_pids": [
+              356,
+              29
+            ],
+            "metric_input_pids": [
+              356,
+              29
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 0.5,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.4090909090909091,
+                "bleu2": 0.31209389196617965,
+                "bleu4": 0.12653094028246673,
+                "rouge1": 0.6956521691493385,
+                "rouge2": 0.319999995648,
+                "rougel": 0.6956521691493385
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "15",
+          "status": "success",
+          "started_at": "2026-09-13T15:28:41.216786582Z",
+          "completed_at": "2026-09-13T15:29:46.440837139Z",
+          "duration_ms": 65228,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1223,
+              "completion_tokens": 40,
+              "total_tokens": 1263,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1223
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1223,
+                  "completion_tokens": 40,
+                  "total_tokens": 1263,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1223
+                },
+                "duration_ms": 10571
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 17
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 54393
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1223,
+                  "completion_tokens": 40,
+                  "total_tokens": 1263,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1223
+                },
+                "duration_ms": 64981
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 15,
+            "question_fingerprint": "sha256:f815f6a75685cb4ab24d165646dc01ea6f13c35730d57253cc30c78cb8efbea8",
+            "reference_answer_fingerprint": "sha256:a4d81c907fef2d6a2b5300a232a633e0bedf1f20c73f3161672e8ed44cc7d803",
+            "generated_answer_fingerprint": "sha256:69de80df299d11e8e16e889792af2262a1d870f0c22b4697d87f0252427bf90c",
+            "ground_truth_pids": [
+              659
+            ],
+            "search_pids": [
+              659,
+              501,
+              773,
+              818,
+              847,
+              621,
+              452,
+              775,
+              824,
+              347,
+              750,
+              757,
+              129,
+              11,
+              554,
+              694,
+              48,
+              510,
+              562,
+              171,
+              762,
+              728
+            ],
+            "rerank_pids": [
+              659
+            ],
+            "metric_input_pids": [
+              659
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.13636363636363635,
+                "bleu2": 0.11396057645963793,
+                "bleu4": 0.07645949399477267,
+                "rouge1": 0.24999999781250004,
+                "rouge2": 0.11111111006172841,
+                "rougel": 0.24999999781250004
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "16",
+          "status": "success",
+          "started_at": "2026-09-13T15:28:57.480436445Z",
+          "completed_at": "2026-09-13T15:30:00.240660609Z",
+          "duration_ms": 62766,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 16660,
+              "completion_tokens": 29,
+              "total_tokens": 16689,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 16660
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 16660,
+                  "completion_tokens": 29,
+                  "total_tokens": 16689,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 16660
+                },
+                "duration_ms": 6400
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 16
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 56030
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 16660,
+                  "completion_tokens": 29,
+                  "total_tokens": 16689,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 16660
+                },
+                "duration_ms": 62446
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 16,
+            "question_fingerprint": "sha256:7580ea315266dcf57617eb3b5437b28242346abc5348a63a3a3c0f7caedc9b16",
+            "reference_answer_fingerprint": "sha256:4023ee15e2becdc88eadcfbf37ea3c73a2e904e7821d8621b1077b837157c282",
+            "generated_answer_fingerprint": "sha256:0e62b27a9ebd8d613d6f015ffab4e23e4dd262a0871a1b7ca0e6e9492c0d4764",
+            "ground_truth_pids": [
+              661
+            ],
+            "search_pids": [
+              661,
+              493,
+              188,
+              153,
+              351,
+              627,
+              140,
+              685,
+              166,
+              588,
+              581,
+              733,
+              789,
+              778,
+              145,
+              135,
+              617,
+              229,
+              821,
+              457,
+              45,
+              678,
+              571,
+              390,
+              609,
+              714,
+              792
+            ],
+            "rerank_pids": [
+              661,
+              135,
+              627,
+              792,
+              778,
+              153,
+              789,
+              493,
+              714,
+              188,
+              617,
+              733,
+              145,
+              685,
+              166,
+              678,
+              588,
+              457,
+              581,
+              140,
+              351,
+              571,
+              390,
+              609
+            ],
+            "metric_input_pids": [
+              661,
+              135,
+              627,
+              792,
+              778,
+              153,
+              789,
+              493,
+              714,
+              188,
+              617,
+              733,
+              145,
+              685,
+              166,
+              678,
+              588,
+              457,
+              581,
+              140,
+              351,
+              571,
+              390,
+              609
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 0.041666666666666664,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.23076923076923078,
+                "bleu2": 0.19611613513818407,
+                "bleu4": 0.1367440667823257,
+                "rouge1": 0.363636360661157,
+                "rouge2": 0.18181818016528928,
+                "rougel": 0.363636360661157
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "17",
+          "status": "success",
+          "started_at": "2026-09-13T15:29:09.858418489Z",
+          "completed_at": "2026-09-13T15:30:17.771478118Z",
+          "duration_ms": 67917,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1524,
+              "completion_tokens": 31,
+              "total_tokens": 1555,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1524
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1524,
+                  "completion_tokens": 31,
+                  "total_tokens": 1555,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1524
+                },
+                "duration_ms": 7632
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 17
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 60155
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1524,
+                  "completion_tokens": 31,
+                  "total_tokens": 1555,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1524
+                },
+                "duration_ms": 67804
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 17,
+            "question_fingerprint": "sha256:93b23a8cca1e6710a4d6d1e4109dc629de98a4a275d1525519d57e502d0e54ae",
+            "reference_answer_fingerprint": "sha256:672e479b7567083386b0d9f7d5be5e97400e3e945f3b9382c4591c3ec63cc0de",
+            "generated_answer_fingerprint": "sha256:0ade13d336bfa0a5da857e2469c812745e484cb947f1e17f1ff3869cdfa047d6",
+            "ground_truth_pids": [
+              636
+            ],
+            "search_pids": [
+              636,
+              398,
+              253,
+              528,
+              746,
+              74,
+              47,
+              711,
+              406,
+              615,
+              328,
+              511,
+              713,
+              515,
+              465,
+              825,
+              320,
+              265,
+              607,
+              490,
+              69,
+              775
+            ],
+            "rerank_pids": [
+              636,
+              746
+            ],
+            "metric_input_pids": [
+              636,
+              746
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 0.5,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.23076923076923078,
+                "bleu2": 0.19611613513818407,
+                "bleu4": 0.1367440667823257,
+                "rouge1": 0.2857142832653061,
+                "rouge2": 0.16666666513888892,
+                "rougel": 0.2857142832653061
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "18",
+          "status": "success",
+          "started_at": "2026-09-13T15:29:25.748028441Z",
+          "completed_at": "2026-09-13T15:30:34.219284068Z",
+          "duration_ms": 68477,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1217,
+              "completion_tokens": 30,
+              "total_tokens": 1247,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1217
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1217,
+                  "completion_tokens": 30,
+                  "total_tokens": 1247,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1217
+                },
+                "duration_ms": 5877
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 17
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 62486
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1217,
+                  "completion_tokens": 30,
+                  "total_tokens": 1247,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1217
+                },
+                "duration_ms": 68380
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 18,
+            "question_fingerprint": "sha256:b6697c30148142426560a8b3200e9bc0e0ae497cab4987d262a1e937fbfe0209",
+            "reference_answer_fingerprint": "sha256:188c985b1872825016739feb13204cf693f73ece230fbe3466e276607e4ae867",
+            "generated_answer_fingerprint": "sha256:bafafcc5695425d5a3e5dc72da6b376c4e1aabebac3a1aa0ed5ea5cdd9418a67",
+            "ground_truth_pids": [
+              599
+            ],
+            "search_pids": [
+              599,
+              458,
+              241,
+              316,
+              343,
+              798,
+              736,
+              145,
+              161,
+              588,
+              188,
+              135,
+              581,
+              493,
+              45,
+              405,
+              432,
+              714,
+              733,
+              609,
+              91,
+              139,
+              627,
+              457,
+              792,
+              559
+            ],
+            "rerank_pids": [
+              599
+            ],
+            "metric_input_pids": [
+              599
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.2,
+                "bleu2": 0.16903085094570328,
+                "bleu4": 0.11633270842295028,
+                "rouge1": 0.30769230508875745,
+                "rouge2": 0.15384615242603553,
+                "rougel": 0.30769230508875745
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "19",
+          "status": "success",
+          "started_at": "2026-09-13T15:29:46.446766853Z",
+          "completed_at": "2026-09-13T15:30:53.134045574Z",
+          "duration_ms": 66691,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1832,
+              "completion_tokens": 172,
+              "total_tokens": 2004,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1832
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1832,
+                  "completion_tokens": 172,
+                  "total_tokens": 2004,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1832
+                },
+                "duration_ms": 7878
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 18
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 58680
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1832,
+                  "completion_tokens": 172,
+                  "total_tokens": 2004,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1832
+                },
+                "duration_ms": 66576
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 19,
+            "question_fingerprint": "sha256:e60484e2a5af1b2a1ede9ceb57a523d4131606b013a7bb5c4c31cb2225290ece",
+            "reference_answer_fingerprint": "sha256:78dfca074140c17515fbca027daca877c2088e6e0e867579a6b39db218a173bb",
+            "generated_answer_fingerprint": "sha256:6b3b83598abb2032c29c79ec7969b77f1d9e20062dcba32b4dc4bea663d4a068",
+            "ground_truth_pids": [
+              637
+            ],
+            "search_pids": [
+              637,
+              281,
+              -1,
+              464,
+              593,
+              231,
+              209,
+              793,
+              273,
+              379,
+              361,
+              739,
+              552,
+              223,
+              268,
+              804,
+              845,
+              748,
+              141,
+              456,
+              488,
+              395,
+              783,
+              83,
+              458,
+              147,
+              798
+            ],
+            "rerank_pids": [
+              637,
+              223
+            ],
+            "metric_input_pids": [
+              637,
+              223
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 0.5,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.06410256410256408,
+                "bleu2": 0.04080443192842739,
+                "bleu4": 0.023247965588597225,
+                "rouge1": 0.1702127634223631,
+                "rouge2": 0.028169012537195087,
+                "rougel": 0.1276595719330014
+              }
+            }
+          },
+          "warnings": []
+        },
+        {
+          "case_id": "20",
+          "status": "success",
+          "started_at": "2026-09-13T15:30:00.247310192Z",
+          "completed_at": "2026-09-13T15:31:07.790465111Z",
+          "duration_ms": 67546,
+          "usage": {
+            "status": "partial",
+            "calls": {
+              "total": 3,
+              "succeeded": 3,
+              "failed": 0,
+              "items": 32
+            },
+            "tokens": {
+              "prompt_tokens": 1583,
+              "completion_tokens": 24,
+              "total_tokens": 1607,
+              "cached_tokens": 0,
+              "cache_read_tokens": 0,
+              "cache_write_tokens": 0,
+              "cache_miss_tokens": 1583
+            },
+            "cache_status": "miss",
+            "reported_call_count": 1,
+            "unavailable_call_count": 2,
+            "by_model": [
+              {
+                "model_type": "chat",
+                "model_id": "14d082ff-71fd-459f-a7f8-fde258e848c7",
+                "model_name": "gpt-5.6-luna",
+                "operation": "chat",
+                "usage_source": "provider_reported",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 1583,
+                  "completion_tokens": 24,
+                  "total_tokens": 1607,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1583
+                },
+                "duration_ms": 4907
+              },
+              {
+                "model_type": "embedding",
+                "model_id": "3fead461-f523-44ba-bbae-75ef3c41be04",
+                "model_name": "BAAI/bge-small-zh-v1.5",
+                "operation": "embed",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 1
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 15
+              },
+              {
+                "model_type": "rerank",
+                "model_id": "95a5e79c-b6ed-4d5b-a489-e217ed7ca840",
+                "model_name": "BAAI/bge-reranker-base",
+                "operation": "rerank",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 1,
+                  "succeeded": 1,
+                  "failed": 0,
+                  "items": 30
+                },
+                "tokens": {
+                  "prompt_tokens": 0,
+                  "completion_tokens": 0,
+                  "total_tokens": 0,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 0
+                },
+                "duration_ms": 62516
+              }
+            ],
+            "by_phase": [
+              {
+                "phase": "evaluation",
+                "usage_source": "unavailable",
+                "calls": {
+                  "total": 3,
+                  "succeeded": 3,
+                  "failed": 0,
+                  "items": 32
+                },
+                "tokens": {
+                  "prompt_tokens": 1583,
+                  "completion_tokens": 24,
+                  "total_tokens": 1607,
+                  "cached_tokens": 0,
+                  "cache_read_tokens": 0,
+                  "cache_write_tokens": 0,
+                  "cache_miss_tokens": 1583
+                },
+                "duration_ms": 67438
+              }
+            ]
+          },
+          "evidence": {
+            "qid": 20,
+            "question_fingerprint": "sha256:01ddeeb0746af47d69dd53115acf5a850a2a450142b8aaa68ff430df2a9e04c1",
+            "reference_answer_fingerprint": "sha256:c361931e04048f89ec87bd43cff3449ce5d8e27272e2d5d8350a0bde5286c324",
+            "generated_answer_fingerprint": "sha256:b6691c4c2e208ae627639628d4a572d88ca80f5f47355ffcce9d55d7a5d97182",
+            "ground_truth_pids": [
+              799
+            ],
+            "search_pids": [
+              799,
+              433,
+              448,
+              1,
+              454,
+              346,
+              353,
+              460,
+              51,
+              688,
+              529,
+              194,
+              490,
+              368,
+              630,
+              494,
+              381,
+              53,
+              552,
+              81,
+              66,
+              15,
+              671,
+              629,
+              403,
+              291
+            ],
+            "rerank_pids": [
+              799
+            ],
+            "metric_input_pids": [
+              799
+            ],
+            "unmapped_result_count": 0,
+            "metrics": {
+              "retrieval_metrics": {
+                "precision": 1,
+                "recall": 1,
+                "ndcg3": 1,
+                "ndcg10": 1,
+                "mrr": 1,
+                "map": 1
+              },
+              "generation_metrics": {
+                "bleu1": 0.5,
+                "bleu2": 0.4714045207910317,
+                "bleu4": 0.39281465090051304,
+                "rouge1": 0.6153846111242604,
+                "rouge2": 0.5454545414876033,
+                "rougel": 0.6153846111242604
+              }
+            }
+          },
+          "warnings": []
+        }
+      ],
+      "warnings": [
+        {
+          "code": "usage_incomplete",
+          "message": "One or more model calls did not report token usage."
+        }
+      ]
+    }
+  },
+  "success": true
+}

@@ -1,0 +1,50 @@
+{
+  "run_id": "evaluation_10000_1789314517543_c7412678_default",
+  "task": {
+    "id": "evaluation_10000_1789314517543_c7412678_default",
+    "tenant_id": 10000,
+    "dataset_id": "default",
+    "start_time": "2026-09-13T15:48:37.543595Z",
+    "status": 2,
+    "total": 20,
+    "finished": 20
+  },
+  "provider_counts": {
+    "embedding_calls": 264,
+    "embedding_items": 1234,
+    "rerank_calls": 20,
+    "rerank_items": 600,
+    "chat_calls": 21,
+    "chat_items": 0
+  },
+  "database_event_count": 63,
+  "retrieval": {
+    "precision": 0.7854166666666667,
+    "recall": 1,
+    "ndcg3": 1,
+    "ndcg10": 1,
+    "mrr": 1,
+    "map": 1
+  },
+  "answer": {
+    "bleu1": 0.23985293196140756,
+    "bleu2": 0.19793677265605694,
+    "bleu4": 0.14439763660833507,
+    "rouge1": 0.3691805540035715,
+    "rouge2": 0.1906849089578825,
+    "rougel": 0.357677057500075
+  },
+  "timing": {
+    "total_wall_time_ms": 718091,
+    "preparation_ms": 124297,
+    "evaluation_ms": 593674,
+    "cleanup_ms": 109,
+    "case_count": 20,
+    "case_avg_ms": 113853,
+    "case_min_ms": 26085,
+    "case_max_ms": 207073,
+    "case_p50_ms": 98507,
+    "case_p95_ms": 206948,
+    "model_call_cumulative_ms": 2393867
+  }
+}

@@ -1,0 +1,566 @@
+[
+  {
+    "group": "disabled-20",
+    "run_id": "evaluation_10000_1789312737638_e178c21d_default",
+    "dataset_fingerprint": "sha256:9306ee0a2d4cf732238bff36b97c9d5334a30546994b51df2048ea6dcde3f0e4",
+    "config_hash": "sha256:99860311ddd25e229ff9b29bcf9961ab707cbaeffdf0b2d4f4454f918d51ea27",
+    "runtime": {
+      "case_concurrency": 4,
+      "metric_version": "retrieval-generation/v3",
+      "result_version": "evaluation-run/v1",
+      "application_version": "0.7.2",
+      "commit_sha": "5ee7afee78c277102c901e886464d6160f26d9af",
+      "vcs_modified": true,
+      "commit_available": true
+    },
+    "reproducibility": {
+      "status": "partial",
+      "warnings": [
+        {
+          "code": "working_tree_modified",
+          "message": "The application was built from a modified working tree whose diff is not stored."
+        },
+        {
+          "code": "provider_config_partially_snapshotted",
+          "message": "One or more provider settings were excluded from the non-secret model snapshot."
+        }
+      ]
+    },
+    "provider_counts_in_measurement_window": {
+      "embedding_calls": 264,
+      "embedding_items": 1234,
+      "chat_calls": 21,
+      "chat_items": 0,
+      "rerank_calls": 20,
+      "rerank_items": 600
+    },
+    "database_events_in_measurement_window": 63,
+    "database_events_attached_to_run": 61,
+    "evaluation_embedding_events": 21,
+    "evaluation_chat_events": 20,
+    "evaluation_rerank_events": 20,
+    "background_events": [
+      {
+        "model_type": "Embedding",
+        "operation": "batch_embed",
+        "source": "chat",
+        "item_count": 1,
+        "evaluation_run_id": null
+      },
+      {
+        "model_type": "KnowledgeQA",
+        "operation": "chat",
+        "source": "ingestion",
+        "item_count": 1,
+        "evaluation_run_id": null
+      }
+    ],
+    "evaluation_tokens": {
+      "prompt_tokens": 46572,
+      "completion_tokens": 1403,
+      "total_tokens": 47975,
+      "cached_tokens": 0,
+      "cache_read_tokens": 0,
+      "cache_write_tokens": 0,
+      "cache_miss_tokens": 46572
+    },
+    "result_cost": {
+      "status": "unavailable",
+      "source": "not_reported",
+      "amount": null,
+      "warnings": [
+        {
+          "code": "pricing_not_available",
+          "message": "Stage one does not calculate prices; token usage and call counts are reported when available."
+        }
+      ]
+    },
+    "timing": {
+      "total_wall_time_ms": 730307,
+      "preparation_ms": 366241,
+      "evaluation_ms": 363968,
+      "cleanup_ms": 91,
+      "case_count": 20,
+      "case_avg_ms": 67870,
+      "case_min_ms": 48036,
+      "case_max_ms": 101695,
+      "case_p50_ms": 67225,
+      "case_p95_ms": 84776,
+      "model_call_cumulative_ms": 1718200
+    },
+    "retrieval": {
+      "precision": 0.7854166666666667,
+      "recall": 1,
+      "ndcg3": 1,
+      "ndcg10": 1,
+      "mrr": 1,
+      "map": 1
+    },
+    "answer": {
+      "bleu1": 0.22787693207225637,
+      "bleu2": 0.19170347960546388,
+      "bleu4": 0.14132619941219685,
+      "rouge1": 0.35100505944602006,
+      "rouge2": 0.18654922027227,
+      "rougel": 0.34691661555782655
+    },
+    "case_statuses": [
+      {
+        "case_id": "1",
+        "status": "success"
+      },
+      {
+        "case_id": "2",
+        "status": "success"
+      },
+      {
+        "case_id": "3",
+        "status": "success"
+      },
+      {
+        "case_id": "4",
+        "status": "success"
+      },
+      {
+        "case_id": "5",
+        "status": "success"
+      },
+      {
+        "case_id": "6",
+        "status": "success"
+      },
+      {
+        "case_id": "7",
+        "status": "success"
+      },
+      {
+        "case_id": "8",
+        "status": "success"
+      },
+      {
+        "case_id": "9",
+        "status": "success"
+      },
+      {
+        "case_id": "10",
+        "status": "success"
+      },
+      {
+        "case_id": "11",
+        "status": "success"
+      },
+      {
+        "case_id": "12",
+        "status": "success"
+      },
+      {
+        "case_id": "13",
+        "status": "success"
+      },
+      {
+        "case_id": "14",
+        "status": "success"
+      },
+      {
+        "case_id": "15",
+        "status": "success"
+      },
+      {
+        "case_id": "16",
+        "status": "success"
+      },
+      {
+        "case_id": "17",
+        "status": "success"
+      },
+      {
+        "case_id": "18",
+        "status": "success"
+      },
+      {
+        "case_id": "19",
+        "status": "success"
+      },
+      {
+        "case_id": "20",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "group": "cold-20-final",
+    "run_id": "evaluation_10000_1789314517543_c7412678_default",
+    "dataset_fingerprint": "sha256:9306ee0a2d4cf732238bff36b97c9d5334a30546994b51df2048ea6dcde3f0e4",
+    "config_hash": "sha256:99860311ddd25e229ff9b29bcf9961ab707cbaeffdf0b2d4f4454f918d51ea27",
+    "runtime": {
+      "case_concurrency": 4,
+      "metric_version": "retrieval-generation/v3",
+      "result_version": "evaluation-run/v1",
+      "application_version": "0.7.2",
+      "commit_sha": "5ee7afee78c277102c901e886464d6160f26d9af",
+      "vcs_modified": true,
+      "commit_available": true
+    },
+    "reproducibility": {
+      "status": "partial",
+      "warnings": [
+        {
+          "code": "working_tree_modified",
+          "message": "The application was built from a modified working tree whose diff is not stored."
+        },
+        {
+          "code": "provider_config_partially_snapshotted",
+          "message": "One or more provider settings were excluded from the non-secret model snapshot."
+        }
+      ]
+    },
+    "provider_counts_in_measurement_window": {
+      "embedding_calls": 264,
+      "embedding_items": 1234,
+      "rerank_calls": 20,
+      "rerank_items": 600,
+      "chat_calls": 21,
+      "chat_items": 0
+    },
+    "database_events_in_measurement_window": 63,
+    "database_events_attached_to_run": 61,
+    "evaluation_embedding_events": 21,
+    "evaluation_chat_events": 20,
+    "evaluation_rerank_events": 20,
+    "background_events": [
+      {
+        "model_type": "Embedding",
+        "operation": "batch_embed",
+        "source": "chat",
+        "item_count": 1,
+        "evaluation_run_id": null
+      },
+      {
+        "model_type": "KnowledgeQA",
+        "operation": "chat",
+        "source": "ingestion",
+        "item_count": 1,
+        "evaluation_run_id": null
+      }
+    ],
+    "evaluation_tokens": {
+      "prompt_tokens": 46572,
+      "completion_tokens": 1244,
+      "total_tokens": 47816,
+      "cached_tokens": 16128,
+      "cache_read_tokens": 16128,
+      "cache_write_tokens": 0,
+      "cache_miss_tokens": 30444
+    },
+    "result_cost": {
+      "status": "unavailable",
+      "source": "not_reported",
+      "amount": null,
+      "warnings": [
+        {
+          "code": "pricing_not_available",
+          "message": "Stage one does not calculate prices; token usage and call counts are reported when available."
+        }
+      ]
+    },
+    "timing": {
+      "total_wall_time_ms": 718091,
+      "preparation_ms": 124297,
+      "evaluation_ms": 593674,
+      "cleanup_ms": 109,
+      "case_count": 20,
+      "case_avg_ms": 113853,
+      "case_min_ms": 26085,
+      "case_max_ms": 207073,
+      "case_p50_ms": 98507,
+      "case_p95_ms": 206948,
+      "model_call_cumulative_ms": 2393867
+    },
+    "retrieval": {
+      "precision": 0.7854166666666667,
+      "recall": 1,
+      "ndcg3": 1,
+      "ndcg10": 1,
+      "mrr": 1,
+      "map": 1
+    },
+    "answer": {
+      "bleu1": 0.23985293196140756,
+      "bleu2": 0.19793677265605694,
+      "bleu4": 0.14439763660833507,
+      "rouge1": 0.3691805540035715,
+      "rouge2": 0.1906849089578825,
+      "rougel": 0.357677057500075
+    },
+    "case_statuses": [
+      {
+        "case_id": "1",
+        "status": "success"
+      },
+      {
+        "case_id": "2",
+        "status": "success"
+      },
+      {
+        "case_id": "3",
+        "status": "success"
+      },
+      {
+        "case_id": "4",
+        "status": "success"
+      },
+      {
+        "case_id": "5",
+        "status": "success"
+      },
+      {
+        "case_id": "6",
+        "status": "success"
+      },
+      {
+        "case_id": "7",
+        "status": "success"
+      },
+      {
+        "case_id": "8",
+        "status": "success"
+      },
+      {
+        "case_id": "9",
+        "status": "success"
+      },
+      {
+        "case_id": "10",
+        "status": "success"
+      },
+      {
+        "case_id": "11",
+        "status": "success"
+      },
+      {
+        "case_id": "12",
+        "status": "success"
+      },
+      {
+        "case_id": "13",
+        "status": "success"
+      },
+      {
+        "case_id": "14",
+        "status": "success"
+      },
+      {
+        "case_id": "15",
+        "status": "success"
+      },
+      {
+        "case_id": "16",
+        "status": "success"
+      },
+      {
+        "case_id": "17",
+        "status": "success"
+      },
+      {
+        "case_id": "18",
+        "status": "success"
+      },
+      {
+        "case_id": "19",
+        "status": "success"
+      },
+      {
+        "case_id": "20",
+        "status": "success"
+      }
+    ]
+  },
+  {
+    "group": "warm-20",
+    "run_id": "evaluation_10000_1789315356814_47b2f472_default",
+    "dataset_fingerprint": "sha256:9306ee0a2d4cf732238bff36b97c9d5334a30546994b51df2048ea6dcde3f0e4",
+    "config_hash": "sha256:99860311ddd25e229ff9b29bcf9961ab707cbaeffdf0b2d4f4454f918d51ea27",
+    "runtime": {
+      "case_concurrency": 4,
+      "metric_version": "retrieval-generation/v3",
+      "result_version": "evaluation-run/v1",
+      "application_version": "0.7.2",
+      "commit_sha": "5ee7afee78c277102c901e886464d6160f26d9af",
+      "vcs_modified": true,
+      "commit_available": true
+    },
+    "reproducibility": {
+      "status": "partial",
+      "warnings": [
+        {
+          "code": "working_tree_modified",
+          "message": "The application was built from a modified working tree whose diff is not stored."
+        },
+        {
+          "code": "provider_config_partially_snapshotted",
+          "message": "One or more provider settings were excluded from the non-secret model snapshot."
+        }
+      ]
+    },
+    "provider_counts_in_measurement_window": {
+      "rerank_calls": 20,
+      "rerank_items": 600,
+      "chat_calls": 21,
+      "chat_items": 0,
+      "embedding_calls": 1,
+      "embedding_items": 1
+    },
+    "database_events_in_measurement_window": 42,
+    "database_events_attached_to_run": 40,
+    "evaluation_embedding_events": 0,
+    "evaluation_chat_events": 20,
+    "evaluation_rerank_events": 20,
+    "background_events": [
+      {
+        "model_type": "Embedding",
+        "operation": "batch_embed",
+        "source": "chat",
+        "item_count": 1,
+        "evaluation_run_id": null
+      },
+      {
+        "model_type": "KnowledgeQA",
+        "operation": "chat",
+        "source": "ingestion",
+        "item_count": 1,
+        "evaluation_run_id": null
+      }
+    ],
+    "evaluation_tokens": {
+      "prompt_tokens": 46572,
+      "completion_tokens": 1272,
+      "total_tokens": 47844,
+      "cached_tokens": 3840,
+      "cache_read_tokens": 3840,
+      "cache_write_tokens": 0,
+      "cache_miss_tokens": 42732
+    },
+    "result_cost": {
+      "status": "unavailable",
+      "source": "not_reported",
+      "amount": null,
+      "warnings": [
+        {
+          "code": "pricing_not_available",
+          "message": "Stage one does not calculate prices; token usage and call counts are reported when available."
+        }
+      ]
+    },
+    "timing": {
+      "total_wall_time_ms": 341215,
+      "preparation_ms": 622,
+      "evaluation_ms": 340482,
+      "cleanup_ms": 101,
+      "case_count": 20,
+      "case_avg_ms": 62723,
+      "case_min_ms": 23094,
+      "case_max_ms": 75264,
+      "case_p50_ms": 65448,
+      "case_p95_ms": 75244,
+      "model_call_cumulative_ms": 1243713
+    },
+    "retrieval": {
+      "precision": 0.7854166666666667,
+      "recall": 1,
+      "ndcg3": 1,
+      "ndcg10": 1,
+      "mrr": 1,
+      "map": 1
+    },
+    "answer": {
+      "bleu1": 0.24910810927883395,
+      "bleu2": 0.20696726768511095,
+      "bleu4": 0.15050276832247203,
+      "rouge1": 0.39566282712163037,
+      "rouge2": 0.2088284212934152,
+      "rougel": 0.38219089154319585
+    },
+    "case_statuses": [
+      {
+        "case_id": "1",
+        "status": "success"
+      },
+      {
+        "case_id": "2",
+        "status": "success"
+      },
+      {
+        "case_id": "3",
+        "status": "success"
+      },
+      {
+        "case_id": "4",
+        "status": "success"
+      },
+      {
+        "case_id": "5",
+        "status": "success"
+      },
+      {
+        "case_id": "6",
+        "status": "success"
+      },
+      {
+        "case_id": "7",
+        "status": "success"
+      },
+      {
+        "case_id": "8",
+        "status": "success"
+      },
+      {
+        "case_id": "9",
+        "status": "success"
+      },
+      {
+        "case_id": "10",
+        "status": "success"
+      },
+      {
+        "case_id": "11",
+        "status": "success"
+      },
+      {
+        "case_id": "12",
+        "status": "success"
+      },
+      {
+        "case_id": "13",
+        "status": "success"
+      },
+      {
+        "case_id": "14",
+        "status": "success"
+      },
+      {
+        "case_id": "15",
+        "status": "success"
+      },
+      {
+        "case_id": "16",
+        "status": "success"
+      },
+      {
+        "case_id": "17",
+        "status": "success"
+      },
+      {
+        "case_id": "18",
+        "status": "success"
+      },
+      {
+        "case_id": "19",
+        "status": "success"
+      },
+      {
+        "case_id": "20",
+        "status": "success"
+      }
+    ]
+  }
+]

@@ -1,4 +1,4 @@
-> **Rhino 2026 Topic 3 submission — 徐博 (yushangcan):** [Submission and reproduction guide](docs/submission/README.md) · [Detailed design](docs/submission/详细设计方案.md) · [Submission metadata](submission.yaml). The optimization work is on `codex/evaluation-four-dimension-results`; measured evidence and remaining validation are documented in the guide.
+> **Rhino 2026 Topic 3 submission — 徐博 (yushangcan):** [Submission and reproduction guide](docs/submission/README.md) · [Detailed design](docs/submission/详细设计方案.md) · [Submission metadata](submission.yaml). The optimization work is on `codex/evaluation-four-dimension-results`; the guide includes real Luna 20-case acceptance, cold/warm Embedding results, and remaining validation limits.
 
 <p align="center">
   <picture>

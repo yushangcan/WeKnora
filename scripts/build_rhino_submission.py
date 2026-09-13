@@ -19,6 +19,8 @@ from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table,
                                TableStyle, KeepTogether)
 
 ROOT = Path(__file__).resolve().parents[1]
+SUBMISSION_REF = "rhino-2026-final-3-v2"
+SUBMISSION_DATE = "2026-09-14"
 
 
 def inline(value, source):
@@ -32,8 +34,9 @@ def inline(value, source):
             label, target = re.match(r"\[([^\]]+)\]\(([^)]+)\)", part).groups()
             if not target.startswith("http"):
                 relative = (source.parent / target).resolve().relative_to(ROOT).as_posix()
-                ref = "codex/evaluation-four-dimension-results" if relative == "submission.yaml" else "rhino-2026-final-3"
-                target = f"https://github.com/yushangcan/WeKnora/blob/{ref}/" + quote(relative)
+                ref = "codex/evaluation-four-dimension-results" if relative == "submission.yaml" else SUBMISSION_REF
+                kind = "tree" if (ROOT / relative).is_dir() else "blob"
+                target = f"https://github.com/yushangcan/WeKnora/{kind}/{ref}/" + quote(relative)
             out.append('<link href="' + html.escape(target, quote=True) + '" color="#175F83">' + html.escape(label) + '</link>')
         elif part.startswith(("https://", "http://")):
             out.append('<link href="' + html.escape(part, quote=True) + '" color="#175F83">' + html.escape(part) + '</link>')
@@ -97,7 +100,11 @@ def build(source, output, font):
                     sty = styles['th'] if not rows else styles['table']
                     rows.append([Paragraph(inline(c, source), sty) for c in cells])
                 i += 1
-            ratios = {2: [0.27, 0.73], 3: [0.26, 0.36, 0.38], 4: [0.18, 0.26, 0.28, 0.28]}[len(rows[0])]
+            ratios = {
+                2: [0.27, 0.73], 3: [0.26, 0.36, 0.38],
+                4: [0.18, 0.26, 0.28, 0.28],
+                7: [0.18, 0.09, 0.17, 0.12, 0.12, 0.16, 0.16],
+            }.get(len(rows[0]), [1 / len(rows[0])] * len(rows[0]))
             table = Table(rows, colWidths=[width * r for r in ratios], repeatRows=1, hAlign='LEFT')
             table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#234C63')),
@@ -143,7 +150,7 @@ def build(source, output, font):
         canvas.saveState()
         canvas.setFont(font, 8)
         canvas.setFillColor(colors.HexColor('#62737C'))
-        canvas.drawString(54, A4[1] - 29, 'WeKnora 课题 3  |  徐博  |  2026-09-13')
+        canvas.drawString(54, A4[1] - 29, f'WeKnora 课题 3  |  徐博  |  {SUBMISSION_DATE}')
         canvas.drawRightString(A4[0] - 54, 27, str(doc.page))
         canvas.restoreState()
 

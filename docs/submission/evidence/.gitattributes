@@ -1,4 +1,4 @@
 # Preserve original artifact bytes, including psql padding and final newlines.
-*.json -text
-*.jsonl -text
+*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+*.jsonl -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 *.txt -text -whitespace

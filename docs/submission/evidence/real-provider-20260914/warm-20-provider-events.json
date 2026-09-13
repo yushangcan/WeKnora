@@ -1,0 +1,926 @@
+[
+  {
+    "id": "4f1c5b53-85ae-43a0-a9e7-d4d7f772934d",
+    "started_at": 1789315358.2708604,
+    "input_sha256": "5d61dd877be38fefe111c24bb7d799ba798785278fa81a20bfc208803837f51d",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 16.75
+  },
+  {
+    "id": "d6a776ef-cc84-401e-93d0-1b1f69978a52",
+    "started_at": 1789315375.0344896,
+    "input_sha256": "65babf177bcb3226efc148b70add7177c522d0c029739c58c2649be95353db13",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "04c61e21-050c-4b8a-b448-a29c881790bb",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 145,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 54,
+        "text_tokens": 0
+      },
+      "input_tokens": 1099,
+      "input_tokens_details": null,
+      "output_tokens": 145,
+      "prompt_tokens": 1099,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1244
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "97c9d0b3614af1fbd888edb663e8e06dc9523faa8b6ef6118f02ed467e932a50",
+    "elapsed_seconds": 5.5
+  },
+  {
+    "id": "dc2eb940-f93f-45fa-a750-d6993827efaf",
+    "started_at": 1789315359.3334956,
+    "input_sha256": "4bad2e50ced48d6847f9f4ce2bf32e5fe6d4264972308234ad371cef3410aa4d",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "ca6c9648-5403-4007-9154-f7201590d3ec",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 567,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 143,
+        "text_tokens": 0
+      },
+      "input_tokens": 13777,
+      "input_tokens_details": null,
+      "output_tokens": 567,
+      "prompt_tokens": 13777,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 13056,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 14344
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "202f82e571548e51cd4604b51186923eb6036078fd6246a7a104dfb8470fd20a",
+    "elapsed_seconds": 26.20300000003772
+  },
+  {
+    "id": "a1e6dc47-1490-4b03-91bd-3b27c6d17649",
+    "started_at": 1789315386.2333236,
+    "input_sha256": "ab40402c4bb37b5058cedd1fd6b094228c93fc1f35bee1482fefc7f84d697deb",
+    "model": "BAAI/bge-small-zh-v1.5",
+    "success": true,
+    "operation": "embedding",
+    "items": 1,
+    "elapsed_seconds": 0.14100000000325963
+  },
+  {
+    "id": "9aeabaa0-c491-4599-9924-8fea5dce3adc",
+    "started_at": 1789315358.4164226,
+    "input_sha256": "fdd0ab655911f7026ce9e16912e02731c0577ddab12601d8cca90cf9f894e4fb",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 33.51600000000326
+  },
+  {
+    "id": "85c4b04a-e04e-49b4-b79d-a49dcfca83a7",
+    "started_at": 1789315391.9589908,
+    "input_sha256": "9f3d116232ed607675a1c3a092407ebcfecea9c70a2f421a702411f70e53e47b",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "0444b80f-6a45-4440-91fa-796e1e76b28f",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 33,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1024,
+      "input_tokens_details": null,
+      "output_tokens": 33,
+      "prompt_tokens": 1024,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1057
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "f625d8dc5a580f10bb6408987242a69d0de5861ec0f6c8573d4d7f1b0c4e5803",
+    "elapsed_seconds": 4.26600000000326
+  },
+  {
+    "id": "8c3d220e-45b3-43a6-ab24-e2d63afc764a",
+    "started_at": 1789315358.4212759,
+    "input_sha256": "9a32586dbd4961241c672282bf6eba3df007505f12885b9350c5dc20a3e936b6",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 51.71899999998277
+  },
+  {
+    "id": "de86e86e-8c04-448e-9279-4203ddf4f9f5",
+    "started_at": 1789315410.1735597,
+    "input_sha256": "ae088c68f1cad21e210f7395d27f0ab85220950a8ce09c587c93d82819e8b239",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "01c8e9bf-1e69-4d8f-a8f0-aa10d277d1cd",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 19,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1152,
+      "input_tokens_details": null,
+      "output_tokens": 19,
+      "prompt_tokens": 1152,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1171
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "d6e70ec4465cc584e639a068f1b45dbb88ff70a03566512c56537aa122186904",
+    "elapsed_seconds": 2.905999999959022
+  },
+  {
+    "id": "83dec962-bd92-46cb-9dff-73c4096bfed8",
+    "started_at": 1789315358.4400141,
+    "input_sha256": "6d4ae53a8279459c87228339a9d5bec82326491b9f328f04d4b2c50d65f7ef5e",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 68.57900000002701
+  },
+  {
+    "id": "a0e8c279-aba3-45d0-b4c7-19a448333788",
+    "started_at": 1789315427.040975,
+    "input_sha256": "1efc1a6b4ebf3b96711178104c3335e24276125339f92ca304e34ee172d18e18",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "4ccca4bb-b2a7-4249-a402-9dafaac897aa",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 110,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 29,
+        "text_tokens": 0
+      },
+      "input_tokens": 1559,
+      "input_tokens_details": null,
+      "output_tokens": 110,
+      "prompt_tokens": 1559,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1669
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "e588661b7149171e5a3bcb7e59e5b22dedad6ca03467518d552900445f7d44a3",
+    "elapsed_seconds": 5.64100000000326
+  },
+  {
+    "id": "a4b021cc-28c9-4fb5-bc1e-fa35b8e97cad",
+    "started_at": 1789315381.2789164,
+    "input_sha256": "53f94d73bddbf3c6b18d620e3b6767bd7679c450efab106a6c6ce5a37fef6d04",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 61.79599999997299
+  },
+  {
+    "id": "4f50f84c-1b14-4ce2-a443-538b58aaadf7",
+    "started_at": 1789315443.0941544,
+    "input_sha256": "6af71305aee48907298c78e0811f341d8c6de38769a4e28cf337827ac407b41f",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "820c3f72-f4cd-47cb-9b68-1c3ea1354a58",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 52,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1116,
+      "input_tokens_details": null,
+      "output_tokens": 52,
+      "prompt_tokens": 1116,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1168
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "f3946a423f3d58aa139f27af65ef9a8e5d11373931fdbed8cbb7e5a7a8137578",
+    "elapsed_seconds": 4.73399999999674
+  },
+  {
+    "id": "da55aea8-2b3e-4057-aa36-a0805fe05777",
+    "started_at": 1789315396.943285,
+    "input_sha256": "53d8f453bfd47866fda3366bf5e8e111baf55545aacd6467745f986713419feb",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 62.375
+  },
+  {
+    "id": "cda36791-57d8-4bf5-bc60-c818973c50cb",
+    "started_at": 1789315459.3363798,
+    "input_sha256": "2b3a171a5465418d9a93d17ffe311f0f614d4a8f0b6b5c5d68392836a43e6758",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "982fe5de-e42e-460f-839f-2380e44117ae",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 30,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1087,
+      "input_tokens_details": null,
+      "output_tokens": 30,
+      "prompt_tokens": 1087,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1117
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "d23b183e1c23e07f2b49b5cf8982c7ca458d07a5d518cad24a7feac9d843f705",
+    "elapsed_seconds": 8.578000000037719
+  },
+  {
+    "id": "7da60405-0a98-44a5-9477-4aa0423c1588",
+    "started_at": 1789315413.5868235,
+    "input_sha256": "ce5f1f26e7151c397a8a1d7be857c909d204d5935b522a30a8e0c663351762a0",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 62.29700000002049
+  },
+  {
+    "id": "8e655513-6c6e-4f38-8cf8-450a6abbb28d",
+    "started_at": 1789315475.9090378,
+    "input_sha256": "bea25f0fd7ffde7d4057dbbad4ecfa93022237944b9ab8214290cb75a71f9e59",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "cd491baf-0dc6-4063-9d18-df62a538ab0e",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 25,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1916,
+      "input_tokens_details": null,
+      "output_tokens": 25,
+      "prompt_tokens": 1916,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1941
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "b58c142a793bf4c11db6e20a690143e07ff7240f2025be2f8b301d953b091ada",
+    "elapsed_seconds": 2.625
+  },
+  {
+    "id": "d38ed0e7-0855-410c-bd7a-7a0ea6981d41",
+    "started_at": 1789315433.2078326,
+    "input_sha256": "8fd37baa7de58693732e4725201102d47755a449de3abe81a64643d84395bec1",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 57.45300000003772
+  },
+  {
+    "id": "6258ae16-abbc-4b3c-83c5-d38d501956af",
+    "started_at": 1789315490.6826694,
+    "input_sha256": "cd945692c5cf4640bee0dc3e3eeea5496cdfe4e69d386287a33242815b07a8aa",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "88a31a02-802c-4e97-aa5f-69dd8768f267",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 130,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 61,
+        "text_tokens": 0
+      },
+      "input_tokens": 1131,
+      "input_tokens_details": null,
+      "output_tokens": 130,
+      "prompt_tokens": 1131,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1261
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "d6e793f90c9dcaf0c918bf270e52cf33b1a9e3cd635252e125a1b533908a0834",
+    "elapsed_seconds": 6.921999999962281
+  },
+  {
+    "id": "57623475-558e-451b-90df-835b14fbc8c7",
+    "started_at": 1789315448.3633478,
+    "input_sha256": "fd98c3f6abeb573c8aa88f8ad81aacfd5e62dc3c58a69ecf891dfb690ddeb195",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 58.89100000000326
+  },
+  {
+    "id": "9759be70-ad62-4311-bc15-b1eb549d00b2",
+    "started_at": 1789315507.2777739,
+    "input_sha256": "9a3ddeb127ef951910b98dd929ee29b45f5e1a19d63a819547590c59c3470ec5",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "c787e777-7f7f-47fe-942b-09bc7be68dfe",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 43,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1437,
+      "input_tokens_details": null,
+      "output_tokens": 43,
+      "prompt_tokens": 1437,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1480
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "a52ea8cbaafd9c38c66478a4fefe4f9625f356ef4ddef1c6a541583c89c49f17",
+    "elapsed_seconds": 3.6709999999729916
+  },
+  {
+    "id": "3a144b51-1e58-43cf-bc75-89719828d817",
+    "started_at": 1789315468.4358904,
+    "input_sha256": "533dbcaf0e83872c8812eba6c764d64cce77af7b34b5676591d3b4142d66b405",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 54.68800000002375
+  },
+  {
+    "id": "873fc90c-9424-43d2-a981-853306fdf33c",
+    "started_at": 1789315523.1649034,
+    "input_sha256": "94ea18745661e6c83c7db48774830a895f12de70333cb0781b1e005b0305fdd3",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "4452fe3f-0d2d-4a65-ac51-5ddc4075a7b3",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 80,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 32,
+        "text_tokens": 0
+      },
+      "input_tokens": 1434,
+      "input_tokens_details": null,
+      "output_tokens": 80,
+      "prompt_tokens": 1434,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1514
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "740d623e17bffe4713760dc81e63cbd5332952645fa83ff24f8178efab5170b8",
+    "elapsed_seconds": 7.0
+  },
+  {
+    "id": "bfaedc02-a73f-420d-bbe9-cb94caf94f21",
+    "started_at": 1789315478.8313787,
+    "input_sha256": "15c2ea647bba9a089fbd6515a4df26edc93ec7356cedc831a40387d3c33b6964",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 61.67200000002049
+  },
+  {
+    "id": "c969662e-7dea-478d-9c20-8cac522542d1",
+    "started_at": 1789315540.5352032,
+    "input_sha256": "9ff8161124df93dbeedea7cc8a5c40344cbfc30bc4d62faf95fbdbcf37ad9751",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "49f734ac-ae92-4ee2-9b76-bd60f2aeb27c",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 67,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 34,
+        "text_tokens": 0
+      },
+      "input_tokens": 4743,
+      "input_tokens_details": null,
+      "output_tokens": 67,
+      "prompt_tokens": 4743,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 3840,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 4810
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "3fbe8daf791a88803f6bc93079b6a8096af40f685e08965570424b4b861ae3c5",
+    "elapsed_seconds": 5.0939999999827705
+  },
+  {
+    "id": "b714f777-42c7-4b6a-b47d-529a5e3c0bf7",
+    "started_at": 1789315498.07597,
+    "input_sha256": "9d118218d2f321131a9ad5738efe822ae801ff4c6030975eb43361abffb402a2",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 58.61000000004424
+  },
+  {
+    "id": "9b9fe1b0-db1e-439b-9b39-697e3bfaae2a",
+    "started_at": 1789315511.2285948,
+    "input_sha256": "0fbe2dc5c0b98f94046e3b156f653b3f13382faf720d79d6b215a96cc8af03f9",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 61.26500000001397
+  },
+  {
+    "id": "4955fb94-495e-4d64-94c7-a3a5b5e32ae1",
+    "started_at": 1789315556.7084706,
+    "input_sha256": "74e8fe8b4edfb80ae0a2bd7c05d4644b8d192b58993c6e489cd361eb696fbea2",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "4a96dd65-87a0-4804-bd43-422500feaffc",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 157,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 26,
+        "text_tokens": 0
+      },
+      "input_tokens": 1215,
+      "input_tokens_details": null,
+      "output_tokens": 157,
+      "prompt_tokens": 1215,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1372
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "a745941c988c83102996817b2cde49b57cb91a23698105eb11833340d50d1356",
+    "elapsed_seconds": 16.15600000001723
+  },
+  {
+    "id": "6b9d1579-bbc5-488a-a1ca-f977650e2c1e",
+    "started_at": 1789315572.5106983,
+    "input_sha256": "3d384565b79aa0f2ffc026d56cd48b397be8870a0ffe544e18fd05159e407407",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "32ff44d6-3ad0-4061-8de4-5adc56f2e4e2",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 24,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1663,
+      "input_tokens_details": null,
+      "output_tokens": 24,
+      "prompt_tokens": 1663,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1687
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "d76cf55cac2c204e94edd65f25f7096e3f6a789a5f58529aa9c29be8edb6b55d",
+    "elapsed_seconds": 10.03100000001723
+  },
+  {
+    "id": "b5e4dd84-74da-4c24-adf6-49bf2fd1ca39",
+    "started_at": 1789315530.4256017,
+    "input_sha256": "059af91096af8bcbfd561684093f32102daa0bee49fb18ea1ad3735b227b7013",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 59.59399999998277
+  },
+  {
+    "id": "8890913c-3819-4a01-8544-ff46d741a2ca",
+    "started_at": 1789315590.0538507,
+    "input_sha256": "8d8bad26553fffbd55e0f11bc4579cc2b7823f0acc1fcdc2e5a7fcb54c2509a4",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "c0aee373-4135-4f41-b32b-58c4ae727994",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 34,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1957,
+      "input_tokens_details": null,
+      "output_tokens": 34,
+      "prompt_tokens": 1957,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1991
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "82c5a00ab7d072dea7b0c81acd488f1f99da3271236538a8607b2ebe6b8309c8",
+    "elapsed_seconds": 2.4689999999827705
+  },
+  {
+    "id": "a3fc3bbb-1f7f-4511-a4cf-c04660dace48",
+    "started_at": 1789315545.8781085,
+    "input_sha256": "896b34195f0edad1488e3f58c714ce44e7e11aa386cfe56beffc3e93d4139685",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 58.78100000001723
+  },
+  {
+    "id": "5846fc55-5df5-469e-bbad-f13b5340d847",
+    "started_at": 1789315604.6862752,
+    "input_sha256": "dbea6033263817fab0a939b942340dbad3e1738b7f593ae79971ea792e0fc62b",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "b39b21d7-8a9b-463d-8a1c-21cad1b00ff3",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 40,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1223,
+      "input_tokens_details": null,
+      "output_tokens": 40,
+      "prompt_tokens": 1223,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1263
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "af32a412d7bb28730fc5aeb53b70183944b18139e966b01b5817c3e91a32f0f2",
+    "elapsed_seconds": 5.547000000020489
+  },
+  {
+    "id": "8fb2acdf-1a90-4278-a9fd-5b04869ad0b7",
+    "started_at": 1789315573.1444352,
+    "input_sha256": "852ad887db5cadec0e18157cb98f1e6f265a1b8f0330ce51f7494c6119180cc4",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 49.23399999999674
+  },
+  {
+    "id": "30ba9c92-f2e7-4a7a-a1e0-30e3e12a1a2d",
+    "started_at": 1789315622.6557524,
+    "input_sha256": "bf82022afd58a30c8767a93ac284475f35fdcf6c46236767319319d810fc91ca",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "6e2e52cc-2ec6-42ba-b770-9b473e15c9d3",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 29,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 16660,
+      "input_tokens_details": null,
+      "output_tokens": 29,
+      "prompt_tokens": 16660,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 16689
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "77203dff3379c5b61487212deeb12e48d047d0318bac2c5d2a58080d0185e69d",
+    "elapsed_seconds": 4.171999999962281
+  },
+  {
+    "id": "658d91c7-7afd-424f-b493-a03361938199",
+    "started_at": 1789315583.1021554,
+    "input_sha256": "bf1ae5112668a364338ccbe42c2d20733430bd2545bbb34378baacc71549514a",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 56.07800000003772
+  },
+  {
+    "id": "e4133853-ffd6-4cd1-a96d-601b3b38ef82",
+    "started_at": 1789315639.2090576,
+    "input_sha256": "5be0005ccf3030c85a75ccf00c23bd7952f4d6963a6676153fc8713b5440a577",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "8e7ad285-5ba6-4182-a420-ea11974bb0e7",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 33,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1524,
+      "input_tokens_details": null,
+      "output_tokens": 33,
+      "prompt_tokens": 1524,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1557
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "be80869900147a3646617b78021d0f0877b17788d394f66a03ae19e18978b6b6",
+    "elapsed_seconds": 4.4060000000172295
+  },
+  {
+    "id": "c5a6fab1-ce9e-432c-a412-17c726a412c8",
+    "started_at": 1789315592.8002276,
+    "input_sha256": "86402839b49cc5cf02a80d29b9f345b9dc603a6bd553c96a6190e320f931c939",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 64.38999999995576
+  },
+  {
+    "id": "584551ab-4cdd-4d9b-9653-b6b50538cfe2",
+    "started_at": 1789315657.214579,
+    "input_sha256": "1925bc08fa191bb7ae374ab499cbe4a3b419b9858aa11b17234dec1aefad3301",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "c0fca195-f4e6-4470-8fdf-d9b100270c60",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 30,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1217,
+      "input_tokens_details": null,
+      "output_tokens": 30,
+      "prompt_tokens": 1217,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1247
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "94e0ccf9520be2934a1a8327f327b204f84a81ecf714fd50e3ff665e441cb59a",
+    "elapsed_seconds": 4.328000000037719
+  },
+  {
+    "id": "fa6220ad-bcbf-44a0-832c-a5bfc20db8cc",
+    "started_at": 1789315610.4975533,
+    "input_sha256": "aea9c85d68fd92c69f170c893b131c1e92f4812058c199e12ea31c7c6ca189e6",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 63.76600000000326
+  },
+  {
+    "id": "dab40a1b-e8ef-43bb-9eae-54da565b13a2",
+    "started_at": 1789315674.2962575,
+    "input_sha256": "7d9c13377eab8679416ca6ef023a4797d5f3eada121b990d6f4dc722f3478ef3",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "18900f7f-170a-4ae3-a122-ec0aed69ca2b",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 167,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 54,
+        "text_tokens": 0
+      },
+      "input_tokens": 1832,
+      "input_tokens_details": null,
+      "output_tokens": 167,
+      "prompt_tokens": 1832,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1999
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "5426605196c65bb3f33e0fd84527fc17946bb46f9fd6c795703a3c75b1f4c4ff",
+    "elapsed_seconds": 6.905999999959022
+  },
+  {
+    "id": "87fe33e7-2402-4f9d-9950-9d2a984546e6",
+    "started_at": 1789315627.1069765,
+    "input_sha256": "91d88ecdb04decbf1d206aed84ae1da762cb318f9315dc3fce391071402901bf",
+    "model": "BAAI/bge-reranker-base",
+    "success": true,
+    "operation": "rerank",
+    "items": 30,
+    "elapsed_seconds": 65.125
+  },
+  {
+    "id": "d8f6fc71-f37b-46a0-b344-9ef18d1da5df",
+    "started_at": 1789315692.2445607,
+    "input_sha256": "e08b32628d8d4d26d10926e4a45171e3785b54b54889ed7da68a99742e8a0b63",
+    "model": "gpt-5.6-luna",
+    "success": true,
+    "operation": "chat",
+    "provider_request_id": "e0f9f2f4-09bd-4c53-a5e8-0133e84ad019",
+    "usage": {
+      "claude_cache_creation_1_h_tokens": 0,
+      "claude_cache_creation_5_m_tokens": 0,
+      "completion_tokens": 24,
+      "completion_tokens_details": {
+        "audio_tokens": 0,
+        "image_tokens": 0,
+        "reasoning_tokens": 0,
+        "text_tokens": 0
+      },
+      "input_tokens": 1583,
+      "input_tokens_details": null,
+      "output_tokens": 24,
+      "prompt_tokens": 1583,
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": 0,
+        "text_tokens": 0
+      },
+      "total_tokens": 1607
+    },
+    "returned_model": "gpt-5.6-luna",
+    "answer_sha256": "8d422d49e31082a4ec7d93b00078308b36069243e666f673c92bfebd54e5015e",
+    "elapsed_seconds": 5.64100000000326
+  }
+]

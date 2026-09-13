@@ -7,9 +7,9 @@ topic:
   title: "质量评测基线与成本可观测"
 result:
   type: code
-  url: "https://github.com/yushangcan/WeKnora/tree/rhino-2026-final-3/docs/submission"
+  url: "https://github.com/yushangcan/WeKnora/tree/rhino-2026-final-3-v2/docs/submission"
 repository:
   url: "https://github.com/yushangcan/WeKnora"
   branch: "codex/evaluation-four-dimension-results"
-  commit: "154f33aeb579c8eff3479ea1ada3c2004b896d33"
-  tag: "rhino-2026-final-3"
+  commit: "c7f35bc70b79081a01755c38211febfcefd4c448"
+  tag: "rhino-2026-final-3-v2"

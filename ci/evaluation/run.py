@@ -116,8 +116,12 @@ def validate_report(detail, commit, positive=True, retrieval_positive=True):
         if positive:
             require(evidence["generated_answer_fingerprint"] == evidence["reference_answer_fingerprint"],
                     "synthetic answer does not match reference")
-    require(result["usage"]["calls"]["total"] > 0 and result["usage"]["reported_call_count"] > 0,
-            "usage observation missing")
+    require(result["usage"]["calls"]["total"] > 0, "usage observation missing")
+    # An empty rerank takes the App's no-context fallback and skips generation.
+    # This generic embedding/rerank adapter records calls but need not expose
+    # token counts. Do not demand or fabricate chat usage on that branch.
+    if retrieval_positive:
+        require(result["usage"]["reported_call_count"] > 0, "usage observation missing")
     require(result["cost"]["amount"] is None, "synthetic provider must not invent monetary cost")
     if not retrieval_positive:
         require(result["retrieval"]["recall"] == 0.0, "retrieval degradation did not lower recall to zero")

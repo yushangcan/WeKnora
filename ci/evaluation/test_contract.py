@@ -35,6 +35,7 @@ class EvidenceTest(unittest.TestCase):
         for case in report["result"]["cases"]:
             case["evidence"]["metric_input_pids"] = []
         report["result"]["retrieval"]["recall"] = 0.0
+        report["result"]["usage"]["reported_call_count"] = 0
         run.validate_report(report, "a" * 40, positive=False, retrieval_positive=False)
         report["result"]["retrieval"]["recall"] = 1.0
         with self.assertRaisesRegex(RuntimeError, "lower recall"):
